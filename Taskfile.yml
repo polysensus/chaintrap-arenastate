@@ -18,6 +18,18 @@ tasks:
     desc: format and lint the code, then build the package
     deps: [format]
 
+  test:unit:
+    desc: run the unit tests
+    cmds:
+      - npm run test -- {{.CLI_ARGS}}
+
+  test:unit:ci:
+    desc: run the unit tests for the ci (juint output)
+    cmds:
+      - |
+        set -e
+        npm run test -- --reporter junit --outputFile jest-junit.xml
+
   test:integ:deploy:
     desc: start hardhat and deploy contracts for test:integ
     cmds:

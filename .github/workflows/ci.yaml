@@ -62,8 +62,27 @@ jobs:
           npm install ../chaintrap-contracts --save-dev
           npm install
 
-      - name: Do the build task
+      - name: build
         working-directory: chaintrap-arenastate
         run: |
           ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
           task build
+
+      - name: unit tests
+        working-directory: chaintrap-arenastate
+        run: |
+          ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
+          task test:unit:ci
+
+      - uses: actions/upload-artifact@v2
+        if: success() || failure() # even if previous failed
+        with:
+          name: test-results
+          path: jest-junit.xml
+
+      - uses: dorny/test-reporter@v1
+        with:
+          artifact: test-results
+          name: Vitest results (jest compat)
+          path: '*.xml'
+          reporter: jest-junit

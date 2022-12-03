@@ -8,7 +8,8 @@
     "arenactl": "./cli.js"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "vitest run",
+    "test-watch": "vitest",
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
@@ -18,6 +19,7 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",
+    "@babel/plugin-syntax-import-assertions": "^7.20.0",
     "chai": "^4.3.7",
     "dotenv": "^16.0.3",
     "eslint": "^8.29.0",
@@ -27,13 +29,15 @@
     "eslint-plugin-promise": "^6.1.1",
     "mocha": "^10.1.0",
     "prettier": "^2.8.0",
-    "rollup": "^3.5.1"
+    "rollup": "^3.5.1",
+    "vitest": "^0.25.3"
   },
   "dependencies": {
-    "@babel/plugin-syntax-import-assertions": "^7.20.0",
+    "@msgpack/msgpack": "^2.8.0",
     "@polysensus/chaintrap-contracts": "file:../chaintrap-contracts",
     "commander": "^9.4.1",
-    "ethers": "^5.7.2"
+    "ethers": "^5.7.2",
+    "loglevel": "^1.8.1"
   },
   "eslintConfig": {
     "parser": "@babel/eslint-parser",

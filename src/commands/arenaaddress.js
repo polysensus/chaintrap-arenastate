@@ -4,10 +4,13 @@ import { isFile, readHexKey, readJson } from "./fsutil.js";
 import { deriveContractAddress } from "../lib/deriveaddress.js";
 import { programConnect } from "./connect.js";
 
-const log = console.log;
+import { getLogger } from "../lib/log.js";
+
+const log = getLogger("arenaaddress");
+const out = console.log;
 
 export async function getArenaAddress(program, options, provider) {
-  const vlog = program.opts().verbose ? log : () => {};
+  const vout = program.opts().verbose ? console.log : () => {};
 
   let deployjson = program.opts().deployjson;
   let key = program.opts().deploykey;
@@ -34,7 +37,7 @@ export async function getArenaAddress(program, options, provider) {
     return hh.contracts.Arena.address;
   }
 
-  vlog(`deployer wallet: ${acc}`);
+  vout(`deployer wallet: ${acc}`);
   if (!provider) {
     provider = programConnect(program);
   }
@@ -50,10 +53,8 @@ export async function getArenaAddress(program, options, provider) {
 export async function arenaAddress(program, options) {
   try {
     const addr = await getArenaAddress(program, options);
-    log(addr);
-    return 0;
+    out(addr);
   } catch (err) {
-    log(err);
-    return -1;
+    log.warn(err);
   }
 }
