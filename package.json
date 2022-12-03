@@ -26,6 +26,7 @@
     "rollup": "^3.5.1"
   },
   "dependencies": {
+    "@polysensus/chaintrap-contracts": "file:../chaintrap-contracts",
     "commander": "^9.4.1",
     "ethers": "^5.7.2"
   },

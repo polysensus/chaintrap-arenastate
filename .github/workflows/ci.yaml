@@ -1,0 +1,69 @@
+on: [push]
+
+name: ci
+
+jobs:
+  test:
+    name: Foundry project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate as the cicd github app
+        id: cicd-app-authenticate
+        uses: polysensus/cicd-app-token@main
+        with:
+          APP_PEM: ${{ secrets.CICD_APP_PEM }}
+          APP_ID: ${{ secrets.CICD_APP_ID }}
+
+      - name: Checkout the contracts repository
+        uses: actions/checkout@v3
+        with:
+          repository: polysensus/chaintrap-contracts
+          token: ${{ steps.cicd-app-authenticate.outputs.app_token }}
+          submodules: recursive
+          path: chaintrap-contracts
+
+      - name: Checkout the arenastate repository
+        uses: actions/checkout@v3
+        with:
+          repository: polysensus/chaintrap-arenastate
+          submodules: recursive
+          path: chaintrap-arenastate
+
+      - name: Setup node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.15.0
+
+      - name: Install go-tusk and go-task
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/bin
+
+          # go-task
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- \
+            -d -b $GITHUB_WORKSPACE/bin
+
+          # go-tusk
+          curl -sL https://git.io/tusk | bash -s -- -b $GITHUB_WORKSPACE/bin latest
+          chmod a+x $GITHUB_WORKSPACE/bin/tusk
+          echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
+
+      - name: Install arenastate with localy checked out chaintrap-contracts
+        env:
+          GITHUB_TOKEN: ${{ steps.cicd-app-authenticate.outputs.app_token }}
+          CICD_APP_ID: ${{ secrets.CICD_APP_ID }}
+          CICD_APP_PEM: ${{ secrets.CICD_APP_PEM }}
+
+        run: |
+          pushd chaintrap-contracts
+          npm install
+          popd
+          pushd chaintrap-arenastate
+          npm uninstall --save "@polysensus/chaintrap-contracts"
+          npm install ../chaintrap-contracts --save-dev
+          npm install
+
+      - name: Do the build task
+        working-directory: chaintrap-arenastate
+        run: |
+          ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
+          task build
