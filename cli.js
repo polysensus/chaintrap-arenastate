@@ -1,4 +1,5 @@
 #! /usr/bin/env node
+/* eslint-env es6 */
 import { program } from "commander";
 
 import { lastGame, gameState } from "./src/commands/gamestate.js";

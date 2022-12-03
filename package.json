@@ -28,5 +28,13 @@
   "dependencies": {
     "commander": "^9.4.1",
     "ethers": "^5.7.2"
+  },
+  "eslintConfig": {
+    "env": {
+      "es2022": true
+    },
+    "parserOptions": {
+      "sourceType": "module"
+    }
   }
 }

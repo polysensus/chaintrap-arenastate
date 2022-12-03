@@ -1,3 +1,4 @@
+/* eslint-env node */
 const log = console.log;
 
 export async function lastGame(program, options, address) {
