@@ -74,8 +74,11 @@ jobs:
           ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
           task test:unit:ci
 
-      - uses: actions/upload-artifact@v2
-        if: success() || failure() # even if previous failed
-        with:
-          name: test-results
-          path: chaintrap-arenastate/jest-junit.xml
+      # this didn't work, despite looking like jest/junit format the reporter
+      # crashed when looking at the time property
+      # https://github.com/marketplace/actions/test-reporter
+      # - uses: actions/upload-artifact@v2
+      #   if: success() || failure() # even if previous failed
+      #   with:
+      #     name: test-results
+      #     path: chaintrap-arenastate/jest-junit.xml

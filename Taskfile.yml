@@ -28,7 +28,8 @@ tasks:
     cmds:
       - |
         set -e
-        npm run test -- --reporter junit --outputFile jest-junit.xml
+        # npm run test -- --reporter junit --outputFile jest-junit.xml
+        npm run test -- --coverage
 
   test:integ:deploy:
     desc: start hardhat and deploy contracts for test:integ

@@ -2,3 +2,4 @@ jest-junit.xml
 .env
 node_modules
 .local
+coverage
