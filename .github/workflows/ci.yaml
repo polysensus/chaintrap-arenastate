@@ -78,7 +78,7 @@ jobs:
         if: success() || failure() # even if previous failed
         with:
           name: test-results
-          path: jest-junit.xml
+          path: chaintrap-arenastate/jest-junit.xml
 
       - uses: dorny/test-reporter@v1
         with:
@@ -86,3 +86,4 @@ jobs:
           name: Vitest results (jest compat)
           path: '*.xml'
           reporter: jest-junit
+          working-directory: chaintrap-arenastate
