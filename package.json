@@ -1,0 +1,32 @@
+{
+  "name": "chaintrap-arenastate",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "chaintrap arena libary to derive and model the arena contract state for specific game sessions",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
+    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
+  },
+  "author": "robin@polysensus.com",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.29.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "mocha": "^10.1.0",
+    "prettier": "^2.8.0",
+    "rollup": "^3.5.1"
+  },
+  "dependencies": {
+    "commander": "^9.4.1",
+    "ethers": "^5.7.2"
+  }
+}
