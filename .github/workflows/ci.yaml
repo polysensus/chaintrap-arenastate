@@ -4,7 +4,7 @@ name: ci
 
 jobs:
   test:
-    name: Foundry project
+    name: ci build & test
     runs-on: ubuntu-latest
     steps:
       - name: Authenticate as the cicd github app
