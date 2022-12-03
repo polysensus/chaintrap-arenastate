@@ -18,6 +18,9 @@ tasks:
     desc: format and lint the code, then build the package
     deps: [format]
 
+  test:
+    deps: [test:unit]
+
   test:unit:
     desc: run the unit tests
     cmds:
