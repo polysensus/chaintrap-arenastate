@@ -7,9 +7,7 @@ import {
   getGameCreatedBlock,
 } from "../lib/gameevents.js";
 
-import {
-  StateRoster
-} from "../lib/stateroster.js";
+import { StateRoster } from "../lib/stateroster.js";
 
 const log = console.log;
 const out = console.log;
@@ -68,9 +66,9 @@ export async function stateroster(program, options) {
   vlog(`Arena: ${address} ${gid}`);
   const events = await findGameEvents(arena, gid, gameCreatedBlock);
   const roster = new StateRoster(arena, gid, (player) => {
-    out(JSON.parse(JSON.stringify(player), null, 2))
-  })
-  roster.batchedUpdateBegin()
-  roster.load(events)
-  roster.batchedUpdateFinalize()
+    out(JSON.parse(JSON.stringify(player), null, 2));
+  });
+  roster.batchedUpdateBegin();
+  roster.load(events);
+  roster.batchedUpdateFinalize();
 }

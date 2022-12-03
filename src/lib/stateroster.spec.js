@@ -26,10 +26,11 @@ describe("StateRoster", function () {
   it("Should dispatch player registration imediately", async function () {
     const d = new MockDispatcher();
 
-    const r = new StateRoster(undefined, bigOne, (...args) =>
-      d.dispatch(...args)
-    );
+    const r = new StateRoster(undefined, bigOne);
+    const snap = r.snapshot();
     r._playerJoined(playerJoined());
+    r.dispatchChanges(snap, (...args) => d.dispatch(...args));
+
     // registered -> true, address -> 0x11...
     expect(d.results.length).to.equal(1);
     const [player, delta] = d.results[0];
@@ -40,16 +41,16 @@ describe("StateRoster", function () {
     const d = new MockDispatcher();
     const g = new MockGame();
 
-    const r = new StateRoster(g, bigOne, (...args) => d.dispatch(...args));
+    const r = new StateRoster(g, bigOne);
 
     const events = [
       playerJoined({ tx: 1 }),
       playerStartLocation({ tx: 2 }),
       useExit({ tx: 3, eid: 1 }),
     ];
-    r.batchedUpdateBegin();
+    const snap = r.snapshot();
     await r.load(events);
-    r.batchedUpdateFinalize();
+    r.dispatchChanges(snap, (...args) => d.dispatch(...args));
     // registered -> true, address -> 0x11...
     expect(d.results.length).to.equal(1);
 

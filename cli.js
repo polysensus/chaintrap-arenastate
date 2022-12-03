@@ -58,5 +58,4 @@ program
   .option("-g, --gid <gid>")
   .action((options) => stateroster(program, options));
 
-
 program.parse();

@@ -95,14 +95,23 @@ describe("Player", function () {
     // (from the game host) produce the expected state delta.  Notice that the
     // transcript entry id (eid) is the same for the player and the game host.
     // The player declares the move and the game host responds.
-    let delta = p.applyEvent(useExit);
+
+    const applyEvent = (p, event) => {
+      const before = p.stateSnapshot();
+      p.applyEvent(event);
+      p.processPending(p.lastEID);
+      return p.stateDelta(before, p.stateSnapshot());
+    };
+
+    let delta = applyEvent(p, useExit);
+
     expect(delta.lastEID).toBe(1);
     delete delta.lastEID;
     expect(delta.pendingExitUsed).toBe(true);
     delete delta.pendingExitUsed;
     expect(delta.toObject()).toStrictEqual({});
 
-    delta = p.applyEvent(exitUsed);
+    delta = applyEvent(p, exitUsed);
     expect(delta.location).toStrictEqual(arrayify("0x0202"));
     expect(delta.sceneblob).toStrictEqual(arrayify("0x0404"));
     expect(delta.locationIngress).toStrictEqual([2, 1]);

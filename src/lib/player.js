@@ -83,6 +83,10 @@ export class Player {
     return this.state.halted;
   }
 
+  get lastEID() {
+    return this.state.lastEID;
+  }
+
   get started() {
     return (
       typeof this.state.lastEID !== "undefined" || this.state.pendingExitUsed
@@ -117,158 +121,13 @@ export class Player {
     }
   }
 
-  _addStartLocation(event) {
-    let before;
-    if (!this._batchingUpdate) {
-      before = this.stateSnapshot();
-    }
-
-    // Note: StartLocation is not a transcript event. It sets where the player
-    // begins and the host may set it many times before finally starting the
-    // game.
-
-    // @ts-ignore
-    this.setState({
-      location: event.args.startLocation,
-      startLocation: event.args.startLocation,
-      sceneblob: event.args.sceneblob,
-    });
-
-    // if batching, defer computing the player delta until the end of the batch
-    if (this._batchingUpdate) {
-      return;
-    }
-
-    // imediately process the new state.
-    return this.stateDelta(before, this.stateSnapshot());
-  }
-
-  _addUseExit(event) {
-    const eid = Number(event.args.eid);
-    if (this.eids[eid]?.transactionHash === event.transactionHash) {
-      // log.debug(`duplicate transaction hash, ignoring event: ${event.event}, tx: ${event.transactionHash}`)
-      return;
-    }
-
-    this.eids[eid] = event;
-    this.useExit[eid] = event.args;
-
-    // if not batch updating, imediately process the new state.
-    if (this._batchingUpdate) {
-      return;
-    }
-
-    // if not batch updating, imediately process the new state.
-    return this._processPendingEntries(this.state.lastEID);
-  }
-
-  _addExitUsed(event) {
-    const eid = Number(event.args.eid);
-    this.eids[eid] = event;
-    this.exitUsed[eid] = event.args;
-
-    if (this._batchingUpdate) {
-      return;
-    }
-
-    // if not batch updating, imediately process the new state.
-    return this._processPendingEntries(this.state.lastEID);
-  }
-
-  _addEntryReject(event) {
-    const eid = Number(event.args.eid);
-    this.eids[eid] = event;
-    this.entryReject[eid] = event.args;
-    this.state.halted = event.args.halted;
-
-    // if not batch updating, imediately process the new state.
-    if (this._batchingUpdate) {
-      return;
-    }
-
-    // if not batch updating, imediately process the new state.
-    return this._processPendingEntries(this.state.lastEID);
-  }
-
-  // --- update state control
-
-  batchedUpdateBegin() {
-    this._batchingUpdate = true;
-  }
-
   /**
-   * derive the results applied updates
-   */
-  batchedUpdateFinalize(before, force) {
-    if (!this._batchingUpdate) {
-      throw new Error("not updating");
-    }
-    this._batchingUpdate = false;
-
-    return this._processPendingEntries(
-      force ? undefined : this.state.lastEID,
-      before
-    );
-  }
-
-  /**
-   * Process the transcript and return an object describing the changed states.
-   * @param {*} startEID
+   * Process apply events to the player state, starting from the provided eid
+   * or apply them all if undefined
+   * @param {*} fromEID the eid to start from. undefined forces all
    * @returns
    */
-  _processPendingEntries(startEID, before) {
-    if (typeof before === "undefined") {
-      before = this.stateSnapshot();
-    }
-
-    this._processTranscript(startEID);
-
-    return this.stateDelta(before, this.stateSnapshot());
-  }
-
-  // --- private update methods
-  _haveEvent(event) {
-    let eid = event?.args?.eid;
-    if (!eid) {
-      return false;
-    }
-    eid = Number(eid);
-
-    if (this.eids[eid]?.transactionHash !== event.transactionHash) {
-      return false;
-    }
-    // log.debug(`duplicate transaction hash, ignoring event: ${event.event}, tx: ${event.transactionHash}`)
-    return true;
-  }
-
-  /**
-   * Capture the values of all instance variables that we want to signal changes for.
-   * Especially for batched updates, we only want to signal one change per update.
-   * And if a value changes from A -> B -> A we do NOT signal an update
-   * @returns
-   */
-  stateSnapshot() {
-    return this.state.clone();
-  }
-
-  stateDelta(before, after) {
-    return new PlayerState().update(before.diff(after));
-  }
-
-  ordered() {
-    return Object.keys(this.eids)
-      .map((i) => Number(i))
-      .sort((a, b) => a - b);
-  }
-
-  /** return the last eid. computes based on contents of known eids rather than relying on lastEID */
-  last() {
-    const eids = this.ordered();
-    if (eids.length === 0) return undefined;
-    return eids[eids.length - 1];
-  }
-
-  _processTranscript(fromEID) {
+  processPending(fromEID) {
     this.state.pendingExitUsed = false;
 
     // note: the props are integers, we just get them as strings from Object.keys
@@ -345,5 +204,86 @@ export class Player {
         log.debug(`${eid} outcome pending`);
       }
     }
+  }
+
+  _addStartLocation(event) {
+    // Note: StartLocation is not a transcript event. It sets where the player
+    // begins and the host may set it many times before finally starting the
+    // game.
+
+    // @ts-ignore
+    this.setState({
+      location: event.args.startLocation,
+      startLocation: event.args.startLocation,
+      sceneblob: event.args.sceneblob,
+    });
+  }
+
+  _addUseExit(event) {
+    const eid = Number(event.args.eid);
+    if (this.eids[eid]?.transactionHash === event.transactionHash) {
+      // log.debug(`duplicate transaction hash, ignoring event: ${event.event}, tx: ${event.transactionHash}`)
+      return;
+    }
+
+    this.eids[eid] = event;
+    this.useExit[eid] = event.args;
+  }
+
+  _addExitUsed(event) {
+    const eid = Number(event.args.eid);
+    this.eids[eid] = event;
+    this.exitUsed[eid] = event.args;
+  }
+
+  _addEntryReject(event) {
+    const eid = Number(event.args.eid);
+    this.eids[eid] = event;
+    this.entryReject[eid] = event.args;
+    this.state.halted = event.args.halted;
+  }
+
+  // --- update state control
+
+  // --- private update methods
+  _haveEvent(event) {
+    let eid = event?.args?.eid;
+    if (!eid) {
+      return false;
+    }
+    eid = Number(eid);
+
+    if (this.eids[eid]?.transactionHash !== event.transactionHash) {
+      return false;
+    }
+    // log.debug(`duplicate transaction hash, ignoring event: ${event.event}, tx: ${event.transactionHash}`)
+    return true;
+  }
+
+  /**
+   * Capture the values of all instance variables that we want to signal changes for.
+   * Especially for batched updates, we only want to signal one change per update.
+   * And if a value changes from A -> B -> A we do NOT signal an update
+   * @returns
+   */
+  stateSnapshot() {
+    return this.state.clone();
+  }
+
+  stateDelta(before, after) {
+    return new PlayerState().update(before.diff(after));
+  }
+
+  ordered() {
+    return Object.keys(this.eids)
+      .map((i) => Number(i))
+      .sort((a, b) => a - b);
+  }
+
+  /** return the last eid. computes based on contents of known eids rather than relying on lastEID */
+  last() {
+    const eids = this.ordered();
+    if (eids.length === 0) return undefined;
+    return eids[eids.length - 1];
   }
 }
