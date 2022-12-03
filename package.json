@@ -4,6 +4,9 @@
   "version": "0.0.1",
   "description": "chaintrap arena libary to derive and model the arena contract state for specific game sessions",
   "main": "index.js",
+  "bin": {
+    "arenactl": "./cli.js"
+  },
   "scripts": {
     "test": "mocha",
     "build": "rollup -c",
@@ -14,6 +17,7 @@
   "author": "robin@polysensus.com",
   "license": "UNLICENSED",
   "devDependencies": {
+    "@babel/eslint-parser": "^7.19.1",
     "chai": "^4.3.7",
     "dotenv": "^16.0.3",
     "eslint": "^8.29.0",
@@ -26,16 +30,25 @@
     "rollup": "^3.5.1"
   },
   "dependencies": {
+    "@babel/plugin-syntax-import-assertions": "^7.20.0",
     "@polysensus/chaintrap-contracts": "file:../chaintrap-contracts",
     "commander": "^9.4.1",
     "ethers": "^5.7.2"
   },
   "eslintConfig": {
+    "parser": "@babel/eslint-parser",
     "env": {
       "es2022": true
     },
     "parserOptions": {
-      "sourceType": "module"
+      "requireConfigFile": false,
+      "ecmaVersion": 2022,
+      "sourceType": "module",
+      "babelOptions": {
+        "plugins": [
+          "@babel/plugin-syntax-import-assertions"
+        ]
+      }
     }
   }
 }

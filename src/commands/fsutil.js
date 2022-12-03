@@ -19,3 +19,7 @@ export async function readHexKey(key) {
   }
   return new ethers.utils.SigningKey(key);
 }
+
+export async function readJson(filename) {
+  return JSON.parse(await fs.readFile(filename, "utf-8"));
+}

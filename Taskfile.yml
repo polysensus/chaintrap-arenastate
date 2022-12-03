@@ -2,6 +2,10 @@
 version: "3"
 silent: true
 
+env:
+  CHAINTRAP_CONTRACTS_DIR: "../chaintrap-contracts"
+  CONTRACTS_DEVTOOL: "../chaintrap-contracts/scripts/devtool.sh"
+
 tasks:
   format:
     desc: automatic code formatting - run prettier and then lint
@@ -11,4 +15,30 @@ tasks:
         npm run lint
 
   build:
+    desc: format and lint the code, then build the package
     deps: [format]
+
+  test:integ:deploy:
+    desc: start hardhat and deploy contracts for test:integ
+    cmds:
+      - task: dev:hh:restart
+      - |
+        set -e
+        $CONTRACTS_DEVTOOL deploy-local -f .local/hh/deploy.json
+        echo "logs in $(pwd)/.local/hh/hh-log"
+
+  dev:hh:start:
+    desc: start a local hardhat node (if there isn't one running)
+    cmds:
+      - $CONTRACTS_DEVTOOL start-node -d .local/hh
+
+  dev:hh:restart:
+    desc: restart the local hardhat node
+    deps: [dev:hh:stop]
+    cmds:
+      - task: dev:hh:start
+
+  dev:hh:stop:
+    desc: stop a local hardhat node (according to pid in .local/hh/hh-pid)
+    cmds:
+      - $CONTRACTS_DEVTOOL stop-node -d .local/hh

@@ -1,6 +1,8 @@
 import { ethers } from "ethers";
 import { isUndefined } from "./idioms.js";
 
+const log = console.log;
+
 export function addressFromKey(key) {
   return new ethers.Wallet(key).address;
 }
@@ -21,18 +23,18 @@ export async function deriveContractAddress(provider, from, nonce = undefined) {
 
       nonce = (await provider.getTransactionCount(from)) - 1;
       if (nonce < 0) {
-        log.info(`contract not deployed, nonce is zero for ${from}`);
+        log(`contract not deployed, nonce is zero for ${from}`);
         return;
       }
     } catch (e) {
-      log.info(`error getting nonce for ${from}: ${JSON.stringify(e)}`);
+      log(`error getting nonce for ${from}: ${JSON.stringify(e)}`);
       return;
     }
   }
 
   for (let i = 0; i < nonce; i++) {
     const a = ethers.utils.getContractAddress({ from, nonce: i });
-    log.debug(`All addresses: ${a}`);
+    log(`All addresses: ${a}`);
   }
 
   return ethers.utils.getContractAddress({ from, nonce });

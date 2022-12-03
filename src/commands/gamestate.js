@@ -1,14 +1,46 @@
-/* eslint-env node */
+import { programConnect } from "./connect.js";
+import { getArenaAddress } from "./arenaaddress.js";
+import { arenaConnect } from "../lib/chaintrapabi.js";
+import {
+  findGameEvents,
+  parseEventLog,
+  getGameCreatedBlock,
+} from "../lib/gameevents.js";
+
 const log = console.log;
 
-export async function lastGame(program, options, address) {
-  let vlog = () => {};
-  if (program.opts().verbose) vlog = log;
-  vlog(`hello: ${address}`);
+async function programConnectArena(program, options) {
+  const provider = programConnect(program);
+  const arena = await getArenaAddress(program, options, provider);
+  return await arenaConnect(provider, arena);
 }
 
-export async function gameState(program, options, address, gid) {
+export async function lastGame(program, options) {
   let vlog = () => {};
   if (program.opts().verbose) vlog = log;
-  vlog(`hello: ${address} ${gid}`);
+
+  const c = await programConnectArena(program, options);
+  const gid = await c.lastGame();
+  log(gid.toNumber());
+}
+
+export async function gameState(program, options) {
+  let vlog = () => {};
+  if (program.opts().verbose) vlog = log;
+
+  let gid = options.gid;
+
+  const provider = programConnect(program);
+  const address = await getArenaAddress(program, options, provider);
+  const arena = await arenaConnect(provider, address);
+
+  if (typeof gid === "undefined" || gid < 0) {
+    gid = await arena.lastGame();
+  }
+
+  const gameCreatedBlock = getGameCreatedBlock(arena, gid);
+  vlog(`Arena: ${address} ${gid}`);
+  for (const ethlog of await findGameEvents(arena, gid, gameCreatedBlock)) {
+    log(JSON.parse(JSON.stringify(parseEventLog(arena, ethlog)), null, 2));
+  }
 }
