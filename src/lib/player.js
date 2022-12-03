@@ -100,12 +100,24 @@ export class Player {
   }
 
   // --- update methods
-
-  addStartLocation(event) {
+  applyEvent(event) {
     if (this._haveEvent(event)) return;
 
-    this._requireEvent(event, ABIName.PlayerStartLocation);
+    switch (event.event) {
+      case ABIName.PlayerStartLocation:
+        return this._addStartLocation(event);
+      case ABIName.UseExit:
+        return this._addUseExit(event);
+      case ABIName.ExitUsed:
+        return this._addExitUsed(event);
+      case ABIName.EntryReject:
+        return this._addEntryReject(event);
+      default:
+        throw new Error(`Unrecognised event: ${event.event}`);
+    }
+  }
 
+  _addStartLocation(event) {
     let before;
     if (!this._batchingUpdate) {
       before = this.stateSnapshot();
@@ -131,11 +143,7 @@ export class Player {
     return this.stateDelta(before, this.stateSnapshot());
   }
 
-  addUseExit(event) {
-    if (this._haveEvent(event)) return;
-
-    this._requireEvent(event, ABIName.UseExit);
-
+  _addUseExit(event) {
     const eid = Number(event.args.eid);
     if (this.eids[eid]?.transactionHash === event.transactionHash) {
       // log.debug(`duplicate transaction hash, ignoring event: ${event.event}, tx: ${event.transactionHash}`)
@@ -154,11 +162,7 @@ export class Player {
     return this._processPendingEntries(this.state.lastEID);
   }
 
-  addExitUsed(event) {
-    if (this._haveEvent(event)) return;
-
-    this._requireEvent(event, ABIName.ExitUsed);
-
+  _addExitUsed(event) {
     const eid = Number(event.args.eid);
     this.eids[eid] = event;
     this.exitUsed[eid] = event.args;
@@ -171,11 +175,7 @@ export class Player {
     return this._processPendingEntries(this.state.lastEID);
   }
 
-  addEntryReject(event) {
-    if (this._haveEvent(event)) return;
-
-    this._requireEvent(event, ABIName.EntryReject);
-
+  _addEntryReject(event) {
     const eid = Number(event.args.eid);
     this.eids[eid] = event;
     this.entryReject[eid] = event.args;
@@ -188,12 +188,6 @@ export class Player {
 
     // if not batch updating, imediately process the new state.
     return this._processPendingEntries(this.state.lastEID);
-  }
-
-  _requireEvent(event, expected) {
-    if (event.event !== expected) {
-      throw new Error(`expected ${expected} not ${event.event}`);
-    }
   }
 
   // --- update state control

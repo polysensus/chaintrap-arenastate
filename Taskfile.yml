@@ -19,7 +19,8 @@ tasks:
     deps: [format]
 
   test:
-    deps: [test:unit]
+    cmds:
+      - task: test:unit
 
   test:unit:
     desc: run the unit tests

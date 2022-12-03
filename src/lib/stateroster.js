@@ -11,6 +11,7 @@ import { isUndefined } from "./idioms.js";
 import { TxMemo } from "./txmemo.js";
 import { ABIName } from "./abiconst.js";
 import { Player } from "./player.js";
+import { parseEventLog } from "./gameevents.js";
 
 export const log = getLogger("StateRoster");
 
@@ -63,9 +64,19 @@ export class StateRoster {
   // events. These methods are all named after the game contract events they
   // deal with.
 
-  async playerJoined(event) {
+  async applyEvent(event) {
+    event = parseEventLog(event);
     log.debug(fmtev(event));
+    switch (event.event) {
+      case ABIName.PlayerJoined:
+        return await this.playerJoined(event);
+      default: {
+        this._withConditionalDispatch(event);
+      }
+    }
+  }
 
+  async playerJoined(event) {
     // check the event is for the correct game
     if (this._checkEventGid(event) === null) return;
 
@@ -89,27 +100,7 @@ export class StateRoster {
     });
   }
 
-  async playerStartLocation(event) {
-    log.debug(fmtev(event));
-    this._withConditionalDispatch(event, "addStartLocation");
-  }
-
-  async useExit(event) {
-    log.debug(fmtev(event));
-    this._withConditionalDispatch(event, "addUseExit");
-  }
-
-  async exitUsed(event) {
-    log.debug(fmtev(event));
-    this._withConditionalDispatch(event, "addExitUsed");
-  }
-
-  async entryReject(event) {
-    log.debug(fmtev(event));
-    this._withConditionalDispatch(event, "addEntryReject");
-  }
-
-  _withConditionalDispatch(event, addEvent) {
+  _withConditionalDispatch(event) {
     if (this._checkEventGid(event) === null) return;
 
     const p = this._checkEventPlayer(event);
@@ -117,10 +108,12 @@ export class StateRoster {
 
     let delta;
     try {
-      delta = p[addEvent](event);
+      delta = p.appleyEvent(event);
     } catch (e) {
       log.warn(
-        `addEvent for event ${event.event} raised error: ${JSON.stringify(e)}`
+        `player applyEvent for ${event.event} raised error: ${JSON.stringify(
+          e
+        )}`
       );
       return;
     }
@@ -255,7 +248,7 @@ export class StateRoster {
     // Begin the batch for any we have already.
 
     for (const ethlog of events) {
-      const e = this._parseLog(ethlog);
+      const e = parseEventLog(this.game, ethlog);
 
       if (typeof e.args.player !== "undefined") {
         addr = ethers.utils.getAddress(e.args.player); // normalize to checksum addr
@@ -291,21 +284,9 @@ export class StateRoster {
             });
           }
           break;
-        case ABIName.PlayerStartLocation:
+        default:
           log.debug(fmtev(e));
-          this._players[addr].addStartLocation(e);
-          break;
-        case ABIName.UseExit:
-          log.debug(fmtev(e));
-          this._players[addr].addUseExit(e);
-          break;
-        case ABIName.ExitUsed:
-          log.debug(fmtev(e));
-          this._players[addr].addExitUsed(e);
-          break;
-        case ABIName.EntryReject:
-          log.debug(fmtev(e));
-          this._players[addr].addEntryReject(e);
+          this._players[addr].applyEvent(e)
           break;
       }
     }
@@ -367,26 +348,5 @@ export class StateRoster {
       return;
     }
     return p;
-  }
-
-  _parseLog(log) {
-    // See https://github.com/ethers-io/ethers.js/blob/master/packages/contracts/src.ts/index.ts addContractWait ~#342
-    let parsed = null;
-    try {
-      parsed = this.arena.interface.parseLog(log);
-    } catch (e) {}
-    if (!parsed) {
-      return log;
-    }
-
-    const event = log;
-    event.name = parsed.name;
-    event.event = parsed.event;
-    if (typeof event.event === "undefined") {
-      event.event = event.name;
-    }
-    event.args = parsed.args;
-
-    return event;
   }
 }
