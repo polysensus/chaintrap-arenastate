@@ -80,6 +80,7 @@ jobs:
           name: test-results
           path: chaintrap-arenastate/jest-junit.xml
 
+    report:
       - uses: dorny/test-reporter@v1
         with:
           artifact: test-results
