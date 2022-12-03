@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 import { program } from "commander";
 
-import { lastGame, gameState } from "./src/commands/gamestate.js";
+import { lastGame, gamelog, stateroster } from "./src/commands/gamestate.js";
 import { arenaAddress } from "./src/commands/arenaaddress.js";
 
 program
@@ -47,9 +47,16 @@ program
   .action((options) => lastGame(program, options));
 
 program
-  .command("gamestate")
-  .description("report the current state of the game with gid at the address")
+  .command("glog")
+  .description("report the game event logs")
   .option("-g, --gid <gid>")
-  .action((options) => gameState(program, options));
+  .action((options) => gamelog(program, options));
+
+program
+  .command("roster")
+  .description("determine the current stateroster")
+  .option("-g, --gid <gid>")
+  .action((options) => stateroster(program, options));
+
 
 program.parse();

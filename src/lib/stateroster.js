@@ -69,34 +69,23 @@ export class StateRoster {
     log.debug(fmtev(event));
     switch (event.event) {
       case ABIName.PlayerJoined:
-        return await this.playerJoined(event);
+        return await this._playerJoined(event);
       default: {
         this._withConditionalDispatch(event);
       }
     }
   }
 
-  async playerJoined(event) {
+  async _playerJoined(event) {
     // check the event is for the correct game
     if (this._checkEventGid(event) === null) return;
 
     const addr = ethers.utils.getAddress(event.args.player);
-    if (this._players[addr]?.registered) {
-      return;
-    }
-
-    // const contractstate = this.game.playerByAddress(addr);
-    this.registerPlayer(addr);
-
-    const p = this._players[addr];
+    const [p, update] = this._registerPlayer(addr, event);
+    if (!update) return;
 
     this._withConditionalDispatchStateDelta(p, () => {
-      p.setState({
-        registered: true,
-        address: addr,
-        profile: event.args.profile,
-        /*, ...contractstate */
-      });
+      p.setState(update);
     });
   }
 
@@ -258,44 +247,55 @@ export class StateRoster {
         log.debug(`event known, ignoring ${e.transactionHash}`);
         continue;
       }
+      log.debug(fmtev(e));
 
       switch (e.event) {
-        case ABIName.GameStarted:
-          log.debug(fmtev(e));
-          break;
-        case ABIName.GameCompleted:
-          log.debug(fmtev(e));
-          break;
         case ABIName.PlayerJoined:
-          log.debug(fmtev(e));
-          if (!this._players[addr]?.registered) {
-            // const chainstate = await this.game.playerByAddress(addr);
-            this.registerPlayer(addr);
+          // const chainstate = await this.game.playerByAddress(addr);
+          const [p, update] = this._registerPlayer(addr, e);
+          if (!update) break;
 
-            // begin the batch for the newly registered player
-            if (this._batchingUpdate) {
-              this._players[addr].batchedUpdateBegin();
-              this._batchBefore[addr] = this._players[addr].stateSnapshot();
-            }
-            this._players[addr].setState({
-              registered: true,
-              address: addr,
-              profile: e.args.profile /*, ...chainstate */,
-            });
-          }
+          this._players[addr].setState(update);
           break;
+
+        case ABIName.GameCreated:
+        case ABIName.GameStarted:
+        case ABIName.GameCompleted:
+          break;
+
         default:
           log.debug(fmtev(e));
-          this._players[addr].applyEvent(e)
+          this._players[addr].applyEvent(e);
           break;
       }
     }
   }
 
-  registerPlayer(addr) {
+  _registerPlayer(addr, event) {
+    if (this._players[addr]?.registered) {
+      return [undefined, undefined];
+    }
+
     if (this._players[addr] === undefined) {
       this._players[addr] = new Player();
     }
+
+    const p = this._players[addr];
+
+    // begin the batch for the newly registered player
+    if (this._batchingUpdate) {
+      p.batchedUpdateBegin();
+      this._batchBefore[addr] = p.stateSnapshot();
+    }
+
+    return [
+      p,
+      {
+        registered: true,
+        address: addr,
+        profile: event.args.profile,
+      },
+    ];
   }
 
   // --- getters and query methods for managed state

@@ -29,7 +29,7 @@ describe("StateRoster", function () {
     const r = new StateRoster(undefined, bigOne, (...args) =>
       d.dispatch(...args)
     );
-    r.playerJoined(playerJoined());
+    r._playerJoined(playerJoined());
     // registered -> true, address -> 0x11...
     expect(d.results.length).to.equal(1);
     const [player, delta] = d.results[0];
