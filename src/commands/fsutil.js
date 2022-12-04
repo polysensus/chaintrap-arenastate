@@ -1,9 +1,9 @@
-import fs from "fs/promises";
+import fs from "fs";
 import { ethers } from "ethers";
 
-export async function isFile(maybe) {
+export function isFile(maybe) {
   try {
-    const stats = await fs.stat(maybe);
+    const stats = fs.statSync(maybe);
     return stats.isFile();
   } catch (err) {
     console.log(err);
@@ -11,8 +11,8 @@ export async function isFile(maybe) {
   }
 }
 
-export async function readHexKey(key) {
-  key = await fs.readFile(key, "utf-8");
+export function readHexKey(key) {
+  key = fs.readFileSync(key, "utf-8");
   key = key.trim(); // deals with trailing newline
   if (!key.startsWith("0x")) {
     key = "0x" + key;
@@ -20,6 +20,6 @@ export async function readHexKey(key) {
   return new ethers.utils.SigningKey(key);
 }
 
-export async function readJson(filename) {
-  return JSON.parse(await fs.readFile(filename, "utf-8"));
+export function readJson(filename) {
+  return JSON.parse(fs.readFileSync(filename, "utf-8"));
 }

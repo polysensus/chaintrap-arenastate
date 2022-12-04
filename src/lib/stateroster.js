@@ -11,28 +11,41 @@ import { TxMemo } from "./txmemo.js";
 import { ABIName } from "./abiconst.js";
 import { Player } from "./player.js";
 import { PlayerState } from "./playerstate.js";
-import { parseEventLog } from "./gameevents.js";
+import {
+  findGameEvents,
+  parseEventLog,
+  getGameCreatedBlock,
+} from "./gameevents.js";
 
 export const log = getLogger("StateRoster");
 
 export const fmtev = (e) =>
   `gid: ${e.args.gid}, eid: ${e.args.eid}, ${e.event} bn: ${e.blockNumber}, topics: ${e.topics}, tx: ${e.transactionHash}`;
 
+export async function loadRoster(arena, gid) {
+  if (typeof gid === "undefined" || gid < 0) {
+    gid = await arena.lastGame();
+  }
+
+  const gameCreatedBlock = await getGameCreatedBlock(arena, gid);
+  log.debug(`Arena: ${arena.address} ${gid}`);
+  const events = await findGameEvents(arena, gid, gameCreatedBlock);
+  const roster = new StateRoster(arena, gid);
+  const snap = roster.snapshot();
+  roster.load(events);
+  return [snap, roster];
+}
 /**
  * This class manages a roster of player states for the game.
  */
 export class StateRoster {
-  constructor(game, gid, txmemo) {
+  constructor(arena, gid, txmemo) {
     // note: if the signer on the contract changes, this will be updated to the
     // new contract instance by the older of the roster
-    this.game = game;
+    this.arena = arena;
     this.gid = gid;
     this._players = {};
     this._txmemo = txmemo ?? new TxMemo();
-  }
-
-  get arena() {
-    return this.game.arena;
   }
 
   get players() {
@@ -95,6 +108,20 @@ export class StateRoster {
     }
   }
 
+  getChanges(snap, addresses) {
+    if (typeof addresses === "undefined")
+      addresses = Object.keys(this._players);
+
+    const changes = [];
+    for (const addr of addresses) {
+      const before = snap?.players?.[addr]?.state ?? new PlayerState();
+      const [_, delta] = this.processOne(before, addr);
+      if (!delta) continue;
+      changes.push(delta);
+    }
+    return changes;
+  }
+
   snapshotOne(addr) {
     const p = this._players[addr];
     if (!p) {
@@ -105,6 +132,13 @@ export class StateRoster {
   }
 
   dispatchOne(before, dispatcher, addr) {
+    const [p, delta] = this.processOne(before, addr);
+    if (!delta) return;
+
+    this._dispatchChanges(dispatcher, p, delta);
+  }
+
+  processOne(before, addr) {
     const p = this._players[addr];
     if (!p) {
       log.debug(`player address ${addr} for dispatch not found`);
@@ -113,8 +147,7 @@ export class StateRoster {
 
     p.processPending(p.lastEID);
     const delta = before.diff(p.state);
-    this._dispatchChanges(dispatcher, p, delta);
-    return delta;
+    return [p, delta];
   }
 
   // --- state catchup
@@ -124,7 +157,7 @@ export class StateRoster {
     // Begin the batch for any we have already.
 
     for (const ethlog of events) {
-      const e = parseEventLog(this.game, ethlog);
+      const e = parseEventLog(this.arena, ethlog);
 
       if (typeof e.args.player !== "undefined") {
         addr = ethers.utils.getAddress(e.args.player); // normalize to checksum addr
@@ -138,7 +171,7 @@ export class StateRoster {
 
       switch (e.event) {
         case ABIName.PlayerJoined:
-          // const chainstate = await this.game.playerByAddress(addr);
+          // const chainstate = await this.arena.playerByAddress(addr);
           this._registerPlayer(addr, e);
           break;
 

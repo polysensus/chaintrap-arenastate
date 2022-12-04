@@ -7,21 +7,21 @@ import {
   getGameCreatedBlock,
 } from "../lib/gameevents.js";
 
-import { StateRoster } from "../lib/stateroster.js";
+import { jfmt } from "./util.js";
+
+import { StateRoster, loadRoster } from "../lib/stateroster.js";
 
 const log = console.log;
 const out = console.log;
+const vout = () => {};
 
 async function programConnectArena(program, options) {
   const provider = programConnect(program);
   const arena = await getArenaAddress(program, options, provider);
-  return await arenaConnect(provider, arena);
+  return arenaConnect(provider, arena);
 }
 
 export async function lastGame(program, options) {
-  let vlog = () => {};
-  if (program.opts().verbose) vlog = log;
-
   const c = await programConnectArena(program, options);
   const gid = await c.lastGame();
   log(gid.toNumber());
@@ -35,7 +35,7 @@ export async function gamelog(program, options) {
 
   const provider = programConnect(program);
   const address = await getArenaAddress(program, options, provider);
-  const arena = await arenaConnect(provider, address);
+  const arena = arenaConnect(provider, address);
 
   if (typeof gid === "undefined" || gid < 0) {
     gid = await arena.lastGame();
@@ -49,26 +49,12 @@ export async function gamelog(program, options) {
 }
 
 export async function stateroster(program, options) {
-  let vlog = () => {};
-  if (program.opts().verbose) vlog = log;
-
-  let gid = options.gid;
+  if (program.opts().verbose) vout = out;
 
   const provider = programConnect(program);
   const address = await getArenaAddress(program, options, provider);
-  const arena = await arenaConnect(provider, address);
+  const arena = arenaConnect(provider, address);
 
-  if (typeof gid === "undefined" || gid < 0) {
-    gid = await arena.lastGame();
-  }
-
-  const gameCreatedBlock = getGameCreatedBlock(arena, gid);
-  vlog(`Arena: ${address} ${gid}`);
-  const events = await findGameEvents(arena, gid, gameCreatedBlock);
-  const roster = new StateRoster(arena, gid);
-  const snap = roster.snapshot();
-  roster.load(events);
-  roster.dispatchChanges(snap, (player) =>
-    out(JSON.parse(JSON.stringify(player), null, 2))
-  );
+  const [snap, roster] = loadRoster(arena, options.gid);
+  roster.dispatchChanges(snap, dispatch ?? ((player) => out(jfmt(player))));
 }

@@ -9,7 +9,7 @@ import { getLogger } from "../lib/log.js";
 const log = getLogger("arenaaddress");
 const out = console.log;
 
-export async function getArenaAddress(program, options, provider) {
+export async function getArenaAddress(program, _ /*options*/, provider) {
   const vout = program.opts().verbose ? console.log : () => {};
 
   let deployjson = program.opts().deployjson;
@@ -28,12 +28,12 @@ export async function getArenaAddress(program, options, provider) {
   }
 
   if (key) {
-    if (await isFile(key)) {
-      key = await readHexKey(key);
+    if (isFile(key)) {
+      key = readHexKey(key);
     }
     acc = new ethers.Wallet(key).address;
   } else if (deployjson) {
-    const hh = await readJson(deployjson);
+    const hh = readJson(deployjson);
     return hh.contracts.Arena.address;
   }
 

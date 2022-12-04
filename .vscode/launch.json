@@ -7,6 +7,192 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "newgame",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "-u",
+        "http://localhost:8300",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "-k",
+        "${workspaceFolder}/.local/dev/wallets/guardian.key",
+        "newgame",
+        "--maxplayers",
+        "4"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "join",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "-u",
+        "http://localhost:8300",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "-k",
+        "${workspaceFolder}/.local/dev/wallets/robin.key",
+        "join",
+        "robin"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "commitexituse",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "--map",
+        "${workspaceFolder:chaintrap-frontend}/src/assets/map02.json",
+        "-u",
+        "http://localhost:8300",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "-k",
+        "${workspaceFolder}/.local/dev/wallets/robin.key",
+        "commitexituse",
+        "-e",
+        "0:0" // side:egressIndex
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "setstart",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "--map",
+        "${workspaceFolder:chaintrap-frontend}/src/assets/map02.json",
+        "-u",
+        "http://localhost:8300",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "-k",
+        "${workspaceFolder}/.local/dev/wallets/guardian.key",
+        "setstart",
+        "0xe004890c786c17024C7610A90b5D64c32c4D5575",
+        "2" // robin
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "startgame",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "--map",
+        "${workspaceFolder:chaintrap-frontend}/src/assets/map02.json",
+        "-u",
+        "http://localhost:8300",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "-k",
+        "${workspaceFolder}/.local/dev/wallets/guardian.key",
+        "startgame"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "completegame",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "--map",
+        "${workspaceFolder:chaintrap-frontend}/src/assets/map02.json",
+        "-u",
+        "http://localhost:8300",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "-k",
+        "${workspaceFolder}/.local/dev/wallets/guardian.key",
+        "completegame"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "allowexituse",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "--map",
+        "${workspaceFolder:chaintrap-frontend}/src/assets/map02.json",
+        "-u",
+        "http://localhost:8300",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "-k",
+        "${workspaceFolder}/.local/dev/wallets/guardian.key",
+        "allowexituse",
+        "-c"
+        //, eid, token, scene, side, ingressIndex, halt
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "listplayers",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "-u",
+        "http://localhost:8300",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "listplayers",
+        "8",
+        "-f",
+        "nostart"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "arena address",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",

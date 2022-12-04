@@ -7,6 +7,8 @@ env:
   CONTRACTS_DEVTOOL: "../chaintrap-contracts/scripts/devtool.sh"
 
 tasks:
+  fmt:
+    - npm run format
   format:
     desc: automatic code formatting - run prettier and then lint
     cmds:

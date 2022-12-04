@@ -1,0 +1,41 @@
+interpreter: bash -c
+usage: arenactl
+options:
+  launchdir:
+    default:
+      command: echo $PWD
+
+tasks:
+  new-wallet:
+    args:
+      name:
+    run:
+      - command:
+          exec: |
+            set -e
+            DIR=.local/dev/wallets
+            mkdir -p $DIR
+            cast wallet new > $DIR/${name}.txt
+            cat $DIR/${name}.txt | egrep "^Address: " | cut -d ' ' -f2 > $DIR/${name}.addr
+            cat $DIR/${name}.txt | egrep "^Private Key: " | cut -d ' ' -f3 > $DIR/${name}.key
+  wallet:
+    args:
+      name:
+    run:
+      - command:
+          exec: |
+            DIR=.local/dev/wallets
+            cat $DIR/${name}.addr
+  key:
+    args:
+      name:
+    run:
+      - command:
+          exec: |
+            DIR=.local/dev/wallets
+            cat $DIR/${name}.key
+  keyfile:
+    args:
+      name:
+    run:
+      - echo $(pwd)/.local/dev/wallets/${name}.key

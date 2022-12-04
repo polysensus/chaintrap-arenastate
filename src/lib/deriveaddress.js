@@ -15,6 +15,9 @@ export function addressFromKey(key) {
  * @param {number} nonce used for the deploy tx (which was the transaction count at the time of deploy)
  */
 export async function deriveContractAddress(provider, from, nonce = undefined) {
+  // Note: if the provider is a signer then getTransactionCount is specifically
+  // bound to the signer's wallet and passing an additional address just breaks.
+  provider = provider.provider ?? provider;
   if (isUndefined(nonce)) {
     try {
       // nonce - 1 is the nonce of the *last* transaction on the account. Note: we
