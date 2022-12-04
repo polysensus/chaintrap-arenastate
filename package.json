@@ -3,11 +3,14 @@
   "type": "module",
   "version": "0.0.1",
   "description": "chaintrap arena libary to derive and model the arena contract state for specific game sessions",
-  "main": "index.js",
+  "main": "dist/chaintrap-arenastate.cjs.js",
+  "module": "dist/chaintrap-arenastate.esm.js",
+  "browser": "dist/chaintrap-arenastate.umd.js",
   "bin": {
     "arenactl": "./cli.js"
   },
   "scripts": {
+    "pretest": "npm run build",
     "test": "vitest run",
     "test-watch": "vitest",
     "build": "rollup -c",
@@ -20,6 +23,9 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",
     "@babel/plugin-syntax-import-assertions": "^7.20.0",
+    "@rollup/plugin-commonjs": "^23.0.3",
+    "@rollup/plugin-json": "^5.0.2",
+    "@rollup/plugin-node-resolve": "^15.0.1",
     "@vitest/coverage-c8": "^0.25.3",
     "chai": "^4.3.7",
     "dotenv": "^16.0.3",

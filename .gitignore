@@ -1,5 +1,6 @@
+dist
+node_modules
+coverage
 jest-junit.xml
 .env
-node_modules
 .local
-coverage

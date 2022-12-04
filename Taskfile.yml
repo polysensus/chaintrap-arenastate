@@ -17,6 +17,8 @@ tasks:
   build:
     desc: format and lint the code, then build the package
     deps: [format]
+    cmds:
+      - npm run build
 
   test:
     cmds:
