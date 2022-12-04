@@ -8,7 +8,13 @@ import {
   commitexituse,
 } from "./src/commands/players.js";
 
-import { creategame, setstart, allowexituse } from "./src/commands/guardian.js";
+import {
+  creategame,
+  setstart,
+  startgame,
+  completegame,
+  allowexituse,
+} from "./src/commands/guardian.js";
 
 import { arenaAddress } from "./src/commands/arenaaddress.js";
 
@@ -104,11 +110,28 @@ program
   );
 
 program
+  .command("startgame")
+  .description("close registration and start the game")
+  .option("-g, --gid <gid>")
+  .action((options) => startgame(program, options));
+
+program
+  .command("completegame")
+  .description("complete the game")
+  .option("-g, --gid <gid>")
+  .action((options) => completegame(program, options));
+
+program
   .command("allowexituse")
   .description("validate and confirm the most recent exit uses for the players")
   .option("-g, --gid <gid>")
   .option("-p, --player <player>", "allow only one specific player")
   .option("-c, --commit", "default is dry-run, set -c to issue the transaction")
+  .option(
+    "-H, --halt",
+    "halt the player, when an allow also halts it generaly indicates success/completion or player death",
+    false
+  )
   .action((options) => allowexituse(program, options));
 
 // -- aspirant transactions

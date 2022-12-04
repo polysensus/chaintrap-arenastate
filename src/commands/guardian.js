@@ -22,6 +22,32 @@ export async function creategame(program, options) {
   out(jfmt(r));
 }
 
+export async function startgame(program, options) {
+  if (program.opts().verbose) vout = out;
+  const arena = await programConnectArena(program, options);
+
+  let gid = options.gid;
+  if (typeof gid === "undefined" || gid < 0) {
+    gid = await arena.lastGame();
+  }
+  const g = new Game(arena, gid);
+  const r = await g.startGame();
+  out(jfmt(r));
+}
+
+export async function completegame(program, options) {
+  if (program.opts().verbose) vout = out;
+  const arena = await programConnectArena(program, options);
+
+  let gid = options.gid;
+  if (typeof gid === "undefined" || gid < 0) {
+    gid = await arena.lastGame();
+  }
+  const g = new Game(arena, gid);
+  const r = await g.completeGame();
+  out(jfmt(r));
+}
+
 export async function setstart(program, options, player, room) {
   if (program.opts().verbose) vout = out;
 
@@ -185,6 +211,7 @@ export async function allowexituse(program, options) {
       out(
         `${profile.nickname} ${eid}:no matching ingress for corridor ${icor} joining ${joins[0]} -> ${joins[1]}:${p.address}`
       );
+      return;
     }
 
     const scenenext = model.locationScene(locnext);
@@ -202,7 +229,8 @@ export async function allowexituse(program, options) {
       slocnext.token,
       slocnext.blob,
       enterside,
-      ingressExit
+      ingressExit,
+      options.halt
     );
 
     vout(jfmt(r));
