@@ -22,14 +22,14 @@ export const log = getLogger("StateRoster");
 export const fmtev = (e) =>
   `gid: ${e.args.gid}, eid: ${e.args.eid}, ${e.event} bn: ${e.blockNumber}, topics: ${e.topics}, tx: ${e.transactionHash}`;
 
-export async function loadRoster(arena, gid) {
+export async function loadRoster(arena, gid, fromBlock) {
   if (typeof gid === "undefined" || gid < 0) {
     gid = await arena.lastGame();
   }
 
-  const gameCreatedBlock = await getGameCreatedBlock(arena, gid);
+  if (!fromBlock) fromBlock = await getGameCreatedBlock(arena, gid);
   log.debug(`Arena: ${arena.address} ${gid}`);
-  const events = await findGameEvents(arena, gid, gameCreatedBlock);
+  const events = await findGameEvents(arena, gid, fromBlock);
   const roster = new StateRoster(arena, gid);
   const snap = roster.snapshot();
   roster.load(events);
