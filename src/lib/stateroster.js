@@ -1,7 +1,6 @@
 // Collective state tracking for all players registered in a single game
 
 // deps
-import { nanoid } from "nanoid";
 import { ethers } from "ethers";
 
 // app
