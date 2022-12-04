@@ -65,10 +65,10 @@ export async function stateroster(program, options) {
   const gameCreatedBlock = getGameCreatedBlock(arena, gid);
   vlog(`Arena: ${address} ${gid}`);
   const events = await findGameEvents(arena, gid, gameCreatedBlock);
-  const roster = new StateRoster(arena, gid, (player) => {
-    out(JSON.parse(JSON.stringify(player), null, 2));
-  });
-  roster.batchedUpdateBegin();
+  const roster = new StateRoster(arena, gid);
+  const snap = roster.snapshot();
   roster.load(events);
-  roster.batchedUpdateFinalize();
+  roster.dispatchChanges(snap, (player) =>
+    out(JSON.parse(JSON.stringify(player), null, 2))
+  );
 }

@@ -10,7 +10,6 @@
     "arenactl": "./cli.js"
   },
   "scripts": {
-    "pretest": "npm run build",
     "test": "vitest run",
     "test-watch": "vitest",
     "build": "rollup -c",
