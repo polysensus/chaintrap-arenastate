@@ -1,0 +1,88 @@
+{
+  "map01": {
+    "comment": "two rooms, joined with an east/west corridor",
+    "model_type": "tinykeep",
+    "vrf_inputs": {
+      "comment": "arbitrary alpha - it is not correct for this map",
+      "alpha": "1:1:9c9d1793f1e2c6db:arena_size=2048.0,corridor_redundancy=15.0,flock_factor=600.0,main_room_thresh=0.8,min_separation_factor=1.7,model=tinykeep,room_szmax=1024.0,room_szmin=512.0,room_szratio=1.8,rooms=16,tan_fudge=0.0001,tile_snap_size=4.0"
+    },
+    "model": {
+      "corridors": [
+        {
+          "comment": "east / west join",
+          "join_sides": [3, 1],
+          "joins": [0, 1],
+          "points": [
+            [130, 55],
+            [140, 55]
+          ]
+        }
+      ],
+      "rooms": [
+        {
+          "comment": "west room",
+          "corridors": [[], [], [], [0]],
+          "main": true,
+          "inter": false,
+          "l": 100,
+          "w": 120,
+          "x": 10,
+          "y": 10
+        },
+        {
+          "comment": "east room",
+          "corridors": [[], [0], [], []],
+          "main": true,
+          "inter": false,
+          "l": 100,
+          "w": 120,
+          "x": 140,
+          "y": 10
+        }
+      ]
+    }
+  },
+  "map01badroomcorridor": {
+    "comment": "two rooms, joined with an east/west corridor",
+    "model_type": "tinykeep",
+    "vrf_inputs": {
+      "comment": "arbitrary alpha - it is not correct for this map",
+      "alpha": "1:1:9c9d1793f1e2c6db:arena_size=2048.0,corridor_redundancy=15.0,flock_factor=600.0,main_room_thresh=0.8,min_separation_factor=1.7,model=tinykeep,room_szmax=1024.0,room_szmin=512.0,room_szratio=1.8,rooms=16,tan_fudge=0.0001,tile_snap_size=4.0"
+    },
+    "model": {
+      "corridors": [
+        {
+          "comment": "east / west join",
+          "join_sides": [3, 1],
+          "joins": [0, 1],
+          "points": [
+            [130, 55],
+            [140, 55]
+          ]
+        }
+      ],
+      "rooms": [
+        {
+          "comment": "west room",
+          "corridors": [[], [], [], [0]],
+          "main": true,
+          "inter": false,
+          "l": 100,
+          "w": 120,
+          "x": 10,
+          "y": 10
+        },
+        {
+          "comment": "east room has ill defined corridor, the exit doesn't correspond to the corridor it claims to join",
+          "corridors": [[0], [], [], []],
+          "main": true,
+          "inter": false,
+          "l": 100,
+          "w": 120,
+          "x": 140,
+          "y": 10
+        }
+      ]
+    }
+  }
+}
