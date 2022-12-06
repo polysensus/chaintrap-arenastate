@@ -29,19 +29,39 @@ export async function loadRoster(arena, gid, fromBlock) {
   if (!fromBlock) fromBlock = await getGameCreatedBlock(arena, gid);
   log.debug(`Arena: ${arena.address} ${gid}`);
   const events = await findGameEvents(arena, gid, fromBlock);
-  const roster = new StateRoster(arena, gid);
+  const roster = new StateRoster(arena.interface, gid);
   const snap = roster.snapshot();
   roster.load(events);
   return [snap, roster];
+}
+
+export class RosterSnapshot {
+  constructor() {
+    this.players = {};
+  }
+
+  /**
+   * Return the snapshot state for the player or return a blank state.
+   * Use this to get the 'before' state for delta calculation
+   * @param {address} addr
+   * @returns
+   */
+  current(addr) {
+    return this.players[addr]?.state ?? new PlayerState();
+  }
+
+  set(addr, state) {
+    this.players[addr] = state;
+  }
 }
 /**
  * This class manages a roster of player states for the game.
  */
 export class StateRoster {
-  constructor(arena, gid, txmemo) {
+  constructor(arenaInterface, gid, txmemo) {
     // note: if the signer on the contract changes, this will be updated to the
     // new contract instance by the older of the roster
-    this.arena = arena;
+    this.arenaInterface = arenaInterface;
     this.gid = gid;
     this._players = {};
     this._txmemo = txmemo ?? new TxMemo();
@@ -52,16 +72,19 @@ export class StateRoster {
   }
 
   // --- application of single events
-  async applyEvent(event) {
-    event = parseEventLog(event);
-
+  applyParsedEvent(event) {
     // check the event is for the correct game
     if (this._checkEventGid(event) === null) return;
 
     log.debug(fmtev(event));
     switch (event.event) {
       case ABIName.PlayerJoined:
-        return await this._playerJoined(event);
+        return this._playerJoined(event);
+      case ABIName.GameCreated:
+      case ABIName.GameStarted:
+      case ABIName.GameCompleted:
+        log.debug(`event ${event.event} for game ${event.args.gid} does not impact player state`);
+        break;
       default: {
         const p = this._checkEventPlayer(event);
         if (p === null) return;
@@ -80,9 +103,13 @@ export class StateRoster {
     }
   }
 
+  applyEvent(event) {
+    return this.applyParsedEvent(parseEventLog(this.arenaInterface, event));
+  }
+
   // --- batched state updates, used to reduce state thrashing
   snapshot(addresses) {
-    const snap = { players: {} };
+    const snap = new RosterSnapshot();
 
     if (typeof addresses === "undefined")
       addresses = Object.keys(this._players);
@@ -90,8 +117,7 @@ export class StateRoster {
     for (const addr of addresses) {
       const s = this.snapshotOne(addr);
       if (!s) continue;
-
-      snap.players[addr] = s;
+      snap.set(addr, s);
     }
 
     return snap;
@@ -102,7 +128,7 @@ export class StateRoster {
       addresses = Object.keys(this._players);
 
     for (const addr of addresses) {
-      const before = snap?.players?.[addr]?.state ?? new PlayerState();
+      const before = snap.current(addr);
       this.dispatchOne(before, dispatcher, addr);
     }
   }
@@ -145,18 +171,20 @@ export class StateRoster {
     }
 
     p.processPending(p.lastEID);
+    if (typeof before === "undefined") return [p, undefined];
+
     const delta = before.diff(p.state);
     return [p, delta];
   }
 
   // --- state catchup
-  async load(events) {
+  load(events) {
     let addr;
 
     // Begin the batch for any we have already.
 
     for (const ethlog of events) {
-      const e = parseEventLog(this.arena, ethlog);
+      const e = parseEventLog(this.arenaInterface, ethlog);
 
       if (typeof e.args.player !== "undefined") {
         addr = ethers.utils.getAddress(e.args.player); // normalize to checksum addr
@@ -170,7 +198,6 @@ export class StateRoster {
 
       switch (e.event) {
         case ABIName.PlayerJoined:
-          // const chainstate = await this.arena.playerByAddress(addr);
           this._registerPlayer(addr, e);
           break;
 
@@ -221,7 +248,7 @@ export class StateRoster {
     return this._players[addr];
   }
 
-  async _playerJoined(event) {
+  _playerJoined(event) {
     const addr = ethers.utils.getAddress(event.args.player);
     const p = this._registerPlayer(addr, event);
     return p;

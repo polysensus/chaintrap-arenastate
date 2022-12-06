@@ -1,5 +1,10 @@
 import { ethers } from "ethers";
 
+// app
+import { getLogger } from "./log.js";
+
+const log = getLogger("gameevents");
+
 export async function findGameCreated(arena, gid) {
   const filter = arena.filters["GameCreated(uint256,uint256)"](gid);
   const found = await arena.queryFilter(filter);
@@ -39,17 +44,19 @@ export async function findGameEvents(arena, gid, fromBlock) {
 
 /**
  * parseEventLog returns a normalised and (abi) parsed representation of an ethereum event log
- * @param {any} arena contract interface
+ * @param {any} iface contract interface (ethers.utils.Interface eg arenaInterface() result)
  * @param {*} ethlog
  * @returns
  */
-export function parseEventLog(arena, ethlog) {
+export function parseEventLog(iface, ethlog) {
   // See https://github.com/ethers-io/ethers.js/blob/master/packages/contracts/src.ts/index.ts addContractWait ~#342
   let parsed = null;
 
   try {
-    parsed = arena.interface.parseLog(ethlog);
-  } catch (e) {}
+    parsed = iface.parseLog(ethlog);
+  } catch (e) {
+    log.debug(e);
+  }
 
   if (!parsed) {
     return ethlog;
@@ -64,4 +71,11 @@ export function parseEventLog(arena, ethlog) {
   event.args = parsed.args;
 
   return event;
+}
+
+export function playerFromParsedEvent(event) {
+  if (typeof event.args.player !== "undefined") {
+    return ethers.utils.getAddress(event.args.player); // normalize to checksum addr
+  }
+  return undefined;
 }

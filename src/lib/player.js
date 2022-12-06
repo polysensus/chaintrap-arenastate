@@ -41,12 +41,6 @@ export class Player {
     this.exitUsed = {};
     this.entryReject = {};
 
-    // state derived from the transcript (updated in updateFinlize)
-    this.pendingExitUsed = false;
-
-    // instance state
-    this._batchingUpdate = false;
-
     this.state = new PlayerState();
   }
 
@@ -283,7 +277,7 @@ export class Player {
   /** return the last eid. computes based on contents of known eids rather than relying on lastEID */
   last() {
     const eids = this.ordered();
-    if (eids.length === 0) return undefined;
+    if (eids.length === 0) return 0; // eid zero is reserved by the contracts
     return eids[eids.length - 1];
   }
 }

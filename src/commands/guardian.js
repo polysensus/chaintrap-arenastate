@@ -188,8 +188,6 @@ export async function allowexituse(program, options) {
       return;
     }
 
-    if (!options.commit) continue;
-
     const room = model.map.rooms[loc];
     const icor = room.corridors[side][egressIndex];
     const joins = model.map.corridors[icor].joins;

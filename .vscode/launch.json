@@ -7,6 +7,25 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "glog",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "-u",
+        "http://localhost:8300",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "glog"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
       "name": "newgame",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",

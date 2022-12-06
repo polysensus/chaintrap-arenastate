@@ -5,6 +5,42 @@ import {
   roomSideMinMax,
 } from "./utils.js";
 
+import { getLogger } from "../log.js";
+const log = getLogger("MapModel");
+
+export function connectedRooms(model, subjectRoom) {
+  const r = model.rooms[subjectRoom];
+  const reachable = [];
+
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < r.corridors[i].length; j++) {
+      reachable.push(targetRoom(model, subjectRoom, i, j));
+    }
+  }
+
+  return reachable;
+}
+
+export function targetRoom(model, subjectRoom, egressSide, egressIndex) {
+  const r = model.rooms[subjectRoom];
+  const rc = r.corridors[egressSide][egressIndex];
+
+  // the connected room is the room attached to the 'other' side of the
+  // corridor we detect that by first seeing which side is connected to
+  // the subject room.  it is geometrically impossible, given how we
+  // generate our maps, for the corridor to enter the same side of two
+  // connected rooms.
+  if (model.corridors[rc].join_sides[0] === egressSide) {
+    return model.corridors[rc].joins[1];
+  } else if (model.corridors[rc].join_sides[1] === egressSide) {
+    return model.corridors[rc].joins[0];
+  } else {
+    throw new Error(
+      `room ${iroom}, side ${egressSide}, corridor ${rc} not correctly connected`
+    );
+  }
+}
+
 export class MapModel {
   construct(z) {
     this._resetMap();
@@ -49,6 +85,14 @@ export class MapModel {
   }
 
   /**
+   * Returns a list of rooms reachable from the argument room
+   * @param {*} iroom
+   */
+  connectedRooms(iroom) {
+    return connectedRooms(this.map);
+  }
+
+  /**
    * @param {number} iroom
    */
   _locationScene(iroom) {
@@ -75,16 +119,9 @@ export class MapModel {
               this.map.corridors[rc].points.length - 1
             ];
         } else {
-          console.log(
+          throw new Error(
             `room ${iroom}, side ${roomside}, corridor ${rc} not correctly connected`
           );
-          console.log(
-            `corridor.joins: ${this.map.corridors[rc].joins[0]} ${this.map.corridors[rc].joins[1]}`
-          );
-          console.log(
-            `corridor.join_sides: ${this.map.corridors[rc].join_sides[0]} ${this.map.corridors[rc].join_sides[1]}`
-          );
-          continue;
         }
         sceneCorridors[i].push({ x: exitpoint[0], y: exitpoint[1] });
       }

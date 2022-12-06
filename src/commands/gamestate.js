@@ -43,8 +43,16 @@ export async function gamelog(program, options) {
 
   const gameCreatedBlock = getGameCreatedBlock(arena, gid);
   vlog(`Arena: ${address} ${gid}`);
-  for (const ethlog of await findGameEvents(arena, gid, gameCreatedBlock)) {
-    log(JSON.parse(JSON.stringify(parseEventLog(arena, ethlog)), null, 2));
+
+  const ethlogs = await findGameEvents(arena, gid, gameCreatedBlock);
+  if (options.raw) {
+    out(JSON.stringify(ethlogs));
+    return;
+  }
+  for (const elog of ethlogs) {
+    log(
+      JSON.parse(JSON.stringify(parseEventLog(arena.interface, elog)), null, 2)
+    );
   }
 }
 
@@ -55,6 +63,6 @@ export async function stateroster(program, options) {
   const address = await getArenaAddress(program, options, provider);
   const arena = arenaConnect(provider, address);
 
-  const [snap, roster] = loadRoster(arena, options.gid);
-  roster.dispatchChanges(snap, dispatch ?? ((player) => out(jfmt(player))));
+  const [snap, roster] = await loadRoster(arena, options.gid);
+  roster.dispatchChanges(snap, (player) => out(jfmt(player)));
 }

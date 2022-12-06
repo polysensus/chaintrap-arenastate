@@ -37,14 +37,6 @@ export async function commitexituse(program, options) {
   side = Number(side);
   exit = Number(exit);
 
-  const mapfile = program.opts().map;
-  if (!mapfile) {
-    out(
-      "a map file must be provided, use chaintrap-maptool to generate one or use one of its default examples"
-    );
-    return;
-  }
-
   const arena = await programConnectArena(program, options);
   if (!arena.signer) {
     out("You must provide a wallet --key");

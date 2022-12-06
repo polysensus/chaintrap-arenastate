@@ -67,6 +67,7 @@ program
   .command("glog")
   .description("report the game event logs")
   .option("-g, --gid <gid>")
+  .option("-r, --raw", "raw json format dump")
   .action((options) => gamelog(program, options));
 
 program

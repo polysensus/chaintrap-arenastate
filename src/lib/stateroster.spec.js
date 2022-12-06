@@ -1,4 +1,6 @@
 import { expect, describe, it } from "vitest";
+import fs from "fs";
+import path from "path";
 
 // deps
 import { ethers } from "ethers";
@@ -15,6 +17,14 @@ import {
   useExit,
   defaultPlayer,
 } from "../mocks/ethevents.js";
+
+const singlePlayer2MoveEthLogs = JSON.parse(
+  fs.readFileSync(
+    path.join(__dirname, "../mocks/single-player-two-move-ethlogs.json")
+  )
+);
+
+import { arenaInterface } from "./chaintrapabi.js";
 
 const bigOne = ethers.BigNumber.from(1);
 
@@ -39,9 +49,8 @@ describe("StateRoster", function () {
 
   it("Should dispatch as batch", async function () {
     const d = new MockDispatcher();
-    const g = new MockGame();
 
-    const r = new StateRoster(g, bigOne);
+    const r = new StateRoster(arenaInterface(), bigOne);
 
     const events = [
       playerJoined({ tx: 1 }),
@@ -58,5 +67,21 @@ describe("StateRoster", function () {
     expect(delta.address).to.equal(defaultPlayer);
     // expect the player to be pending host confirmation
     expect(r.players[defaultPlayer].state.pendingExitUsed).to.equal(true);
+  });
+
+  it("Should load mock logs", async function () {
+    const d = new MockDispatcher();
+    const r = new StateRoster(arenaInterface(), bigOne);
+
+    const snap = r.snapshot();
+    await r.load(singlePlayer2MoveEthLogs);
+    r.dispatchChanges(snap, (...args) => d.dispatch(...args));
+    // registered -> true, address -> 0x11...
+    expect(d.results.length).to.equal(1);
+
+    // one player, two moves
+    expect(Object.keys(d.results[0][0].eidsComplete).length).to.equal(2);
+    expect(d.results[0][0].eidsComplete[1]).toBeTruthy();
+    expect(d.results[0][0].eidsComplete[2]).toBeTruthy();
   });
 });
