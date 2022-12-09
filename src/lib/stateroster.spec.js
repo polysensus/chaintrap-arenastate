@@ -10,7 +10,7 @@ import { StateRoster } from "./stateroster.js";
 
 // shared testing
 
-import { MockGame, MockDispatcher } from "../mocks/mocks.js";
+import { MockDispatcher } from "../mocks/mocks.js";
 import {
   playerJoined,
   playerStartLocation,

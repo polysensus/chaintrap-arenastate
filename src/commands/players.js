@@ -2,11 +2,15 @@ import { ethers } from "ethers";
 import { Game } from "@polysensus/chaintrap-contracts";
 import { programConnectArena } from "./connect.js";
 import { PlayerProfile } from "../lib/playerprofile.js";
-import { SceneLocation } from "../lib/scenelocation.js";
 import { loadRoster } from "../lib/stateroster.js";
+import { SceneCatalog } from "../lib/map/scenecatalog.js";
+import { Scene } from "../lib/map/scene.js";
+import { findRoomToken } from "../lib/map/rooms.js";
+import { readJson } from "./fsutil.js";
 import { jfmt } from "./util.js";
 
 const hexStripZeros = ethers.utils.hexStripZeros;
+const arraify = ethers.utils.arrayify;
 
 const out = console.log;
 let vout = () => {};
@@ -61,10 +65,11 @@ export async function commitexituse(program, options) {
   }
 
   if (!p.state?.sceneblob || hexStripZeros(p.state?.sceneblob) == "0x") {
-    out("scene not set for player ${");
+    out("scene not set for player ${p.address}");
+    return;
   }
 
-  const scene = SceneLocation.fromBlob(p.state.sceneblob, true, true).scene;
+  const [_, scene] = Scene.decodeblob(p.state.sceneblob);
   if (side >= scene.corridors.length) {
     out(`side ${side} not valid for current scene`);
     return;
@@ -76,9 +81,8 @@ export async function commitexituse(program, options) {
   }
 
   const g = new Game(arena, gid);
-  const r = await g.commitExitUse(side, exit);
-
-  out(jfmt(r));
+  const eid = await g.commitExitUse(side, exit);
+  out(jfmt(eid));
 }
 
 // --- inspection only calls follow
@@ -103,44 +107,63 @@ export async function listplayers(program, options) {
 
   const count = await g.playerCount();
   for (var i = 0; i < count; i++) {
-    const r = await g.playerByIndex(i);
-    vout(jfmt(r));
-    const profile = new PlayerProfile().decode(r.profile);
+    const p = await g.playerByIndex(i);
+    vout(jfmt(p));
+    const profile = new PlayerProfile().decode(p.profile);
 
     if (options.filter == "nostart") {
-      if (r.startLocation && hexStripZeros(r.startLocation) != "0x") continue;
+      if (p.startLocation && hexStripZeros(p.startLocation) != "0x") continue;
     }
     if (options.filter == "start") {
-      if (!r.startLocation || hexStripZeros(r.startLocation) == "0x") continue;
+      if (!p.startLocation || hexStripZeros(p.startLocation) == "0x") continue;
     }
 
     if (!options.scene) {
-      out(profile.nickname, r.addr);
+      out(profile.nickname, p.addr);
       continue;
     }
 
+    const map = readMap(program);
+    let scat;
     let scene = {};
-    if (r.sceneblob && hexStripZeros(r.sceneblob) != "0x") {
-      const sloc = SceneLocation.fromBlob(r.sceneblob, true, true);
-      scene = {
-        location: sloc.location,
-        scene: sloc.scene,
-        token: sloc.token,
-      };
+    let start = undefined;
+    let location = undefined;
+
+    if (typeof map !== "undefined") {
+      scat = new SceneCatalog();
+      scat.load(map);
     }
-    let start = {};
-    if (r.startLocation && hexStripZeros(r.startLocation) != "0x") {
-      const sloc = SceneLocation.fromBlob(r.sceneblob, true, true);
-      start = {
-        location: sloc.location,
-        scene: sloc.scene,
-        token: sloc.token,
-      };
+
+    if (p.sceneblob && hexStripZeros(p.sceneblob) != "0x") {
+      [location, scene] = Scene.decodeblob(arraify(p.sceneblob));
+    }
+
+    if (typeof scat !== "undefined") {
+      if (p.startLocation && hexStripZeros(p.startLocation) != "0x") {
+        const ir = findRoomToken(
+          map.model.rooms.length,
+          p.addr,
+          p.startLocation,
+          0,
+          scat.hashAlpha
+        );
+        start = ir >= 0 ? scat.scenes[ir] : p.startLocation;
+      }
+      if (location && hexStripZeros(location) != "0x") {
+        const ir = findRoomToken(
+          map.model.rooms.length,
+          p.addr,
+          location,
+          0,
+          scat.hashAlpha
+        );
+        location = ir >= 0 ? scat.scenes[ir] : location;
+      }
     }
 
     const player = {
-      address: r.addr,
-      loc: r.loc,
+      address: p.addr,
+      location: location,
       scene,
       start,
       profile,
@@ -148,4 +171,13 @@ export async function listplayers(program, options) {
     out(jfmt(player));
     // const profile = new PlayerProfile({nickname, character: options.character ?? "assasin"}).encode()
   }
+}
+
+function readMap(program) {
+  const mapfile = program.opts().map;
+  if (!mapfile) {
+    vout("the map file is required to decode the start location");
+    return undefined;
+  }
+  return readJson(mapfile);
 }

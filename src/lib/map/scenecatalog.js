@@ -1,27 +1,6 @@
 // libs
 import { ethers } from "ethers";
 // app
-import { getLogger } from "../log.js";
-
-const log = getLogger("SceneCatalog");
-const keccack = ethers.utils.keccak256;
-const abiCoder = new ethers.utils.AbiCoder();
-
-// Note: this requires that the guardian search the locations for one which
-// matches the token.  Ie do a pre-image attack based on knowning player,
-// lastEID, hashAlpha.  Observers other than the guardian can't know the
-// hashAlpha until after the reveal
-// The lastEID is the eid of *previous* move commited by the player and is
-// always zero for the first move of each player.
-export function scenetoken(player, location, lastEID, hashAlpha) {
-  return keccack(
-    abiCoder.encode(
-      ["address", "uint16", "uint16", "uint256"],
-      [player, location, lastEID, hashAlpha]
-    )
-  );
-}
-
 export class SceneCatalog {
   construct() {}
 
@@ -44,8 +23,8 @@ export class SceneCatalog {
       this.scenes.push(scene);
     }
   }
-  scenetoken(player, lastEID) {
-    return scenetoken(player, lastEID, this.hashAlpha);
+  scene(room) {
+    return this.scenes[room];
   }
 }
 

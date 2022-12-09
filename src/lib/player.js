@@ -1,6 +1,4 @@
 // deps
-import { ethers } from "ethers";
-
 // app
 import { getLogger } from "./log.js";
 
@@ -78,6 +76,7 @@ export class Player {
   }
 
   get lastEID() {
+    if (typeof this.state.lastEID === "undefined") return 0;
     return this.state.lastEID;
   }
 
@@ -134,7 +133,7 @@ export class Player {
     }
 
     let istart = 0;
-    if (typeof fromEID !== "undefined") {
+    if (typeof fromEID !== "undefined" && fromEID !== 0) {
       for (; istart < eids.length; istart++) {
         if (eids[istart] === fromEID) {
           // we always re-process the matching eid. as the outcome is on the same eid as the player move
@@ -279,5 +278,33 @@ export class Player {
     const eids = this.ordered();
     if (eids.length === 0) return 0; // eid zero is reserved by the contracts
     return eids[eids.length - 1];
+  }
+
+  _lastEIDOf(which) {
+    const eids = this.ordered();
+
+    // Note that eid zero is reserved in the contracts
+    var isin = []
+    for (var i=0; i < eids.length; i++) {
+      if (eids[i] in which) {
+        isin.push(eids[i])
+      }
+    }
+
+    if (isin.length === 0) {
+      return 0
+    }
+
+    return isin[isin.length - 1]
+  }
+
+  /** returns the eid of the last committed (which may also have been confrimed) */
+  uselast() {
+    return this._lastEIDOf(this.useExit)
+  }
+
+  /** returns the eid of the last confirmed (which must also have been commited) */
+  lastused() {
+    return this._lastEIDOf(this.exitUsed)
   }
 }

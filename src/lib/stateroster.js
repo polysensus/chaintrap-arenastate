@@ -21,18 +21,24 @@ export const log = getLogger("StateRoster");
 export const fmtev = (e) =>
   `gid: ${e.args.gid}, eid: ${e.args.eid}, ${e.event} bn: ${e.blockNumber}, topics: ${e.topics}, tx: ${e.transactionHash}`;
 
-export async function loadRoster(arena, gid, fromBlock) {
+export async function prepareRoster(arena, gid, fromBlock) {
+  log.debug(`Arena: ${arena.address} ${gid}`);
+
   if (typeof gid === "undefined" || gid < 0) {
     gid = await arena.lastGame();
   }
 
   if (!fromBlock) fromBlock = await getGameCreatedBlock(arena, gid);
-  log.debug(`Arena: ${arena.address} ${gid}`);
-  const events = await findGameEvents(arena, gid, fromBlock);
   const roster = new StateRoster(arena.interface, gid);
   const snap = roster.snapshot();
-  roster.load(events);
   return [snap, roster];
+}
+
+export async function loadRoster(arena, gid, fromBlock) {
+  const [snap, roster] = await prepareRoster(arena, gid, fromBlock);
+  const events = await findGameEvents(arena, gid, fromBlock);
+  const gameStates = roster.load(events);
+  return [snap, roster, gameStates];
 }
 
 export class RosterSnapshot {
@@ -80,10 +86,12 @@ export class StateRoster {
     switch (event.event) {
       case ABIName.PlayerJoined:
         return this._playerJoined(event);
+
+      // The caller should detect these if they need an equivelent of gameStates
+      // as returned by load()
       case ABIName.GameCreated:
       case ABIName.GameStarted:
       case ABIName.GameCompleted:
-        log.debug(`event ${event.event} for game ${event.args.gid} does not impact player state`);
         break;
       default: {
         const p = this._checkEventPlayer(event);
@@ -181,6 +189,8 @@ export class StateRoster {
   load(events) {
     let addr;
 
+    const gameStates = {};
+
     // Begin the batch for any we have already.
 
     for (const ethlog of events) {
@@ -202,8 +212,13 @@ export class StateRoster {
           break;
 
         case ABIName.GameCreated:
+          gameStates[ABIName.GameCreated] = true;
+          break;
         case ABIName.GameStarted:
+          gameStates[ABIName.GameStarted] = true;
+          break;
         case ABIName.GameCompleted:
+          gameStates[ABIName.GameCompleted] = true;
           break;
 
         default:
@@ -212,6 +227,7 @@ export class StateRoster {
           break;
       }
     }
+    return gameStates;
   }
 
   // --- getters and query methods for managed state

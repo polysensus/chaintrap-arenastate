@@ -6,10 +6,13 @@ import { ethers } from "ethers";
 
 import { ABIName } from "../abiconst.js";
 import { arenaInterface } from "../chaintrapabi.js";
-import { connectedRooms, targetRoom } from "./model.js";
-import { SceneCatalog, scenetoken } from "./scenecatalog.js";
+import { connectedRooms, targetRoom, findRoomToken } from "./rooms.js";
+import { SceneCatalog } from "./scenecatalog.js";
+import { Scene, scenetoken } from "./scene.js";
 import { StateRoster } from "../stateroster.js";
 import { parseEventLog, playerFromParsedEvent } from "../gameevents.js";
+
+const keccak = ethers.utils.keccak256
 
 const maps01 = JSON.parse(
   fs.readFileSync(path.join(__dirname, "mocks/map01-model-two-rooms.json"))
@@ -37,6 +40,19 @@ describe("SceneCatalog", function () {
     const scat = new SceneCatalog();
     scat.load(map01);
   });
+  it("Should round trip room 0", async function () {
+    const scat = new SceneCatalog();
+    scat.load(map01);
+    const sceneblob = Scene.encodeblob(keccak("0x11"), scat.scenes[0]);
+    const [_, scene] = Scene.decodeblob(sceneblob);
+    expect(scene.main).toEqual(scat.scenes[0].main);
+    expect(scene.inter).toEqual(scat.scenes[0].inter);
+    expect(scene.x).toEqual(scat.scenes[0].x);
+    expect(scene.y).toEqual(scat.scenes[0].y);
+    expect(scene.w).toEqual(scat.scenes[0].w);
+    expect(scene.l).toEqual(scat.scenes[0].l);
+  });
+
   it("Should raise exception loading two rooms", async function () {
     const scat = new SceneCatalog();
     expect(() => {
@@ -54,7 +70,6 @@ describe("SceneCatalog", function () {
   });
 
   it("Should create and resolve tokens for all moves", async function () {
-
     // Note that this test ignores location values recored in the events. It
     // simply covers the scheme by which we generate those values.
     const arena = arenaInterface();
@@ -101,7 +116,12 @@ describe("SceneCatalog", function () {
 
       // Check we can derive the location cold - this requires searching all the pre-images
       for (var i = 0; i < map02.model.rooms.length; i++) {
-        const derived = scenetoken(p.address, i, currentLocationEID, scat.hashAlpha);
+        const derived = scenetoken(
+          p.address,
+          i,
+          currentLocationEID,
+          scat.hashAlpha
+        );
         const [current, location] = playerLocations[p.address]; // if this breaks the mock data needs re-generating
         if (derived === current) {
           expect(location).toEqual(i);

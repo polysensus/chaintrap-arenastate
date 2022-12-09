@@ -1,13 +1,16 @@
 import { ethers } from "ethers";
 import { Game } from "@polysensus/chaintrap-contracts";
 import { programConnectArena } from "./connect.js";
-import { SceneLocation } from "../lib/scenelocation.js";
+import { Scene, scenetoken } from "../lib/map/scene.js";
 import { PlayerProfile } from "../lib/playerprofile.js";
 
 import { loadRoster } from "../lib/stateroster.js";
-import { MapModel } from "../lib/map/model.js";
 import { readJson } from "./fsutil.js";
 import { jfmt } from "./util.js";
+
+import { SceneCatalog } from "../lib/map/scenecatalog.js";
+import { ABIName } from "../lib/abiconst.js";
+import { findRoomToken, targetRoomIngress } from "../lib/map/rooms.js";
 
 const hexStripZeros = ethers.utils.hexStripZeros;
 
@@ -18,7 +21,8 @@ export async function creategame(program, options) {
   if (program.opts().verbose) vout = out;
   const arena = await programConnectArena(program, options);
 
-  const r = await arena.createGame(options.maxplayers);
+  const tx = await arena.createGame(options.maxplayers);
+  const r = await tx.wait()
   out(jfmt(r));
 }
 
@@ -66,7 +70,19 @@ export async function setstart(program, options, player, room) {
     gid = await arena.lastGame();
   }
 
-  const [snap, roster] = await loadRoster(arena, gid);
+  const [snap, roster, gameStates] = await loadRoster(arena, gid);
+
+  // If a game has started or completed it is not possible (or useful) to set
+  // the player start location. And if it hasn't been created it is obviosly not
+  // possible.
+  if (
+    !gameStates[ABIName.GameCreated] ||
+    gameStates[ABIName.GameStarted] ||
+    gameStates[ABIName.GameCompleted]
+  ) {
+    out(`inappropriate gameStates: ${JSON.stringify(gameStates)}`);
+    return;
+  }
   roster.getChanges(snap);
   const players = roster.players;
 
@@ -77,27 +93,33 @@ export async function setstart(program, options, player, room) {
   }
   if (p.state.startLocation && hexStripZeros(p.state.startLocation) != "0x") {
     out(
-      `player: ${player} start location is already set. ${p.state.startLocation}`
+      `player: ${player} resetting start location, was: ${p.state.startLocation}`
     );
+  }
+
+  if (p.last() != p.lastEID || p.lastEID != 0) {
+    out(`Until the game starts last eid should be 0. ${p.last()} ${p.lastEID}`);
     return;
   }
 
   const map = readJson(mapfile);
-  const model = new MapModel();
-  model.loadSource(map);
-  if (room > model.map.rooms.length) {
+  const scat = new SceneCatalog();
+  scat.load(map);
+
+  if (room > map.model.rooms.length) {
     out(`room: ${room} is not in the map`);
     return;
   }
-  const scene = model.locationScene(room);
-  const sloc = new SceneLocation({ scene, location: room });
-  sloc.tokenize(true, true);
+
+  const locationToken = scenetoken(p.address, room, p.lastEID, scat.hashAlpha);
+  const scene = scat.scene(room);
+  const sceneblob = Scene.encodeblob(locationToken, scene);
 
   const g = new Game(arena, gid);
-
-  const r = await g.setStartLocation(player, sloc.token, sloc.blob);
+  const r = await g.setStartLocation(player, locationToken, sceneblob);
 
   out(jfmt(r));
+  out(`player: ${p.address} start location token: ${locationToken}`);
 }
 
 export async function allowexituse(program, options) {
@@ -125,7 +147,7 @@ export async function allowexituse(program, options) {
       out(`no pending move for player ${options.player}`);
       return;
     }
-    pending.push[options.player];
+    pending.push[players[options.player]];
   } else {
     for (const [addr, p] of Object.entries(players)) {
       if (!p.state.pendingExitUsed) continue;
@@ -147,8 +169,8 @@ export async function allowexituse(program, options) {
   }
 
   const map = readJson(mapfile);
-  const model = new MapModel();
-  model.loadSource(map);
+  const scat = new SceneCatalog();
+  scat.load(map);
 
   const g = new Game(arena, gid);
   for (const p of pending) {
@@ -157,9 +179,8 @@ export async function allowexituse(program, options) {
     const ui = p.useExit[eid];
     const side = ui.exitUse.side;
     const egressIndex = ui.exitUse.egressIndex;
+    const [locationToken, scene] = Scene.decodeblob(p.state.sceneblob);
 
-    const sloc = SceneLocation.fromBlob(p.state.sceneblob, true, true);
-    const scene = sloc.scene;
     if (side >= scene.corridors.length) {
       out(
         `${profile.nickname} ${eid}: side ${side} not valid for current scene ${p.address}`
@@ -176,62 +197,41 @@ export async function allowexituse(program, options) {
 
     // Ok, the move is valid, build the new scene
 
-    // XXX: TODO this whole business with tokenizing (small t) the locations is
-    // still an unfinished mess. its actually there on the chain plain as day at
-    // the moment...
-
-    const loc = Number(sloc.location);
-    if (loc > model.map.rooms.length) {
-      out(
-        `${profile.nickname} ${eid}: location ${loc} not found on map ${p.address}`
-      );
-      return;
+    // TODO: move the room token resolution into the StateRoster so we can use fincConnectedRoomToken.
+    const ir = findRoomToken(map.model.rooms.length, p.address, locationToken, p.lastused(), scat.hashAlpha);
+    if (ir < 0) {
+      out(`location: ${locationToken} not found`);
+      return
     }
 
-    const room = model.map.rooms[loc];
-    const icor = room.corridors[side][egressIndex];
-    const joins = model.map.corridors[icor].joins;
-    const join_sides = model.map.corridors[icor].join_sides;
-    // pick the join side that is not the current room
-    const locnext = joins[0] == loc ? joins[1] : joins[0];
-    const enterside = joins[0] == loc ? join_sides[1] : join_sides[0];
-
-    // the exit index is the only exit on the side connected to the ajoining corridor
-    let ingressExit;
-    var corridorsnext = model.map.rooms[locnext].corridors;
-    for (var i = 0; i < corridorsnext.length; i++) {
-      if (corridorsnext[i] == icor) {
-        ingressExit = i;
-        break;
-      }
-    }
-    if (!ingressExit) {
-      out(
-        `${profile.nickname} ${eid}:no matching ingress for corridor ${icor} joining ${joins[0]} -> ${joins[1]}:${p.address}`
-      );
-      return;
+    let irNext, ingressSide, ingressExit
+    try {
+      [irNext, ingressSide, ingressExit] = targetRoomIngress(map.model, ir, side, egressIndex, true);
+    } catch (err) {
+      out(err)
+      return
     }
 
-    const scenenext = model.locationScene(locnext);
-    const slocnext = new SceneLocation({ scene: scenenext, location: locnext });
-    slocnext.tokenize(true, true);
+    const sceneNext = scat.scene(irNext);
+    const tokenNext = scenetoken(p.address, irNext, eid, scat.hashAlpha);
+    const sceneblob = Scene.encodeblob(tokenNext, sceneNext);
 
     out(
-      `${profile.nickname} ${eid}:ok "${side}:${egressIndex}" room ${loc} => ${locnext}:${p.address}`
+      `${profile.nickname} ${eid}:ok "${side}:${egressIndex} -> ${ingressSide}:${ingressExit}" room ${ir} => ${irNext}:${p.address}`
     );
     if (!options.commit) {
       continue;
     }
     const r = await g.allowExitUse(
       eid,
-      slocnext.token,
-      slocnext.blob,
-      enterside,
+      tokenNext,
+      sceneblob,
+      ingressSide,
       ingressExit,
       options.halt
     );
 
-    vout(jfmt(r));
+    out(jfmt(r));
   }
   !options.commit && out("re run with --commit|-c to execute the transactions");
 }
