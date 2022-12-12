@@ -1,15 +1,9 @@
 import { ethers } from "ethers";
 import { getArenaAddress } from "./arenaaddress.js";
 import { arenaConnect } from "../lib/chaintrapabi.js";
-import { isFile, readHexKey, readJson } from "./fsutil.js";
-
-const out = console.log;
-let vout = () => {};
+import { isFile, readHexKey } from "./fsutil.js";
 
 export function programConnect(program, polling = false) {
-  if (program.opts().verbose) vout = out;
-  vout("verbose output enabled");
-
   const url = program.opts().url;
 
   let provider;

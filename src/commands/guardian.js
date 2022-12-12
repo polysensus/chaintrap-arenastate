@@ -22,7 +22,7 @@ export async function creategame(program, options) {
   const arena = await programConnectArena(program, options);
 
   const tx = await arena.createGame(options.maxplayers);
-  const r = await tx.wait()
+  const r = await tx.wait();
   out(jfmt(r));
 }
 
@@ -198,18 +198,30 @@ export async function allowexituse(program, options) {
     // Ok, the move is valid, build the new scene
 
     // TODO: move the room token resolution into the StateRoster so we can use fincConnectedRoomToken.
-    const ir = findRoomToken(map.model.rooms.length, p.address, locationToken, p.lastused(), scat.hashAlpha);
+    const ir = findRoomToken(
+      map.model.rooms.length,
+      p.address,
+      locationToken,
+      p.lastused(),
+      scat.hashAlpha
+    );
     if (ir < 0) {
       out(`location: ${locationToken} not found`);
-      return
+      return;
     }
 
-    let irNext, ingressSide, ingressExit
+    let irNext, ingressSide, ingressExit;
     try {
-      [irNext, ingressSide, ingressExit] = targetRoomIngress(map.model, ir, side, egressIndex, true);
+      [irNext, ingressSide, ingressExit] = targetRoomIngress(
+        map.model,
+        ir,
+        side,
+        egressIndex,
+        true
+      );
     } catch (err) {
-      out(err)
-      return
+      out(err);
+      return;
     }
 
     const sceneNext = scat.scene(irNext);

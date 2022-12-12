@@ -16,7 +16,13 @@ export function connectedRooms(model, subjectRoom) {
   return reachable;
 }
 
-export function targetRoom(model, subjectRoom, egressSide, egressIndex, nothrow = false) {
+export function targetRoom(
+  model,
+  subjectRoom,
+  egressSide,
+  egressIndex,
+  nothrow = false
+) {
   const r = model.rooms[subjectRoom];
   const rc = r.corridors[egressSide][egressIndex];
 
@@ -45,7 +51,7 @@ export function targetRoomIngress(model, subjectRoom, egressSide, egressIndex) {
   // if egressSide > 3 || egressIndex >= r.corridors[egressSide].length
   const rc = r.corridors[egressSide][egressIndex];
 
-  let ir, ingressSide
+  let ir, ingressSide;
 
   // the connected room is the room attached to the 'other' side of the
   // corridor we detect that by first seeing which side is connected to
@@ -64,9 +70,9 @@ export function targetRoomIngress(model, subjectRoom, egressSide, egressIndex) {
     );
   }
   // To get the ingressExit, Search the destination room side for the corridor matching rc
-  for (var i = 0; i < model.rooms[ir].corridors[ingressSide].length; i ++) {
-    if(model.rooms[ir].corridors[ingressSide][i] == rc) {
-      return [ir, ingressSide, i]
+  for (var i = 0; i < model.rooms[ir].corridors[ingressSide].length; i++) {
+    if (model.rooms[ir].corridors[ingressSide][i] == rc) {
+      return [ir, ingressSide, i];
     }
   }
   throw new Error(

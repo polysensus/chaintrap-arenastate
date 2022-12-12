@@ -12,7 +12,7 @@ import { Scene, scenetoken } from "./scene.js";
 import { StateRoster } from "../stateroster.js";
 import { parseEventLog, playerFromParsedEvent } from "../gameevents.js";
 
-const keccak = ethers.utils.keccak256
+const keccak = ethers.utils.keccak256;
 
 const maps01 = JSON.parse(
   fs.readFileSync(path.join(__dirname, "mocks/map01-model-two-rooms.json"))

@@ -284,27 +284,27 @@ export class Player {
     const eids = this.ordered();
 
     // Note that eid zero is reserved in the contracts
-    var isin = []
-    for (var i=0; i < eids.length; i++) {
+    var isin = [];
+    for (var i = 0; i < eids.length; i++) {
       if (eids[i] in which) {
-        isin.push(eids[i])
+        isin.push(eids[i]);
       }
     }
 
     if (isin.length === 0) {
-      return 0
+      return 0;
     }
 
-    return isin[isin.length - 1]
+    return isin[isin.length - 1];
   }
 
   /** returns the eid of the last committed (which may also have been confrimed) */
   uselast() {
-    return this._lastEIDOf(this.useExit)
+    return this._lastEIDOf(this.useExit);
   }
 
   /** returns the eid of the last confirmed (which must also have been commited) */
   lastused() {
-    return this._lastEIDOf(this.exitUsed)
+    return this._lastEIDOf(this.exitUsed);
   }
 }
