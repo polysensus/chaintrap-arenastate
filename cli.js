@@ -18,6 +18,8 @@ import {
 
 import { arenaAddress } from "./src/commands/arenaaddress.js";
 
+import { showProviders } from "./src/commands/providers.js";
+
 program
   .enablePositionalOptions()
   .option("-v, --verbose", "more verbose reporting")
@@ -52,6 +54,12 @@ program
   .option("-m, --map <mapfile>");
 
 // ---
+program
+  .command("providers")
+  .description("get the address of the most recently deployed arena contract")
+  .option("-p, --providers <providersfile>")
+  .action((options) => showProviders(program, options));
+
 // inspection, no wallet required (the deploy wallet is just a convenient way to work out the contract address)
 program
   .command("arena")

@@ -19,3 +19,13 @@ export function isPromise(value) {
   }
   return false;
 }
+
+export function etherrmsg(err) {
+  if (!err.body) return `${err}`
+  try {
+    const jerr = JSON.parse(err.body)
+    return jerr.error?.message ?? `${err}`
+  } catch (err2) {
+    return `${err}`
+  }
+}

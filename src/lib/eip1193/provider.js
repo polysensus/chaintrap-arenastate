@@ -1,15 +1,23 @@
 import { ethers } from "ethers";
 
-import { isUndefined, isAsync } from "../idioms.js";
+import { isAsync, isUndefined, etherrmsg } from "../idioms.js";
+import { getLogger } from '../log.js'
 
 const log = getLogger("eip1193/provider");
 
 export class EIP1193ProviderContext {
-  constructor({ accountsChanged, chainChanged, disconnected }) {
-    this.reset();
+
+  constructor(cfg={}) {
+    this._init();
+
+    const { accountsChanged, chainChanged, disconnected } = cfg
 
     this._accountsChanged = async (accounts) => {
       this.accounts = accounts;
+
+      const {signer, signerAddress } = await getSignerAddress(this.provider, this.addressOrIndex);
+      this.signer = signer;
+      this.signerAddress = signerAddress;
 
       if (!accountsChanged) return;
 
@@ -21,6 +29,9 @@ export class EIP1193ProviderContext {
 
     this._chainChanged = async (chainId) => {
       this.chainId = alwaysNumber(chainId);
+      const {signer, signerAddress } = await getSignerAddress(this.provider, this.addressOrIndex);
+      this.signer = signer;
+      this.signerAddress = signerAddress;
 
       if (!chainChanged) return;
 
@@ -32,8 +43,7 @@ export class EIP1193ProviderContext {
 
     this._disconnected = async (err) => {
       if (err) log.info("provider disconnected", err);
-      this.eip1193Provider = undefined;
-      this.reset();
+      this.stopListening(); // pause rather than reset so that a trivial reconnect is possible
 
       if (!disconnected) return;
 
@@ -45,65 +55,135 @@ export class EIP1193ProviderContext {
     };
   }
 
-  async setProvider(eip1193Provider = undefined, addressOrIndex = 0) {
-    this.reset();
+  async setProvider(eip1193Provider, addressOrIndex = 0, chainId = undefined) {
 
-    const { provider, chainId, evmProviderType, signer, signerAddress } =
-      await setProvider(provider, addressOrIndex, {
+    this.stopListening();
+
+    const prepared = await setProvider(eip1193Provider, addressOrIndex, chainId, {
         accountsChanged: this._accountsChanged,
         chainChanged: this._chainChanged,
         disconnected: this._disconnected,
       });
 
-    this.provider = provider;
+    this.provider = prepared.provider;
+    this.request = prepared.request;
     this.eip1193Provider = eip1193Provider;
-    this.chainId = chainId;
-    this.evmProviderType = evmProviderType;
-    this.signer = signer;
-    this.signerAddress = signerAddress;
+    this.chainId = prepared.chainId;
+    this.evmProviderType = prepared.evmProviderType;
+    this.signer = prepared.signer;
+    this.signerAddress = prepared.signerAddress;
+    this.accounts = prepared.accounts;
+    this.addressOrIndex = prepared.addressOrIndex;
   }
 
-  reset() {
-    if (this.eip1193Provider)
-      removeListeners(this.eip1193Provider, {
-        accountsChanged: this._accountsChanged,
-        chainChanged: this._chainChanged,
-        disconnected: this._disconnected,
-      });
+  stopListening() {
+    if (this.eip1193Provider?.removeAllListeners) {
+      this.eip1193Provider.removeAllListeners();
+    }
+  }
+
+  async resume() {
+    return this.setProvider(this.eip1193Provider, this.addressOrIndex);
+  }
+
+  _init() {
+    this.eip1193Provider = undefined;
+    this.addressOrIndex = undefined;
 
     this.provider = undefined;
+    this.request = undefined
     this.eip1193Provider = undefined;
     this.chainId = undefined;
     this.evmProviderType = undefined;
     this.signer = undefined;
     this.signerAddress = undefined;
     this.accounts = undefined;
+    this.addressOrIndex = undefined;
   }
+
+  reset() {
+    this.stopListening();
+    this._init();
+  }
+}
+
+export async function getSignerAddress(provider, addressOrIndex) {
+  let signer, signerAddress;
+
+  if (addressOrIndex === null || typeof addressOrIndex === 'undefined') {
+    return {signer, signerAddress};
+  }
+  try {
+    // XXX some providers do not support getSigner
+    if (typeof provider.listAccounts === "function") {
+      signer = provider.getSigner(addressOrIndex);
+    } else {
+      signer = provider.getSigner();
+    }
+    signerAddress = await signer.getAddress();
+  } catch (err) {
+    log.info("failed to get signer and address from provider, not all providers support this");
+  }
+  return {signer, signerAddress};
 }
 
 export async function setProvider(
   provider,
   addressOrIndex = 0,
-  { accountsChanged, chainChanged, disconnected }
+  { chainId, accountsChanged, chainChanged, disconnected }={}
 ) {
   if (!provider) {
-    if (!getWindowEthereum())
+    provider = getWindowEthereum();
+    if (!provider)
       throw new Error(
         "Please authorize browser extension (Metamask or similar) or provide an RPC based provider"
       );
-    getWindowEthereum().autoRefreshOnNetworkChange = false;
-    return set1193Provider(getWindowEthereum(), {
+    provider.autoRefreshOnNetworkChange = false;
+    const prepared = prepare1193Provider(provider, addressOrIndex, chainId, {
       accountsChanged,
       chainChanged,
       disconnected,
     });
+
+    // Wrap the injected provider in a Web3 to make it behave consistently
+    prepared.provider = new ethers.providers.Web3Provider(prepared.provider);
+    const { signer, signerAddress } = getSignerAddress(provider, addressOrIndex);
+    prepared.signer = signer;
+    prepared.signerAddress = signerAddress;
+    return prepared;
   }
-  if (typeof provider === "object" && provider.request)
-    return set1193Provider(provider, addressOrIndex, {
+
+  // If we already have a Web3Provider wrapper, prepare the original provider
+  // again and make a fresh wrapper
+  if (Object.getPrototypeOf(provider) instanceof ethers.providers.Web3Provider) {
+    const prepared = prepare1193Provider(
+      provider.provider, addressOrIndex, chainId, {
       accountsChanged,
       chainChanged,
       disconnected,
     });
+    prepared.provider = new ethers.providers.Web3Provider(prepared.provider);
+    const { signer, signerAddress } = getSignerAddress(provider, addressOrIndex);
+    prepared.signer = signer;
+    prepared.signerAddress = signerAddress;
+    return prepared;
+  }
+
+  // If the caller wants an explicitly provider type,eg the not-polling
+  // StaticJsonRpcProvider, they can just intsance it and pass it in and this
+  // case deals with it.
+  if (typeof provider === "object" && provider.request) {
+    const prepared = prepare1193Provider(
+      provider, addressOrIndex, chainId, {
+      accountsChanged,
+      chainChanged,
+      disconnected,
+    });
+    const { signer, signerAddress } = getSignerAddress(provider, addressOrIndex);
+    prepared.signer = signer;
+    prepared.signerAddress = signerAddress;
+    return prepared;
+  }
 
   if (
     typeof provider !== "object" ||
@@ -117,28 +197,17 @@ export async function setProvider(
   ) {
     provider = new ethers.providers.JsonRpcProvider(provider);
   }
-  const { chainId } = await provider.getNetwork();
-  let signer, signerAddress;
-  if (addressOrIndex !== null) {
-    try {
-      // XXX some providers do not support getSigner
-      if (typeof provider.listAccounts === "function") {
-        signer = provider.getSigner(addressOrIndex);
-      } else {
-        signer = provider.getSigner();
-      }
-      signerAddress = await signer.getAddress();
-    } catch (err) {
-      log.warn(err);
-    }
-  }
-  return {
-    provider,
-    chainId: alwaysNumber(chainId),
-    evmProviderType: provider.constructor.name,
-    signer,
-    signerAddress,
-  };
+
+  const prepared = prepare1193Provider(
+    provider, addressOrIndex, chainId, {
+    accountsChanged,
+    chainChanged,
+    disconnected,
+  });
+  const { signer, signerAddress } = getSignerAddress(provider, addressOrIndex);
+  prepared.signer = signer;
+  prepared.signerAddress = signerAddress;
+  return prepared;
 }
 
 /**
@@ -147,12 +216,11 @@ export async function setProvider(
  * @returns
  */
 export async function accountsChanged(ctx) {
-  return checkProvider({
-    provider: ctx.eip1193Provider,
-    addressOrIndex:
-      Array.isArray(ctx.accounts) && ctx.accounts.length ? ctx.accounts[0] : 0,
-    chainId,
-  });
+  return prepare1193Provider(
+    ctx.eip1193Provider,
+    Array.isArray(ctx.accounts) && ctx.accounts.length ? ctx.accounts[0] : 0,
+    ctx.chainId,
+  );
 }
 
 /**
@@ -161,11 +229,11 @@ export async function accountsChanged(ctx) {
  * @returns
  */
 export async function chainChanged(ctx) {
-  return checkProvider({
-    provider: ctx.eip1193Provider,
-    addressOrIndex: undefined,
-    chainId: this.chainId,
-  });
+  return prepare1193Provider(
+    ctx.eip1193Provider,
+    Array.isArray(ctx.accounts) && ctx.accounts.length ? ctx.accounts[0] : 0,
+    ctx.chainId,
+  );
 }
 
 /**
@@ -191,12 +259,25 @@ export function removeListeners(
   if (disconnected) eip1193Provider.removeListener("disconnect", disconnected);
 }
 
-export async function set1193Provider(
+export async function prepare1193Provider(
   eip1193Provider,
   addressOrIndex,
   chainId,
   { accountsChanged, chainChanged, disconnected }
 ) {
+
+  let request;
+  // Get the eip 1193 compatible request method
+  if (eip1193Provider.request) {
+    request = eip1193Provider.request;
+  } else if (eip1193Provider.send) {
+    // This is the ethers JsonRpcProvider api which predated eip 1193 and this package is made *for* ethers
+    request = r => eip1193Provider.send(r.method, r.params || [])
+  }
+  if (!request) {
+    throw new Error(`EIP 1193 compatible providers must implement one of 'request' or 'send'`);
+  }
+
   // Ensure we always remove, though I believe this un-necessary
   removeListeners(eip1193Provider, {
     accountsChanged,
@@ -205,59 +286,57 @@ export async function set1193Provider(
   });
   let accounts;
   try {
-    accounts = await eip1193Provider.request({ method: "eth_requestAccounts" });
+    accounts = await request({ method: "eth_requestAccounts" });
   } catch (err) {
-    log.error(err);
+    log.info(etherrmsg(err))
   }
 
-  if (addressOrIndex == null && Array.isArray(accounts) && accounts.length) {
-    addressOrIndex = accounts[0];
+  if (isUndefined(addressOrIndex)) {
+    if (Array.isArray(accounts) && accounts.length) {
+      addressOrIndex = accounts[0]
+    }
+  } else if (typeof addressOrIndex === 'number' ){
+    if (Array.isArray(accounts) && accounts.length) {
+      addressOrIndex = accounts[addressOrIndex];
+    }
   }
-  const provider = new ethers.providers.Web3Provider(eip1193Provider);
+
   if (eip1193Provider.on) {
     // TODO handle disconnect/connect events
     if (accountsChanged) eip1193Provider.on("accountsChanged", accountsChanged);
     if (chainChanged) eip1193Provider.on("chainChanged", chainChanged);
-
-    if (!disconnected) disconnected = defaultHandlers.disconnected;
     if (disconnected) eip1193Provider.on("disconnect", disconnected);
   }
-  return checkProvider({
-    evmProviderType: provider?.constructor?.name,
-    provider,
-    addressOrIndex,
-    chainId,
-  });
-}
 
-/**
- * checkProvider performs the chainId check on the supplied provider and
- * resolves the addressOrIndex to a signer
- * @param {*} provider
- * @param {*} chainId
- * @param {*} addressOrIndex
- * @returns {object} provider, chainId, signer?, signerAddress
- */
-export async function checkProvider({ provider, chainId, addressOrIndex }) {
   if (!chainId) {
-    chainId = alwaysNumber((await provider.getNetwork()).chainId);
-  }
-
-  let signer;
-  let signerAddress;
-  if (typeof addressOrIndex !== "undefined") {
-    signer = provider.getSigner(addressOrIndex);
+    // chainId = alwaysNumber((await provider.getNetwork()).chainId);
     try {
-      signerAddress = await signer.getAddress();
+      const r = await request({method: "eth_chainId"});
+      chainId = alwaysNumber(r);
     } catch (err) {
-      log.info(`signer may not support getSigner`, err);
+      log.info(`failed to get chainId`, etherrmsg(err))
+    }
+  } else {
+    let currentChainId
+    try {
+      const r = await request({method: "eth_chainId"});
+      currentChainId = alwaysNumber(r);
+    } catch (err) {
+      log.info(`failed to check chainId`, etherrmsg(err))
+    }
+
+    if (chainId  != currentChainId) {
+      throw new Error(`chain id mis match. expected ${chainId}, have ${currentChainId}`);
     }
   }
+
   return {
-    provider,
+    evmProviderType: eip1193Provider?.constructor?.name,
+    provider: eip1193Provider,
+    request: request,
+    accounts,
+    addressOrIndex,
     chainId,
-    signer,
-    signerAddress,
   };
 }
 
