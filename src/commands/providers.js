@@ -14,7 +14,9 @@ export async function showProviders(program, options) {
 
   const providers = await prepareProviders(cfgs);
   for (const ctx of Object.values(providers)) {
-    console.log(`name: ${ctx.cfg.name}, type: ${ctx.cfg.type}, chainId: ${ctx.chainId}, url: ${ctx.cfg.url}, ${ctx.cfg.description}`)
-    ctx.stopListening()
+    console.log(
+      `name: ${ctx.cfg.name}, type: ${ctx.cfg.type}, chainId: ${ctx.chainId}, url: ${ctx.cfg.url}, ${ctx.cfg.description}`
+    );
+    ctx.stopListening();
   }
 }

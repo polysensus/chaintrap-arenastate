@@ -21,11 +21,11 @@ export function isPromise(value) {
 }
 
 export function etherrmsg(err) {
-  if (!err.body) return `${err}`
+  if (!err.body) return `${err}`;
   try {
-    const jerr = JSON.parse(err.body)
-    return jerr.error?.message ?? `${err}`
+    const jerr = JSON.parse(err.body);
+    return jerr.error?.message ?? `${err}`;
   } catch (err2) {
-    return `${err}`
+    return `${err}`;
   }
 }

@@ -1,21 +1,23 @@
 import { ethers } from "ethers";
 
 import { isAsync, isUndefined, etherrmsg } from "../idioms.js";
-import { getLogger } from '../log.js'
+import { getLogger } from "../log.js";
 
 const log = getLogger("eip1193/provider");
 
 export class EIP1193ProviderContext {
-
-  constructor(cfg={}) {
+  constructor(cfg = {}) {
     this._init();
 
-    const { accountsChanged, chainChanged, disconnected } = cfg
+    const { accountsChanged, chainChanged, disconnected } = cfg;
 
     this._accountsChanged = async (accounts) => {
       this.accounts = accounts;
 
-      const {signer, signerAddress } = await getSignerAddress(this.provider, this.addressOrIndex);
+      const { signer, signerAddress } = await getSignerAddress(
+        this.provider,
+        this.addressOrIndex
+      );
       this.signer = signer;
       this.signerAddress = signerAddress;
 
@@ -29,7 +31,10 @@ export class EIP1193ProviderContext {
 
     this._chainChanged = async (chainId) => {
       this.chainId = alwaysNumber(chainId);
-      const {signer, signerAddress } = await getSignerAddress(this.provider, this.addressOrIndex);
+      const { signer, signerAddress } = await getSignerAddress(
+        this.provider,
+        this.addressOrIndex
+      );
       this.signer = signer;
       this.signerAddress = signerAddress;
 
@@ -56,14 +61,18 @@ export class EIP1193ProviderContext {
   }
 
   async setProvider(eip1193Provider, addressOrIndex = 0, chainId = undefined) {
-
     this.stopListening();
 
-    const prepared = await setProvider(eip1193Provider, addressOrIndex, chainId, {
+    const prepared = await setProvider(
+      eip1193Provider,
+      addressOrIndex,
+      chainId,
+      {
         accountsChanged: this._accountsChanged,
         chainChanged: this._chainChanged,
         disconnected: this._disconnected,
-      });
+      }
+    );
 
     this.provider = prepared.provider;
     this.request = prepared.request;
@@ -91,7 +100,7 @@ export class EIP1193ProviderContext {
     this.addressOrIndex = undefined;
 
     this.provider = undefined;
-    this.request = undefined
+    this.request = undefined;
     this.eip1193Provider = undefined;
     this.chainId = undefined;
     this.evmProviderType = undefined;
@@ -110,8 +119,8 @@ export class EIP1193ProviderContext {
 export async function getSignerAddress(provider, addressOrIndex) {
   let signer, signerAddress;
 
-  if (addressOrIndex === null || typeof addressOrIndex === 'undefined') {
-    return {signer, signerAddress};
+  if (addressOrIndex === null || typeof addressOrIndex === "undefined") {
+    return { signer, signerAddress };
   }
   try {
     // XXX some providers do not support getSigner
@@ -122,15 +131,17 @@ export async function getSignerAddress(provider, addressOrIndex) {
     }
     signerAddress = await signer.getAddress();
   } catch (err) {
-    log.info("failed to get signer and address from provider, not all providers support this");
+    log.info(
+      "failed to get signer and address from provider, not all providers support this"
+    );
   }
-  return {signer, signerAddress};
+  return { signer, signerAddress };
 }
 
 export async function setProvider(
   provider,
   addressOrIndex = 0,
-  { chainId, accountsChanged, chainChanged, disconnected }={}
+  { chainId, accountsChanged, chainChanged, disconnected } = {}
 ) {
   if (!provider) {
     provider = getWindowEthereum();
@@ -147,7 +158,10 @@ export async function setProvider(
 
     // Wrap the injected provider in a Web3 to make it behave consistently
     prepared.provider = new ethers.providers.Web3Provider(prepared.provider);
-    const { signer, signerAddress } = getSignerAddress(provider, addressOrIndex);
+    const { signer, signerAddress } = getSignerAddress(
+      provider,
+      addressOrIndex
+    );
     prepared.signer = signer;
     prepared.signerAddress = signerAddress;
     return prepared;
@@ -155,15 +169,24 @@ export async function setProvider(
 
   // If we already have a Web3Provider wrapper, prepare the original provider
   // again and make a fresh wrapper
-  if (Object.getPrototypeOf(provider) instanceof ethers.providers.Web3Provider) {
+  if (
+    Object.getPrototypeOf(provider) instanceof ethers.providers.Web3Provider
+  ) {
     const prepared = prepare1193Provider(
-      provider.provider, addressOrIndex, chainId, {
-      accountsChanged,
-      chainChanged,
-      disconnected,
-    });
+      provider.provider,
+      addressOrIndex,
+      chainId,
+      {
+        accountsChanged,
+        chainChanged,
+        disconnected,
+      }
+    );
     prepared.provider = new ethers.providers.Web3Provider(prepared.provider);
-    const { signer, signerAddress } = getSignerAddress(provider, addressOrIndex);
+    const { signer, signerAddress } = getSignerAddress(
+      provider,
+      addressOrIndex
+    );
     prepared.signer = signer;
     prepared.signerAddress = signerAddress;
     return prepared;
@@ -173,13 +196,15 @@ export async function setProvider(
   // StaticJsonRpcProvider, they can just intsance it and pass it in and this
   // case deals with it.
   if (typeof provider === "object" && provider.request) {
-    const prepared = prepare1193Provider(
-      provider, addressOrIndex, chainId, {
+    const prepared = prepare1193Provider(provider, addressOrIndex, chainId, {
       accountsChanged,
       chainChanged,
       disconnected,
     });
-    const { signer, signerAddress } = getSignerAddress(provider, addressOrIndex);
+    const { signer, signerAddress } = getSignerAddress(
+      provider,
+      addressOrIndex
+    );
     prepared.signer = signer;
     prepared.signerAddress = signerAddress;
     return prepared;
@@ -198,8 +223,7 @@ export async function setProvider(
     provider = new ethers.providers.JsonRpcProvider(provider);
   }
 
-  const prepared = prepare1193Provider(
-    provider, addressOrIndex, chainId, {
+  const prepared = prepare1193Provider(provider, addressOrIndex, chainId, {
     accountsChanged,
     chainChanged,
     disconnected,
@@ -219,7 +243,7 @@ export async function accountsChanged(ctx) {
   return prepare1193Provider(
     ctx.eip1193Provider,
     Array.isArray(ctx.accounts) && ctx.accounts.length ? ctx.accounts[0] : 0,
-    ctx.chainId,
+    ctx.chainId
   );
 }
 
@@ -232,7 +256,7 @@ export async function chainChanged(ctx) {
   return prepare1193Provider(
     ctx.eip1193Provider,
     Array.isArray(ctx.accounts) && ctx.accounts.length ? ctx.accounts[0] : 0,
-    ctx.chainId,
+    ctx.chainId
   );
 }
 
@@ -265,17 +289,18 @@ export async function prepare1193Provider(
   chainId,
   { accountsChanged, chainChanged, disconnected }
 ) {
-
   let request;
   // Get the eip 1193 compatible request method
   if (eip1193Provider.request) {
     request = eip1193Provider.request;
   } else if (eip1193Provider.send) {
     // This is the ethers JsonRpcProvider api which predated eip 1193 and this package is made *for* ethers
-    request = r => eip1193Provider.send(r.method, r.params || [])
+    request = (r) => eip1193Provider.send(r.method, r.params || []);
   }
   if (!request) {
-    throw new Error(`EIP 1193 compatible providers must implement one of 'request' or 'send'`);
+    throw new Error(
+      `EIP 1193 compatible providers must implement one of 'request' or 'send'`
+    );
   }
 
   // Ensure we always remove, though I believe this un-necessary
@@ -288,14 +313,14 @@ export async function prepare1193Provider(
   try {
     accounts = await request({ method: "eth_requestAccounts" });
   } catch (err) {
-    log.info(etherrmsg(err))
+    log.info(etherrmsg(err));
   }
 
   if (isUndefined(addressOrIndex)) {
     if (Array.isArray(accounts) && accounts.length) {
-      addressOrIndex = accounts[0]
+      addressOrIndex = accounts[0];
     }
-  } else if (typeof addressOrIndex === 'number' ){
+  } else if (typeof addressOrIndex === "number") {
     if (Array.isArray(accounts) && accounts.length) {
       addressOrIndex = accounts[addressOrIndex];
     }
@@ -311,22 +336,24 @@ export async function prepare1193Provider(
   if (!chainId) {
     // chainId = alwaysNumber((await provider.getNetwork()).chainId);
     try {
-      const r = await request({method: "eth_chainId"});
+      const r = await request({ method: "eth_chainId" });
       chainId = alwaysNumber(r);
     } catch (err) {
-      log.info(`failed to get chainId`, etherrmsg(err))
+      log.info(`failed to get chainId`, etherrmsg(err));
     }
   } else {
-    let currentChainId
+    let currentChainId;
     try {
-      const r = await request({method: "eth_chainId"});
+      const r = await request({ method: "eth_chainId" });
       currentChainId = alwaysNumber(r);
     } catch (err) {
-      log.info(`failed to check chainId`, etherrmsg(err))
+      log.info(`failed to check chainId`, etherrmsg(err));
     }
 
-    if (chainId  != currentChainId) {
-      throw new Error(`chain id mis match. expected ${chainId}, have ${currentChainId}`);
+    if (chainId != currentChainId) {
+      throw new Error(
+        `chain id mis match. expected ${chainId}, have ${currentChainId}`
+      );
     }
   }
 
