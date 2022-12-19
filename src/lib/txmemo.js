@@ -22,12 +22,12 @@ export class TxMemo {
     this._highestBlock = 0;
   }
 
-  haveEventTx(e) {
+  haveEvent(e) {
     return typeof this._recentTx[e.transactionHash] !== "undefined";
   }
 
   eventTxMemo(e) {
-    if (this.haveEventTx(e)) {
+    if (this.haveEvent(e)) {
       log.debug(fmt(`<<<<<< Have memo for ${e.transactionHash}`));
       return true;
     }

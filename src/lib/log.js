@@ -1,6 +1,4 @@
 import log from "loglevel";
-import * as dotenv from "dotenv";
-dotenv.config();
 
 // const enabled = undefined
 const disabled = {
@@ -13,7 +11,10 @@ const levels = {
 };
 
 export function getLogger(name) {
-  const defaultLevel = process?.env?.ARENASTATE_LOGLEVEL ?? "INFO";
+  let defaultLevel = "INFO";
+  if (typeof process !== "undefined")
+    defaultLevel = process?.env?.ARENASTATE_LOGLEVEL ?? "INFO";
+
   const enable = typeof enabled === "undefined" || enabled[name];
   const disable =
     typeof disabled !== "undefined" && typeof disabled[name] !== "undefined";

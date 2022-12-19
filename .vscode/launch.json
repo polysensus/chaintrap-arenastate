@@ -7,6 +7,21 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "watcharena",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "args": [
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "watch",
+        "--providers",
+        "${workspaceFolder}/.local/dev/providers.json"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
       "name": "providers",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",

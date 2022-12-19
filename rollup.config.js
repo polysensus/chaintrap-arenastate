@@ -8,6 +8,7 @@ export default [
   {
     input: "src/lib/main.js",
     output: {
+      inlineDynamicImports: true,
       name: pkg.name,
       file: pkg.browser,
       format: "umd",

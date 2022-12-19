@@ -1,4 +1,7 @@
 #! /usr/bin/env node
+import * as dotenv from "dotenv";
+dotenv.config();
+
 import { program } from "commander";
 
 import { lastGame, gamelog, stateroster } from "./src/commands/gamestate.js";
@@ -19,6 +22,7 @@ import {
 import { arenaAddress } from "./src/commands/arenaaddress.js";
 
 import { showProviders } from "./src/commands/providers.js";
+import { watchArena } from "./src/commands/watcharena.js";
 
 program
   .enablePositionalOptions()
@@ -59,6 +63,17 @@ program
   .description("get the address of the most recently deployed arena contract")
   .option("-p, --providers <providersfile>")
   .action((options) => showProviders(program, options));
+
+program
+  .command("watch")
+  .description("watch for events on the arena contract")
+  .option("-p, --providers <providersfile>")
+  .option(
+    "-w, --which <which>",
+    "name of the provider entry in providersfile",
+    "caimst"
+  )
+  .action((options) => watchArena(program, options));
 
 // inspection, no wallet required (the deploy wallet is just a convenient way to work out the contract address)
 program

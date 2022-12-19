@@ -5,6 +5,67 @@ import { getLogger } from "./log.js";
 
 const log = getLogger("gameevents");
 
+export function parseEthersEvent(arenaInterface, txmemo, ...args) {
+  if (args.length === 0) {
+    log.info("bad callback from ethers, args empty");
+    return;
+  }
+  const ev = args[args.length - 1];
+
+  if (txmemo && txmemo.haveEvent(ev)) {
+    log.debug(
+      `discarding redundant event. have seen ${ev.transactionHash} before`
+    );
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = arenaInterface.parseLog(ev);
+  } catch (err) {
+    log.info("error parsing event from ethers", err);
+    return;
+  }
+
+  ev.name = parsed.name;
+  ev.event = parsed.name;
+  ev.signature = parsed.signature;
+  ev.args = parsed.args;
+  ev.topic = parsed.topic;
+  return ev;
+}
+
+/**
+ * arenaEventFilter is used to monitor any events regardless of gid, typically
+ * GameCreated, GameStarted and so on, and specifically _not_ events that are
+ * specific to a game
+ * @param {string} name
+ * @param  {...any} args
+ * @returns
+ */
+export function arenaEventFilter(arena, name, ...args) {
+  try {
+    return arena.filters[name](undefined, ...args);
+  } catch (e) {
+    log.debug(`${e}`);
+    throw e;
+  }
+}
+
+/**
+ * gameEventFilter is used when the gid is available
+ * @returns
+ */
+export function gameEventFilter(arena, gid) {
+  return {
+    address: arena.address,
+    topics: [
+      null, // any event signature
+      hexZeroPad(BigNumber.from(gid).toHexString(), 32), // which has the gid as the first topic
+    ],
+  };
+}
+
 export async function findGameCreated(arena, gid) {
   const filter = arena.filters["GameCreated(uint256,uint256)"](gid);
   const found = await arena.queryFilter(filter);
