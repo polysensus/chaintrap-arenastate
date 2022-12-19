@@ -19,8 +19,12 @@ export class Dispatcher {
 
   addHandler(handler, signature, ...args) {
     const filter = this.getFilter(signature, ...args);
+    return this.addFilterHandler(filter, handler, ...args);
+  }
+
+  addFilterHandler(filter, handler) {
     const listener = this.wrapHandler(handler);
-    this.listeners.push([filter, listener, signature, handler]);
+    this.listeners.push([filter, listener, filter, handler]);
   }
 
   stopListening() {
@@ -37,7 +41,7 @@ export class Dispatcher {
     this.stopListening();
 
     for (const [event, listener, signature] of this.listeners) {
-      this.contract.on(event, listener, signature);
+      this.contract.on(event, listener);
       this.active.push([event, listener, signature]);
       log.debug(`Listening for ${signature}, with ${JSON.stringify(event)}`);
     }

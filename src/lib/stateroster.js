@@ -77,6 +77,10 @@ export class StateRoster {
     return this._players;
   }
 
+  get playerCount() {
+    return Object.keys(this._players).length
+  }
+
   // --- application of single events
   applyParsedEvent(event) {
     // check the event is for the correct game

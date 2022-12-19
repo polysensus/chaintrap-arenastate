@@ -9,7 +9,7 @@ import {
 
 import { jfmt } from "./util.js";
 
-import { StateRoster, loadRoster } from "../lib/stateroster.js";
+import { loadRoster } from "../lib/stateroster.js";
 
 const log = console.log;
 const out = console.log;

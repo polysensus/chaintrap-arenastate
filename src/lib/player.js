@@ -93,7 +93,7 @@ export class Player {
    */
   // @ts-ignore
   setState(state) {
-    this.state.update(state);
+    return this.state.update(state);
   }
 
   // --- update methods
