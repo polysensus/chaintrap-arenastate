@@ -21,22 +21,25 @@ export const log = getLogger("StateRoster");
 export const fmtev = (e) =>
   `gid: ${e.args.gid}, eid: ${e.args.eid}, ${e.event} bn: ${e.blockNumber}, topics: ${e.topics}, tx: ${e.transactionHash}`;
 
-export async function prepareRoster(arena, gid, fromBlock) {
-  log.debug(`Arena: ${arena.address} ${gid}`);
+export async function prepareRoster(arena, gid, options = {}) {
+  log.debug(`Arena: ${arena.address} ${gid}, ${options}`);
+
+  let { fromBlock, model } = options;
 
   if (typeof gid === "undefined" || gid < 0) {
     gid = await arena.lastGame();
   }
 
   if (!fromBlock) fromBlock = await getGameCreatedBlock(arena, gid);
-  const roster = new StateRoster(arena.interface, gid);
+  const roster = new StateRoster(arena.interface, gid, options);
   const snap = roster.snapshot();
   return [snap, roster];
 }
 
-export async function loadRoster(arena, gid, fromBlock) {
-  const [snap, roster] = await prepareRoster(arena, gid, fromBlock);
-  const events = await findGameEvents(arena, gid, fromBlock);
+export async function loadRoster(arena, gid, options) {
+  const [snap, roster] = await prepareRoster(arena, gid, options);
+
+  const events = await findGameEvents(arena, gid, options?.fromBlock);
   const gameStates = roster.load(events);
   return [snap, roster, gameStates];
 }
@@ -64,13 +67,18 @@ export class RosterSnapshot {
  * This class manages a roster of player states for the game.
  */
 export class StateRoster {
-  constructor(arenaInterface, gid, txmemo) {
+  constructor(arenaInterface, gid, options) {
+    const { txmemo, model, hashAlpha } = options;
     // note: if the signer on the contract changes, this will be updated to the
     // new contract instance by the older of the roster
     this.arenaInterface = arenaInterface;
     this.gid = gid;
     this._players = {};
     this._txmemo = txmemo ?? new TxMemo();
+
+    // These are only available when managing state from the perspective of the map owner
+    this.model = model;
+    this.hashAlpha = hashAlpha;
   }
 
   get players() {
@@ -78,7 +86,7 @@ export class StateRoster {
   }
 
   get playerCount() {
-    return Object.keys(this._players).length
+    return Object.keys(this._players).length;
   }
 
   // --- application of single events
@@ -102,13 +110,9 @@ export class StateRoster {
         if (p === null) return;
 
         try {
-          p.applyEvent(event);
+          p.applyEvent(event, { model: this.model, hashAlpha: this.hashAlpha });
         } catch (e) {
-          log.warn(
-            `player applyEvent for ${
-              event.event
-            } raised error: ${JSON.stringify(e)}`
-          );
+          log.warn(`player applyEvent for ${event.event} raised error`, e);
         }
         return p;
       }
@@ -152,7 +156,10 @@ export class StateRoster {
     const changes = [];
     for (const addr of addresses) {
       const before = snap?.players?.[addr]?.state ?? new PlayerState();
-      const [_, delta] = this.processOne(before, addr);
+      const [_, delta] = this.processOne(before, addr, {
+        model: this.model,
+        hashAlpha: this.hashAlpha,
+      });
       if (!delta) continue;
       changes.push(delta);
     }
@@ -182,7 +189,10 @@ export class StateRoster {
       return;
     }
 
-    p.processPending(p.lastEID);
+    p.processPending(p.lastEID, {
+      model: this.model,
+      hashAlpha: this.hashAlpha,
+    });
     if (typeof before === "undefined") return [p, undefined];
 
     const delta = before.diff(p.state);
@@ -227,7 +237,10 @@ export class StateRoster {
 
         default:
           log.debug(fmtev(e));
-          this._players[addr].applyEvent(e);
+          this._players[addr].applyEvent(e, {
+            model: this.model,
+            hashAlpha: this.hashAlpha,
+          });
           break;
       }
     }
@@ -256,6 +269,7 @@ export class StateRoster {
     }
 
     if (this._players[addr] === undefined) {
+      log.debug(`_registerPlayer ${addr} ****`);
       const p = new Player();
       p.setState({
         registered: true,

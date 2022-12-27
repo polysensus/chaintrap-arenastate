@@ -6,8 +6,10 @@ import {
   parseEventLog,
   getGameCreatedBlock,
 } from "../lib/gameevents.js";
+import { SceneCatalog } from "../lib/map/scenecatalog.js";
 
 import { jfmt } from "./util.js";
+import { readJson } from "./fsutil.js";
 
 import { loadRoster } from "../lib/stateroster.js";
 
@@ -63,6 +65,27 @@ export async function stateroster(program, options) {
   const address = await getArenaAddress(program, options, provider);
   const arena = arenaConnect(provider, address);
 
-  const [snap, roster] = await loadRoster(arena, options.gid);
-  roster.dispatchChanges(snap, (player) => out(jfmt(player)));
+  let gid = options.gid;
+  if (typeof gid === "undefined" || gid < 0) {
+    gid = await arena.lastGame();
+  }
+
+  let ropts;
+  const mapfile = program.opts().map;
+  if (mapfile) {
+    const map = readJson(mapfile);
+    const scat = new SceneCatalog();
+    scat.load(map);
+    ropts = { model: map.model, hashAlpha: scat.hashAlpha };
+  }
+
+  const [snap, roster] = await loadRoster(arena, gid, ropts);
+  roster.dispatchChanges(snap, (player) => {
+    out(`
+    player: ${player.profile.nickname}
+    address: ${player.address}
+    room: ${player.location}
+    pendingExitUsed: ${player.pendingExitUsed}
+    `);
+  });
 }

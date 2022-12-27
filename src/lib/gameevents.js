@@ -61,7 +61,7 @@ export function gameEventFilter(arena, gid) {
     address: arena.address,
     topics: [
       null, // any event signature
-      hexZeroPad(BigNumber.from(gid).toHexString(), 32), // which has the gid as the first topic
+      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the gid as the first topic
     ],
   };
 }
@@ -97,7 +97,7 @@ export async function findGameEvents(arena, gid, fromBlock) {
     address: arena.address,
     topics: [
       null, // any event on the contract
-      ethers.utils.hexZeroPad(gid.toHexString(), 32), // which has the game id as the first indexed paramater
+      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the game id as the first indexed paramater
     ],
   };
   return arena.queryFilter(filter, fromBlock);

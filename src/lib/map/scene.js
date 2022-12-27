@@ -14,11 +14,11 @@ const abiCoder = new ethers.utils.AbiCoder();
 // hashAlpha until after the reveal
 // The lastEID is the eid of *previous* move commited by the player and is
 // always zero for the first move of each player.
-export function scenetoken(player, location, lastEID, hashAlpha) {
+export function scenetoken(playerAddress, location, lastEID, hashAlpha) {
   return keccack(
     abiCoder.encode(
       ["address", "uint16", "uint16", "uint256"],
-      [player, location, lastEID, hashAlpha]
+      [playerAddress, location, lastEID, hashAlpha]
     )
   );
 }

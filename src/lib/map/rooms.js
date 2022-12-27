@@ -1,4 +1,4 @@
-import { scenetoken } from "./scene.js";
+import { Scene, scenetoken } from "./scene.js";
 
 import { getLogger } from "../log.js";
 const log = getLogger("map.rooms");
@@ -80,18 +80,67 @@ export function targetRoomIngress(model, subjectRoom, egressSide, egressIndex) {
   );
 }
 
+/** decodePlayerRoom determines which room number the player is in
+ * - If calling as the host to determine which room to confirm, pass
+ * player.uselast() for eid and the current room for previousRoom
+ * - If calling as the player to decode the new sceneblob pass lastused() for eid
+ * and the room just left for previousRoom.
+ * - In both cases you can ommit previous rooms and all possible rooms will be
+ * considered. This is O(N) on the number of rooms in the map
+ * @param {*} player
+ * @param {*} model
+ * @param {*} hashAlpha
+ * @param {*} eid
+ * @param {*} previousRoom
+ * @returns {[Number, object, string]}
+ */
+export function decodedPlayerLocation(
+  player,
+  model,
+  hashAlpha,
+  eid,
+  previousRoom
+) {
+  const [token, scene] = Scene.decodeblob(player.state.sceneblob);
+  if (typeof previousRoom === "undefined") {
+    const loc = findRoomToken(
+      model.rooms.length,
+      player.address,
+      token,
+      eid,
+      hashAlpha
+    );
+    return [loc, scene, token];
+  }
+  const loc = findConnectedRoomToken(
+    model,
+    player.address,
+    previousRoom,
+    token,
+    eid,
+    hashAlpha
+  );
+  return [loc, scene, token];
+}
+
 /**
  * Returns the room index for a location token
  * Uses the supplied parameters to make tokens for roomCount rooms. Returns the first match
  * @param {} model
- * @param {*} player
+ * @param {*} playerAddress
  * @param {*} token
- * @param {*} eid
+ * @param {*} lastUsedEID
  * @param {*} hashAlpha
  */
-export function findRoomToken(roomCount, player, token, eid, hashAlpha) {
+export function findRoomToken(
+  roomCount,
+  playerAddress,
+  token,
+  lastUsedEID,
+  hashAlpha
+) {
   for (var i = 0; i < roomCount; i++) {
-    const derived = scenetoken(player, i, eid, hashAlpha);
+    const derived = scenetoken(playerAddress, i, lastUsedEID, hashAlpha);
     if (derived == token) {
       return i;
     }
@@ -103,28 +152,28 @@ export function findRoomToken(roomCount, player, token, eid, hashAlpha) {
  * Returns the room index for a location token, considering only those locations
  * connected to the provided location.
  * @param {*} model
- * @param {*} player
- * @param {*} lastLocation
+ * @param {*} playerAddress
+ * @param {*} previousRoom
  * @param {*} token
- * @param {*} eid
+ * @param {*} lastUsedEID
  * @param {*} hashAlpha
  * @returns
  */
 export function findConnectedRoomToken(
   model,
-  player,
-  lastLocation,
-  token,
-  eid,
+  playerAddress,
+  previousRoom, // the room the player left
+  token, // token is for the room just confirmed by the host
+  lastUsedEID,
   hashAlpha
 ) {
-  for (const i of connectedRooms(model, lastLocation)) {
-    const derived = scenetoken(player, i, eid, hashAlpha);
+  for (const i of connectedRooms(model, previousRoom)) {
+    const derived = scenetoken(playerAddress, i, lastUsedEID, hashAlpha);
     if (derived == token) {
       return i;
     }
   }
-  return -i;
+  return -1;
 }
 
 /**

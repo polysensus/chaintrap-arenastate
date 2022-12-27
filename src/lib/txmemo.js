@@ -48,6 +48,11 @@ export class TxMemo {
       this._highestBlock = e.blockNumber;
     }
 
+    if (this._blockHorizon === false) {
+      // Configured to remember ALL transactions
+      return;
+    }
+
     // We may not see events in all blocks. We probably wont. This arrangement
     // means if we only have two blocks but they are > horizon appart, we will
     // drop the lowest and stop. ie this is a true horizon not a count of blocks

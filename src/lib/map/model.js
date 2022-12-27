@@ -34,23 +34,11 @@ export class MapModel {
     // bind the exits inside the rooms
 
     // map elements in map format
-    this.map = {
+    this.model = {
       exits: [],
       rooms: [],
       corridors: [],
     };
-    this.exits = [];
-    this.rooms = [];
-    this.corridors = [];
-    this.scenes = []; // one per room
-  }
-
-  /**
-   * Return a scene for the room
-   * @param {number} iroom
-   */
-  locationScene(iroom) {
-    return this.scenes[iroom];
   }
 
   /**
@@ -58,53 +46,7 @@ export class MapModel {
    * @param {*} iroom
    */
   connectedRooms(iroom) {
-    return connectedRooms(this.map);
-  }
-
-  /**
-   * @param {number} iroom
-   */
-  _locationScene(iroom) {
-    if (iroom >= this.map.rooms.length) {
-      throw Error(`room ${iroom} out of range. have ${this.map.rooms.length}`);
-    }
-
-    const sceneCorridors = [[], [], [], []];
-
-    const r = this.map.rooms[iroom];
-
-    for (let i = 0; i < 4; i++) {
-      for (let j = 0; j < r.corridors[i].length; j++) {
-        const rc = r.corridors[i][j];
-        const roomside = i;
-        // get the point matching the roomside
-
-        let exitpoint;
-        if (this.map.corridors[rc].join_sides[0] === roomside) {
-          exitpoint = this.map.corridors[rc].points[0];
-        } else if (this.map.corridors[rc].join_sides[1] === roomside) {
-          exitpoint =
-            this.map.corridors[rc].points[
-              this.map.corridors[rc].points.length - 1
-            ];
-        } else {
-          throw new Error(
-            `room ${iroom}, side ${roomside}, corridor ${rc} not correctly connected`
-          );
-        }
-        sceneCorridors[i].push({ x: exitpoint[0], y: exitpoint[1] });
-      }
-    }
-
-    return {
-      corridors: sceneCorridors,
-      main: r.main,
-      inter: r.inter,
-      x: r.x,
-      y: r.y,
-      w: r.w,
-      l: r.l,
-    };
+    return connectedRooms(this.model, iroom);
   }
 
   /**
@@ -119,16 +61,11 @@ export class MapModel {
       m = JSON.parse(m);
     }
 
-    this.map.rooms = m?.model?.rooms;
-    this.map.corridors = m?.model?.corridors;
-    for (let i = 0; i < this.map.rooms.length; i++) {
-      // Allow for arbitrary props to be added. Currently this is used to
-      // facilitate demo content
-      this.scenes.push({ ...this._locationScene(i), ...opts?.scene?.[i] });
-    }
+    this.model.rooms = m?.model?.rooms;
+    this.model.corridors = m?.model?.corridors;
 
     [this.minRoomDimension, this.maxRoomDimension] = roomSideMinMax(
-      this.map.rooms
+      this.model.rooms
     );
   }
 
@@ -138,7 +75,7 @@ export class MapModel {
       targetHeight
     );
     const [averageWidth, averageLength] = sourceRoomAverageBounds(
-      this.map.rooms
+      this.model.rooms
     );
     return {
       tx,
@@ -155,9 +92,9 @@ export class MapModel {
    * @returns {[number, number, number, number]}
    */
   AABB() {
-    let [minx, miny, maxx, maxy] = sourceRoomBounds(this.map.rooms);
+    let [minx, miny, maxx, maxy] = sourceRoomBounds(this.model.rooms);
     const [cminx, cminy, cmaxx, cmaxy] = sourceCorridorBounds(
-      this.map.corridors
+      this.model.corridors
     );
     if (cminx < minx) minx = cminx;
     if (cminy < miny) miny = cminy;
@@ -182,7 +119,7 @@ export class MapModel {
       1,
     ];
 
-    if (!(this.map.rooms || this.map.corridors)) {
+    if (!(this.model.rooms || this.model.corridors)) {
       return [offx, offy, scalex, scaley];
     }
 

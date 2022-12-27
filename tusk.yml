@@ -6,6 +6,79 @@ options:
       command: echo $PWD
 
 tasks:
+  cfg:
+    options:
+      force:
+        type: bool
+        default: false
+        short: "f"
+      verbose:
+        default: true
+      url:
+        default: https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==
+      providers:
+        short: "p"
+      deploykey:
+        short: "d"
+      key:
+        short: "k"
+      deployacc:
+      abi:
+      map:
+      key1:
+      key2:
+      key3:
+    args:
+      name:
+    run:
+      - command:
+          exec: |
+            DIR=$(cd ${launchdir} && pwd)
+            mkdir -p $DIR
+            CFG=$DIR/${name}.cfg.json
+            ${force} && rm -f $CFG
+            [ -f ${CFG} ] && echo "$CFG exists, -f to force" && exit 1
+
+            # TODO: use https://github.com/jpmens/jo/blob/master/jo.md
+
+            echo "{" >> $CFG
+            [ -n "${verbose}" ] && \
+            echo '  "verbose": "${verbose}",' >> $CFG
+            [ -n "${url}" ] && \
+            echo '  "url": "${url}",' >> $CFG
+            [ -n "${providers}" ] && \
+            echo '  "providers": "${providers}",' >> $CFG
+            [ -n "${deploykey}" ] && \
+            echo '  "deploykey": "${deploykey}",' >> $CFG
+            [ -n "${deployacc}" ] && \
+            echo '  "deployacc": "${deployacc}",' >> $CFG
+            [ -n "${abi}" ] && \
+            echo '  "abi": "${abi}",' >> $CFG
+            [ -n "${map}" ] && \
+            echo '  "map": "${map}",' >> $CFG
+            [ -n "${key}" ] && \
+            echo '  "key": "${key}",' >> $CFG
+            [ -n "${key1}" ] && \
+            echo '  "key1": "${key1}",' >> $CFG
+            [ -n "${key2}" ] && \
+            echo '  "key2": "${key2}",' >> $CFG
+            [ -n "${key3}" ] && \
+            echo '  "key3": "${key3}",' >> $CFG
+
+            # easiest way to deal with traling ',' is to put this one last
+            echo "  \"launchdir\": \"$DIR\"" >> $CFG
+            echo '}' >> $CFG
+
+  showcfg:
+    args:
+      name:
+    run:
+      - command:
+          exec: |
+            set -e
+            DIR=$(cd ${launchdir} && pwd)
+            cat $DIR/${name}.cfg.json
+
   new-wallet:
     args:
       name:

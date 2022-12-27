@@ -69,8 +69,14 @@ export async function setstart(program, options, player, room) {
   if (typeof gid === "undefined" || gid < 0) {
     gid = await arena.lastGame();
   }
+  const map = readJson(mapfile);
+  const scat = new SceneCatalog();
+  scat.load(map);
 
-  const [snap, roster, gameStates] = await loadRoster(arena, gid);
+  const [snap, roster, gameStates] = await loadRoster(arena, gid, {
+    model: map.model,
+    hashAlpha: scat.hashAlpha,
+  });
 
   // If a game has started or completed it is not possible (or useful) to set
   // the player start location. And if it hasn't been created it is obviosly not
@@ -102,10 +108,6 @@ export async function setstart(program, options, player, room) {
     return;
   }
 
-  const map = readJson(mapfile);
-  const scat = new SceneCatalog();
-  scat.load(map);
-
   if (room > map.model.rooms.length) {
     out(`room: ${room} is not in the map`);
     return;
@@ -119,7 +121,9 @@ export async function setstart(program, options, player, room) {
   const r = await g.setStartLocation(player, locationToken, sceneblob);
 
   out(jfmt(r));
-  out(`player: ${p.address} start location token: ${locationToken}`);
+  out(
+    `player: ${p.address} start location token: ${locationToken}, ${p.location}`
+  );
 }
 
 export async function allowexituse(program, options) {

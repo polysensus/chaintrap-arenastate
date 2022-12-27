@@ -1,9 +1,12 @@
 // deps
+import { ethers } from "ethers";
 // app
 import { getLogger } from "./log.js";
 
 import { ABIName } from "./abiconst.js";
 import { PlayerState } from "./playerstate.js";
+import { findConnectedRoomToken, findRoomToken } from "./map/rooms.js";
+import { Scene } from "./map/scene.js";
 const log = getLogger("Player");
 
 export class Player {
@@ -43,6 +46,10 @@ export class Player {
   }
 
   // --- read only external accessors for chain state
+  get registered() {
+    return this.state.registered;
+  }
+
   get address() {
     return this.state.address;
   }
@@ -71,6 +78,10 @@ export class Player {
     return this.state.locationIngress;
   }
 
+  get pendingExitUsed() {
+    return this.state.pendingExitUsed;
+  }
+
   get halted() {
     return this.state.halted;
   }
@@ -97,18 +108,18 @@ export class Player {
   }
 
   // --- update methods
-  applyEvent(event) {
+  applyEvent(event, options = {}) {
     if (this._haveEvent(event)) return;
 
     switch (event.event) {
       case ABIName.PlayerStartLocation:
-        return this._addStartLocation(event);
+        return this._addStartLocation(event, options);
       case ABIName.UseExit:
-        return this._addUseExit(event);
+        return this._addUseExit(event, options);
       case ABIName.ExitUsed:
-        return this._addExitUsed(event);
+        return this._addExitUsed(event, options);
       case ABIName.EntryReject:
-        return this._addEntryReject(event);
+        return this._addEntryReject(event, options);
       default:
         throw new Error(`Unrecognised event: ${event.event}`);
     }
@@ -120,7 +131,10 @@ export class Player {
    * @param {*} fromEID the eid to start from. undefined forces all
    * @returns
    */
-  processPending(fromEID) {
+  processPending(fromEID, options) {
+    // available if the caller has the map
+    const { model, hashAlpha } = options;
+
     this.state.pendingExitUsed = false;
 
     // note: the props are integers, we just get them as strings from Object.keys
@@ -150,6 +164,7 @@ export class Player {
 
     for (let i = istart; i < eids.length; i++) {
       const eid = eids[i];
+
       this.state.lastEID = eid;
       if (this.eidsComplete[eid]) {
         log.debug(`eid ${eid} is complete, continuing`);
@@ -183,7 +198,35 @@ export class Player {
           this.state.halted = true;
         }
 
-        this.state.location = eu.outcome.location;
+        // if we have the model and alpha hash, we update the location
+        let location;
+
+        if (model && hashAlpha) {
+          const [token] = Scene.decodeblob(eu.outcome.sceneblob);
+
+          // the location currently on the player is the room the player left. The token
+          // will be for TOK()
+          if (typeof this.location != "undefined") {
+            location = findConnectedRoomToken(
+              model,
+              this.address,
+              this.location,
+              token,
+              eid,
+              hashAlpha
+            );
+          } else {
+            location = findRoomToken(
+              model.rooms.length,
+              this.address,
+              token,
+              eid,
+              hashAlpha
+            );
+          }
+        }
+
+        this.state.location = location;
         this.state.locationIngress = [eu.outcome.side, eu.outcome.ingressIndex];
         this.state.sceneblob = eu.outcome.sceneblob;
         this.eidsComplete[eid] = true;
@@ -199,15 +242,34 @@ export class Player {
     }
   }
 
-  _addStartLocation(event) {
+  _addStartLocation(event, options) {
     // Note: StartLocation is not a transcript event. It sets where the player
     // begins and the host may set it many times before finally starting the
     // game.
 
+    // If we have the model and hashAlpha we can derive the start location
+
+    let location;
+
+    const { model, hashAlpha } = options;
+    if (model && hashAlpha) {
+      const [token] = Scene.decodeblob(event.args.sceneblob);
+      const playerAddress = ethers.utils.getAddress(event.args.player);
+
+      // lastused is always zero as we don't get to set start location after the game is started.
+      location = findRoomToken(
+        model.rooms.length,
+        playerAddress,
+        token,
+        0,
+        hashAlpha
+      );
+    }
+
     // @ts-ignore
     this.setState({
-      location: event.args.startLocation,
-      startLocation: event.args.startLocation,
+      location: location,
+      startLocation: location,
       sceneblob: event.args.sceneblob,
     });
   }

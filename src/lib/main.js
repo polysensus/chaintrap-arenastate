@@ -6,6 +6,10 @@ export {
   arenaConnect,
   arenaInterface,
 } from "./chaintrapabi.js";
+export * from "./map/scenecatalog.js";
+export * from "./map/scene.js";
+export * from "./map/rooms.js";
+export * from "./map/utils.js";
 export * from "./deriveaddress.js";
 export * from "./gameevents.js";
 export * from "./dispatcher.js";
