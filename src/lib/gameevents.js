@@ -82,6 +82,12 @@ export async function findGameCreated(arena, gid) {
   return found[0];
 }
 
+export async function findGames(arena) {
+  const filter =
+    arena.filters["GameCreated(uint256,uint256,address,uint256)"]();
+  return arena.queryFilter(filter);
+}
+
 export async function getGameCreatedBlock(arena, gid) {
   return (await findGameCreated(arena, gid)).blockNumber;
 }
