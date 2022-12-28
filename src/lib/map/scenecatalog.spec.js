@@ -25,7 +25,7 @@ const maps02 = JSON.parse(
 // Note: this set of logs were made using mocks/map02.json
 const singlePlayer2MoveEthLogs = JSON.parse(
   fs.readFileSync(
-    path.join(__dirname, "mocks/single-player-two-move-ethlogs.json")
+    path.join(__dirname, "../../mocks/single-player-two-move-ethlogs.json")
   )
 );
 
@@ -73,7 +73,7 @@ describe("SceneCatalog", function () {
     // Note that this test ignores location values recored in the events. It
     // simply covers the scheme by which we generate those values.
     const arena = arenaInterface();
-    const r = new StateRoster(arena, ethers.BigNumber.from(11)); // 11 matches the mock data
+    const r = new StateRoster(arena, ethers.BigNumber.from(2)); // 2 matches the mock data
     const scat = new SceneCatalog();
     scat.load(map01);
 

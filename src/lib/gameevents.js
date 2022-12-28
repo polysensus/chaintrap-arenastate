@@ -67,7 +67,7 @@ export function gameEventFilter(arena, gid) {
 }
 
 export async function findGameCreated(arena, gid) {
-  const filter = arena.filters["GameCreated(uint256,uint256)"](gid);
+  const filter = arena.filters["GameCreated(uint256,uint256,address,uint256)"](gid);
   const found = await arena.queryFilter(filter);
 
   if (found.length == 0) {

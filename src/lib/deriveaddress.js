@@ -37,7 +37,6 @@ export async function deriveContractAddress(provider, from, nonce = undefined) {
 
   for (let i = 0; i < nonce; i++) {
     const a = ethers.utils.getContractAddress({ from, nonce: i });
-    log(`All addresses: ${a}`);
   }
 
   return ethers.utils.getContractAddress({ from, nonce });
