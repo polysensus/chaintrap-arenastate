@@ -131,7 +131,7 @@ export class Player {
    * @param {*} fromEID the eid to start from. undefined forces all
    * @returns
    */
-  processPending(fromEID, options) {
+  processPending(fromEID, options = {}) {
     // available if the caller has the map
     const { model, hashAlpha } = options;
 

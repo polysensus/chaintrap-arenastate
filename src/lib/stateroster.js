@@ -67,7 +67,7 @@ export class RosterSnapshot {
  * This class manages a roster of player states for the game.
  */
 export class StateRoster {
-  constructor(arenaInterface, gid, options) {
+  constructor(arenaInterface, gid, options = {}) {
     const { txmemo, model, hashAlpha } = options;
     // note: if the signer on the contract changes, this will be updated to the
     // new contract instance by the older of the roster

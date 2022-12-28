@@ -112,10 +112,9 @@ describe("Player", function () {
     expect(delta.toObject()).toStrictEqual({});
 
     delta = applyEvent(p, exitUsed);
-    expect(delta.location).toStrictEqual(arrayify("0x0202"));
+    expect(delta.location).toBeUndefined();
     expect(delta.sceneblob).toStrictEqual(arrayify("0x0404"));
     expect(delta.locationIngress).toStrictEqual([2, 1]);
-    delete delta.location;
     delete delta.locationIngress;
     delete delta.sceneblob;
     expect(delta.pendingExitUsed).toBe(false);
