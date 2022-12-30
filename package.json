@@ -6,6 +6,12 @@
   "main": "dist/chaintrap-arenastate.cjs.js",
   "module": "dist/chaintrap-arenastate.esm.js",
   "browser": "dist/chaintrap-arenastate.umd.js",
+  "files": [
+    "dist"
+  ],
+  "directories": {
+    "lib": "src/lib"
+  },
   "scripts": {
     "test": "vitest run",
     "test-watch": "vitest",
@@ -15,8 +21,24 @@
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
     "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/polysensus/chaintrap-arenastate.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "keywords": [
+    "solidity",
+    "chaintrap",
+    "arenastate"
+  ],
   "author": "robin@polysensus.com",
   "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/polysensus/chaintrap-arenastate/issues"
+  },
+  "homepage": "https://github.com/polysensus/chaintrap-arenastate#readme",
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",
     "@babel/plugin-syntax-import-assertions": "^7.20.0",
