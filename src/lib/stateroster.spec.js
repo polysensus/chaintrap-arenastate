@@ -25,6 +25,8 @@ const singlePlayer2MoveEthLogs = JSON.parse(
 );
 
 import { arenaInterface } from "./chaintrapabi.js";
+import doc from "@polysensus/chaintrap-contracts/abi/Arena.json" assert { type: "json" };
+export const { abi } = doc;
 
 const bigOne = ethers.BigNumber.from(1);
 
@@ -50,7 +52,7 @@ describe("StateRoster", function () {
   it("Should dispatch as batch", async function () {
     const d = new MockDispatcher();
 
-    const r = new StateRoster(arenaInterface(), bigOne);
+    const r = new StateRoster(arenaInterface(abi), bigOne);
 
     const events = [
       playerJoined({ tx: 1 }),
@@ -71,7 +73,7 @@ describe("StateRoster", function () {
 
   it("Should load mock logs", async function () {
     const d = new MockDispatcher();
-    const r = new StateRoster(arenaInterface(), bigOne);
+    const r = new StateRoster(arenaInterface(abi), bigOne);
 
     const snap = r.snapshot();
     await r.load(singlePlayer2MoveEthLogs);

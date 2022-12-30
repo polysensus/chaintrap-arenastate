@@ -6,6 +6,9 @@ import { ethers } from "ethers";
 
 import { ABIName } from "../abiconst.js";
 import { arenaInterface } from "../chaintrapabi.js";
+import doc from "@polysensus/chaintrap-contracts/abi/Arena.json" assert { type: "json" };
+export const { abi } = doc;
+
 import { connectedRooms, targetRoom, findRoomToken } from "./rooms.js";
 import { SceneCatalog } from "./scenecatalog.js";
 import { Scene, scenetoken } from "./scene.js";
@@ -72,7 +75,7 @@ describe("SceneCatalog", function () {
   it("Should create and resolve tokens for all moves", async function () {
     // Note that this test ignores location values recored in the events. It
     // simply covers the scheme by which we generate those values.
-    const arena = arenaInterface();
+    const arena = arenaInterface(abi);
     const r = new StateRoster(arena, ethers.BigNumber.from(2)); // 2 matches the mock data
     const scat = new SceneCatalog();
     scat.load(map01);

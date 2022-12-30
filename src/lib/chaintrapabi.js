@@ -1,12 +1,9 @@
 import { ethers } from "ethers";
 
-import doc from "@polysensus/chaintrap-contracts/abi/Arena.json" assert { type: "json" };
-export const { abi } = doc;
-
-export function arenaConnect(signerOrProvider, address) {
+export function arenaConnect(signerOrProvider, address, abi) {
   return new ethers.Contract(address, abi, signerOrProvider);
 }
 
-export function arenaInterface() {
+export function arenaInterface(abi) {
   return new ethers.utils.Interface(abi);
 }

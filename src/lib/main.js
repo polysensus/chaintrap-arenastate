@@ -1,11 +1,5 @@
-// import pkg from "../../package.json" assert { type: "json" };
-// export const { version } = pkg;
 export { ABIName } from "./abiconst.js";
-export {
-  abi as ABIArena,
-  arenaConnect,
-  arenaInterface,
-} from "./chaintrapabi.js";
+export { arenaConnect, arenaInterface } from "./chaintrapabi.js";
 export * from "./map/scenecatalog.js";
 export * from "./map/scene.js";
 export * from "./map/rooms.js";
