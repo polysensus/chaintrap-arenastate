@@ -6,9 +6,9 @@
   "main": "dist/chaintrap-arenastate.cjs.js",
   "module": "dist/chaintrap-arenastate.esm.js",
   "browser": "dist/chaintrap-arenastate.umd.js",
-  "bin": {
-    "arenactl": "./cli.js"
-  },
+  // "bin": {
+  //   "arenactl": "./cli.js"
+  // },
   "scripts": {
     "test": "vitest run",
     "test-watch": "vitest",
