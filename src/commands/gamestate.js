@@ -1,6 +1,9 @@
 import { programConnect } from "./connect.js";
 import { getArenaAddress } from "./arenaaddress.js";
 import { arenaConnect } from "../lib/chaintrapabi.js";
+import doc from "@polysensus/chaintrap-contracts/abi/Arena.json" assert { type: "json" };
+export const { abi } = doc;
+
 import {
   findGameEvents,
   parseEventLog,
@@ -37,7 +40,7 @@ export async function gamelog(program, options) {
 
   const provider = programConnect(program);
   const address = await getArenaAddress(program, options, provider);
-  const arena = arenaConnect(provider, address);
+  const arena = arenaConnect(provider, address, abi);
 
   if (typeof gid === "undefined" || gid < 0) {
     gid = await arena.lastGame();
@@ -63,12 +66,15 @@ export async function stateroster(program, options) {
 
   const provider = programConnect(program);
   const address = await getArenaAddress(program, options, provider);
-  const arena = arenaConnect(provider, address);
+  const arena = arenaConnect(provider, address, abi);
 
   let gid = options.gid;
   if (typeof gid === "undefined" || gid < 0) {
     gid = await arena.lastGame();
   }
+
+  const gs = await arena.gameStatus(gid);
+  out(`${JSON.stringify(gs)}`);
 
   let ropts;
   const mapfile = program.opts().map;
