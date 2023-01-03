@@ -7,6 +7,7 @@ import { PlayerProfile } from "../lib/playerprofile.js";
 import { loadRoster } from "../lib/stateroster.js";
 import { readJson } from "./fsutil.js";
 import { jfmt } from "./util.js";
+import { storeERC1155GameMetadata } from "./metadata.js";
 
 import { SceneCatalog } from "../lib/map/scenecatalog.js";
 import { ABIName } from "../lib/abiconst.js";
@@ -21,7 +22,37 @@ export async function creategame(program, options) {
   if (program.opts().verbose) vout = out;
   const arena = await programConnectArena(program, options);
 
-  const tx = await arena.createGame(options.maxplayers);
+  // We include the proof in the initial metadata
+  const mapfile = program.opts().map;
+  if (!mapfile) {
+    out(
+      "a map file must be provided, use chaintrap-maptool to generate one or use one of its default examples"
+    );
+    return;
+  }
+  const map = readJson(mapfile);
+
+  let url = "";
+  if (true || options.withmetadata) {
+    const { stored, token } = await storeERC1155GameMetadata(
+      arena.address,
+      map,
+      {
+        name: options.name,
+        iconfile: options.iconfile,
+        nftstoragekey: options.nftstoragekey,
+        openaikey: options.openaikey,
+        properties: {
+          maxplayers: options.maxplayers,
+        },
+      }
+    );
+    out(token.embed());
+    out(token.url);
+    url = token.url;
+  }
+
+  const tx = await arena.createGame(options.maxplayers, url);
   const r = await tx.wait();
   out(jfmt(r));
 }

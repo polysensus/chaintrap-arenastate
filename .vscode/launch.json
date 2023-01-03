@@ -52,9 +52,62 @@
         "-u",
         //"http://localhost:8300",
         "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
+        "glog"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "storegame",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env.local",
+
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
         "-d",
         "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
-        "glog"
+        "-u",
+        // "http://localhost:8300",
+        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        "--map",
+        "${workspaceFolder}/data/tests/map02.json",
+        "--deployacc",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.addr",
+        "-k",
+        "${workspaceFolder}/.local/dev/wallets/guardian.key",
+        "storegame",
+        "--iconfile",
+        "${workspaceFolder}/assets/game-ico-1.png"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "tokenuri",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env.local",
+
+      "args": [
+        // "-u",
+        // "http://localhost:8545",
+        // "-j",
+        // "${workspaceFolder}/.local/hh/deploy.json",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "-u",
+        // "http://localhost:8300",
+        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        "tokenuri",
+        "26959946667150639794667015087019630673637144422540572481103610249217"
       ]
     },
 
@@ -64,23 +117,28 @@
       "name": "newgame",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env.local",
+
       "args": [
         // "-u",
         // "http://localhost:8545",
         // "-j",
         // "${workspaceFolder}/.local/hh/deploy.json",
-        "-u",
-        // "http://localhost:8300",
-        "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
         "-d",
         "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "-u",
+        // "http://localhost:8300",
+        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        // "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
+        "--map",
+        "${workspaceFolder}/data/tests/map02.json",
         "-k",
         "${workspaceFolder}/.local/dev/wallets/guardian.key",
-        "newgame",
-        "--maxplayers",
-        "4"
+        "newgame"
       ]
     },
+
     {
       "type": "node",
       "request": "launch",
@@ -308,6 +366,7 @@
         "--map",
         "${workspaceFolder}/data/tests/map02.json",
         "-u",
+        // 0x8dbE84897531AcC7f62095790CE8c7213c4FBfD1
         // "http://localhost:8300",
         "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
         "-d",

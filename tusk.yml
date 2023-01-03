@@ -4,8 +4,123 @@ options:
   launchdir:
     default:
       command: echo $PWD
+  openai-api-key:
+    default:
+      command: echo $ARENASTATE_OPENAI_API_KEY
 
 tasks:
+  showcfg:
+    args:
+      name:
+    run:
+      - command:
+          exec: |
+            set -e
+            DIR=$(cd ${launchdir} && pwd)
+            cat $DIR/${name}.cfg.json
+
+  oai-list:
+    run:
+      - command:
+          exec: |
+            set -e
+            curl https://api.openai.com/v1/models \
+              -H "Authorization: Bearer ${openai-api-key}"
+
+  oai-model:
+    args:
+      model:
+    run:
+      - command:
+          exec: |
+            set -e
+            curl https://api.openai.com/v1/models/${model} \
+              -H "Authorization: Bearer ${openai-api-key}"
+  oai-scene-text:
+    run:
+      - command:
+          exec: |
+            set -e
+            # "prompt": "In the voice of an adventure game, provide a discription of the scene observed by a player who just entered a room through its south door. Note that the room is part of a dungeon and the player is nervous of traps. The room has for sides. There are two doors in the east side. There is one door in the south side.",
+            curl -X POST https://api.openai.com/v1/completions \
+              -H 'Content-Type: application/json' \
+              -H 'Authorization: Bearer ${openai-api-key}' \
+              -d '{
+                "model": "text-davinci-003",
+                "prompt": "In the voice of an adventure game, provide a discription of the scene observed by a player who just entered a room through its south door. Note that the room is part of a dungeon and the player is nervous of traps. The room has for sides. There are two doors in the east side. There is one door in the south side.",
+                "max_tokens": 1024
+              }' | jq -r
+  oai-scene:
+    run:
+      - command:
+          exec: |
+            set -e
+            DIR=.local/dev/wallets
+            WALLET=$(cat $DIR/robin.addr)
+            curl -X POST https://api.openai.com/v1/images/generations \
+              -H 'Content-Type: application/json' \
+              -H 'Authorization: Bearer ${openai-api-key}' \
+              -d '{
+                "prompt": "Your eyes scan the room nervously, looking for traps. You note the door you just stepped through in the south side, and two doors on the east side. The walls of the room are lined with ancient stone and the air is humid and stale - a stark reminder that you are underground in a dungeon. You take a deep breath in preparation for what the next room may hold",
+                
+                "n": 2,
+                "size": "512x512",
+                "response_format": "url"
+              }' | jq -r
+
+  oai-game-icon:
+    run:
+      - command:
+          exec: |
+            set -e
+            DIR=.local/dev/wallets
+            WALLET=$(cat $DIR/robin.addr)
+            curl -X POST https://api.openai.com/v1/images/generations \
+              -H 'Content-Type: application/json' \
+              -H 'Authorization: Bearer ${openai-api-key}' \
+              -d '{
+                "prompt": "A stylised icon representing a turn based random dungeon crawler game",
+                
+                "n": 2,
+                "size": "512x512",
+                "response_format": "b64_json"
+              }' | jq -r
+
+  new-wallet:
+    args:
+      name:
+    run:
+      - command:
+          exec: |
+            set -e
+            DIR=.local/dev/wallets
+            mkdir -p $DIR
+            cast wallet new > $DIR/${name}.txt
+            cat $DIR/${name}.txt | egrep "^Address: " | cut -d ' ' -f2 > $DIR/${name}.addr
+            cat $DIR/${name}.txt | egrep "^Private Key: " | cut -d ' ' -f3 > $DIR/${name}.key
+
+  wallet:
+    args:
+      name:
+    run:
+      - command:
+          exec: |
+            DIR=.local/dev/wallets
+            cat $DIR/${name}.addr
+  key:
+    args:
+      name:
+    run:
+      - command:
+          exec: |
+            DIR=.local/dev/wallets
+            cat $DIR/${name}.key
+  keyfile:
+    args:
+      name:
+    run:
+      - echo $(pwd)/.local/dev/wallets/${name}.key
+
   cfg:
     options:
       force:
@@ -14,7 +129,7 @@ tasks:
         short: "f"
       verbose:
         default: true
-      url:
+      chain-url:
         default: https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==
       providers:
         short: "p"
@@ -44,8 +159,8 @@ tasks:
             echo "{" >> $CFG
             [ -n "${verbose}" ] && \
             echo '  "verbose": "${verbose}",' >> $CFG
-            [ -n "${url}" ] && \
-            echo '  "url": "${url}",' >> $CFG
+            [ -n "${chain-url}" ] && \
+            echo '  "chain-url": "${chain-url}",' >> $CFG
             [ -n "${providers}" ] && \
             echo '  "providers": "${providers}",' >> $CFG
             [ -n "${deploykey}" ] && \
@@ -68,47 +183,3 @@ tasks:
             # easiest way to deal with traling ',' is to put this one last
             echo "  \"launchdir\": \"$DIR\"" >> $CFG
             echo '}' >> $CFG
-
-  showcfg:
-    args:
-      name:
-    run:
-      - command:
-          exec: |
-            set -e
-            DIR=$(cd ${launchdir} && pwd)
-            cat $DIR/${name}.cfg.json
-
-  new-wallet:
-    args:
-      name:
-    run:
-      - command:
-          exec: |
-            set -e
-            DIR=.local/dev/wallets
-            mkdir -p $DIR
-            cast wallet new > $DIR/${name}.txt
-            cat $DIR/${name}.txt | egrep "^Address: " | cut -d ' ' -f2 > $DIR/${name}.addr
-            cat $DIR/${name}.txt | egrep "^Private Key: " | cut -d ' ' -f3 > $DIR/${name}.key
-  wallet:
-    args:
-      name:
-    run:
-      - command:
-          exec: |
-            DIR=.local/dev/wallets
-            cat $DIR/${name}.addr
-  key:
-    args:
-      name:
-    run:
-      - command:
-          exec: |
-            DIR=.local/dev/wallets
-            cat $DIR/${name}.key
-  keyfile:
-    args:
-      name:
-    run:
-      - echo $(pwd)/.local/dev/wallets/${name}.key

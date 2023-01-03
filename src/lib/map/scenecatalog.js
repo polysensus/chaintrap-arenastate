@@ -1,6 +1,6 @@
 // libs
 import { ethers } from "ethers";
-import { sourceRoomAverageBounds } from "./utils";
+import { sourceRoomAverageBounds } from "./utils.js";
 // app
 export class SceneCatalog {
   construct() {}

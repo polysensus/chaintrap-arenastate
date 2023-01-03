@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import { programConnect } from "./connect.js";
 import { getArenaAddress } from "./arenaaddress.js";
 import { arenaConnect } from "../lib/chaintrapabi.js";
@@ -30,6 +31,21 @@ export async function lastGame(program, options) {
   const c = await programConnectArena(program, options);
   const gid = await c.lastGame();
   log(gid.toNumber());
+}
+
+export async function tokenuri(program, options, token) {
+  let vlog = () => {};
+  if (program.opts().verbose) vlog = log;
+
+  let gid = options.gid;
+
+  const provider = programConnect(program);
+  const address = await getArenaAddress(program, options, provider);
+  const arena = arenaConnect(provider, address, abi);
+
+  const tok = ethers.BigNumber.from(token);
+  const uri = await arena.uri(tok);
+  out(uri);
 }
 
 export async function gamelog(program, options) {

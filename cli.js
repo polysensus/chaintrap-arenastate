@@ -4,7 +4,12 @@ dotenv.config();
 
 import { program } from "commander";
 
-import { lastGame, gamelog, stateroster } from "./src/commands/gamestate.js";
+import {
+  tokenuri,
+  lastGame,
+  gamelog,
+  stateroster,
+} from "./src/commands/gamestate.js";
 import {
   listplayers,
   joingame,
@@ -18,6 +23,7 @@ import {
   completegame,
   allowexituse,
 } from "./src/commands/guardian.js";
+import { storegame, defaultGameIconPrompt } from "./src/commands/metadata.js";
 
 import { arenaAddress } from "./src/commands/arenaaddress.js";
 
@@ -28,7 +34,8 @@ program
   .enablePositionalOptions()
   .option("-v, --verbose", "more verbose reporting")
   .option("-u, --url <url>", "provider url", "http://localhost:8300")
-
+  .option("--openaikey", "openai api key")
+  .option("--nftstorage", "nftstorage api key")
   .option(
     "-j, --deployjson <deployjson>",
     "derive the areana address from the hardhat deploy formatted json file"
@@ -87,6 +94,11 @@ program
   .action((options) => lastGame(program, options));
 
 program
+  .command("tokenuri <token>")
+  .description("report the game event logs")
+  .action((token, options) => tokenuri(program, options, token));
+
+program
   .command("glog")
   .description("report the game event logs")
   .option("-g, --gid <gid>")
@@ -113,6 +125,26 @@ program
 
 // ----
 // State changing.  The following methods require a wallet key (--key)
+
+// -- nft metadata
+program
+  .command("storegame")
+  .description("store the game nft metadata")
+  .option(
+    "-i, --iconfile <iconfile>",
+    "file on disc to use as icon (default is to generate one)"
+  )
+  .option(
+    "-p, --prompt <prompt>",
+    "The prompt string to send to DALL-E to generate the game image. A useful and tested default is provided",
+    defaultGameIconPrompt
+  )
+  .option(
+    "-n, --name <name>",
+    "Name the game. A generic default is provided",
+    "A game of chaintrap"
+  )
+  .action((options) => storegame(program, options));
 
 // -- guardian transactions
 program

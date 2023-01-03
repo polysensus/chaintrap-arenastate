@@ -1,3 +1,5 @@
+assets
+data/metadata
 tusk-tests.yml
 dist
 node_modules
