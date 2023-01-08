@@ -55,6 +55,7 @@ export async function creategame(program, options) {
   const tx = await arena.createGame(options.maxplayers, url);
   const r = await tx.wait();
   out(jfmt(r));
+  out(Object.keys(r));
 }
 
 export async function startgame(program, options) {

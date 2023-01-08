@@ -1,5 +1,6 @@
 export { ABIName } from "./abiconst.js";
 export { arenaConnect, arenaInterface } from "./chaintrapabi.js";
+export * from "./nftmetadata.js";
 export * from "./map/scenecatalog.js";
 export * from "./map/scene.js";
 export * from "./map/rooms.js";

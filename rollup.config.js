@@ -1,5 +1,6 @@
 // derived from: https://github.com/rollup/rollup-starter-lib/blob/master/rollup.config.js
 import resolve from "@rollup/plugin-node-resolve";
+import nodePolyfills from "rollup-plugin-node-polyfills";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import pkg from "./package.json" assert { type: "json" };
@@ -13,7 +14,7 @@ export default [
       file: pkg.browser,
       format: "umd",
     },
-    plugins: [json(), resolve(), commonjs()],
+    plugins: [json(), resolve(), commonjs(), nodePolyfills()],
   },
   {
     // Note: it is faster to generate multiple builds from the same config
@@ -22,9 +23,19 @@ export default [
     input: "src/lib/main.js",
     external: ["ethers", "commander", "@msgpack/msgpack"],
     output: [
-      { file: pkg.main, format: "cjs" },
-      { file: pkg.module, format: "es" },
+      {
+        inlineDynamicImports: true,
+        file: pkg.main,
+        format: "cjs",
+        sorucemap: true,
+      },
+      {
+        inlineDynamicImports: true,
+        file: pkg.module,
+        format: "es",
+        sorucemap: true,
+      },
     ],
-    plugins: [json(), resolve(), commonjs()],
+    plugins: [json(), resolve(), commonjs(), nodePolyfills()],
   },
 ];
