@@ -26,6 +26,14 @@ tasks:
     cmds:
       - task: test:unit
 
+  deploy:
+    desc: deploy the contracts to caimst and mumbai
+    cmds:
+      - |
+        set -e
+        tusk -f tusk-arena.yml deploy-caimst
+        tusk -f tusk-arena.yml deploy-polygon
+
   test:unit:
     desc: run the unit tests
     cmds:

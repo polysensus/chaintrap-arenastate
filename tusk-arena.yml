@@ -1,0 +1,70 @@
+interpreter: bash -c
+usage: arenactl
+options:
+  contracts-dir:
+    default: ../chaintrap-contracts
+
+  deploy-key:
+    default:
+      command: cat .local/dev/wallets/wallet-deploy.key
+
+  deploy-gaslimit:
+    default: 3000000
+  deploy-caimst-url:
+    default: https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==
+  deploy-polygon-mumbai-url:
+    default: https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf
+  deploy-hh-url:
+    default: http://localhost:8545
+  deploy-hh-private-key:
+    # the private key for hh is well known
+    default: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+  deploy-hh-account:
+    default: "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+
+tasks:
+  deploy-all:
+    run:
+      - task: deploy-caimst
+      - task: deploy-polygon
+
+  deploy-polygon:
+    run:
+      task:
+        name: deploy-arena
+        options:
+          rpc: ${deploy-polygon-mumbai-url}
+          deploy-key: ${deploy-key}
+
+  deploy-caimst:
+    run:
+      task:
+        name: deploy-arena
+        options:
+          rpc: ${deploy-caimst-url}
+          deploy-key: ${deploy-key}
+
+  deploy-hh:
+    run:
+      task:
+        name: deploy-arena
+        options:
+          rpc: ${deploy-hh-url}
+          deploy-key: ${deploy-hh-private-key}
+
+  deploy-arena:
+    options:
+      rpc:
+      deploy-key:
+    run:
+      - command:
+          exec: |
+            set -e
+            cd ${contracts-dir}
+
+            forge create chaintrap/arena.sol:Arena \
+              --optimizer-runs 200 \
+              --legacy \
+              --rpc-url=${rpc} \
+              --private-key=${deploy-key} \
+              --gas-limit=${deploy-gaslimit}

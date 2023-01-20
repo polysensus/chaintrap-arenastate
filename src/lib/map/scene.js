@@ -14,11 +14,46 @@ const abiCoder = new ethers.utils.AbiCoder();
 // hashAlpha until after the reveal
 // The lastEID is the eid of *previous* move commited by the player and is
 // always zero for the first move of each player.
-export function scenetoken(playerAddress, location, lastEID, hashAlpha) {
+//
+// XXX: TODO: Currently hashAlpha is used as the salt. Once we do map re-play
+// hashAlpha will need to be combined with a game instance unique (and secret
+// value)
+export function scenetoken(playerAddress, location, lastEID, salt) {
   return keccack(
     abiCoder.encode(
       ["address", "uint16", "uint16", "uint256"],
-      [playerAddress, location, lastEID, hashAlpha]
+      [playerAddress, location, lastEID, salt]
+    )
+  );
+}
+
+/**
+ * modlocationtoken creates an opaque location bound token for a dungeon
+ * location mod. The salt should be unique to the game & game host and should be
+ * known only to the host.
+ * @param {*} mod the mod id component of the mod nft token
+ * @param {*} location the location on the map to bind the mod to
+ * @param {*} salt
+ * @returns
+ */
+export function locationModToken(location, mod, salt) {
+  return keccack(
+    abiCoder.encode(["uint16", "uint16", "uint256"], [location, mod, salt])
+  );
+}
+
+/**
+ * @param {*} location
+ * @param {*} encounter
+ * @param {*} lastEID
+ * @param {*} salt
+ * @returns
+ */
+export function locationEncounterToken(location, encounter, lastEID, salt) {
+  return keccack(
+    abiCoder.encode(
+      ["uint16", "uint16", "uint256"],
+      [location, encounter, lastEID, salt]
     )
   );
 }
