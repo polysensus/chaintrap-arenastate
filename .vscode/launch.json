@@ -7,6 +7,44 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "deploy-new",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": ["deploy-new"]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "list selectors",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "list-selectors",
+        "-i",
+        "${workspaceFolder:chaintrap-contracts}/build/forge/out",
+        "-n",
+        "HelloWorld",
+        "-F",
+        "json"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "list deployable",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "list",
+        "-i",
+        "${workspaceFolder:chaintrap-contracts}/build/forge/out"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "watcharena",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
