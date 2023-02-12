@@ -32,7 +32,7 @@ program
   .option(
     "--diamond-init-args",
     "json formated args for the init contract name",
-    '{"typeURIs":[]}'
+    '[{"typeURIs":[]}]'
   )
   .option("--diamond-cut-name", "name of diamond contract", "DiamondCutFacet")
   .option(
