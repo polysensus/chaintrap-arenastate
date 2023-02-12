@@ -9,11 +9,7 @@ export class FoundryLoader extends ABILoader {
     this.excludes = BaseFinder.defaultExcludes();
     this.includes = [];
 
-    if (
-      options.includeclasses?.includes(
-        BaseFinder.IncludeClassFacet
-      )
-    ) {
+    if (options.includeclasses?.includes(BaseFinder.IncludeClassFacet)) {
       this.includes.push(...BaseFinder.includeFacets());
     }
 

@@ -153,7 +153,7 @@ export class FacetCutOpts {
   toObject() {
     return {
       name: this.name,
-      fileName: this.filename,
+      fileName: this.fileName,
       commonName: this.commonName,
       finderName: this.finderName,
       readerName: this.readerName,

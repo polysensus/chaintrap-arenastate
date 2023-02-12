@@ -7,10 +7,15 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "deploy-new",
+      "name": "diamond-new",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
-      "args": ["deploy-new"]
+      "envFile": "${workspaceFolder}/.env.hh",
+      "args": [
+        "-u",
+        "http://localhost:8545",
+        "diamond-new" // , "--offline"
+      ]
     },
 
     {

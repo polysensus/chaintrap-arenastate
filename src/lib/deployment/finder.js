@@ -35,10 +35,19 @@ export class BaseMatcher {
  * Defines the interface expected by {@link BaseFinder} for its reader instance. The default implementation throws.
  */
 export class BaseReader {
+  /** readJson reads the full contents of the found source and returns the object
+   * parses assuming the content is json formated.
+   * The base implemetnation throws, there is no possible neutral implementation
+   * @param {*} foundname - assumed to be a source found by this finder
+   * @returns {object} the abi as a javsacript list, compatible with ethers.utils.Interface constructor
+   */
+  readJson(foundname) {
+    throw new Error(`not implemented by ${this.constructor.name}`);
+  }
   /** readAbi reads a contract abi from the contents of any source found by the finder it is used by.
    * The base implementation throws, there is no possible neutral implementation
-   * @param {*} foundname - assumed to be a file found by this finder
-   * @returns the abi as a javsacript list, compatible with ethers.utils.Interface constructor
+   * @param {*} foundname - assumed to be a source found by this finder
+   * @returns {object} the abi as a javsacript list, compatible with ethers.utils.Interface constructor
    */
   readAbi(foundname) {
     throw new Error(`not implemented by ${this.constructor.name}`);

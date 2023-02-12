@@ -8,7 +8,7 @@ import { deployNewDiamond, listSelectors } from "./src/commands/deploy.js";
 
 program.addOption(
   new Option(
-    "-d, --deploykey <deploykey>",
+    "-d, --deploykey <key>",
     "derive the areana address from private key that deployed the arena contract"
   ).env("ARENASTATE_DEPLOYKEY")
 );
@@ -20,12 +20,21 @@ program.addOption(
 );
 
 program
-  .command("deploy-new")
+  .command("diamond-new")
   .description(
     `deploy a new diamond, this deploys a new proxy contract with empty state and cuts in the facets`
   )
   .enablePositionalOptions()
   .combineFlagAndOptionalValue(false)
+  .option("-O, --offline", "prepare unsigned transaction payloads")
+  .option("--diamond-name", "name of diamond contract", "Diamond")
+  .option("--diamond-init-name", "name of diamond contract", "DiamondNew")
+  .option(
+    "--diamond-init-args",
+    "json formated args for the init contract name",
+    '{"typeURIs":[]}'
+  )
+  .option("--diamond-cut-name", "name of diamond contract", "DiamondCutFacet")
   .option(
     "-f, --facets <facets>",
     "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
