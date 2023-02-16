@@ -4,49 +4,7 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "diamond-new",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/deploycli.js",
-      "envFile": "${workspaceFolder}/.env.hh",
-      "args": [
-        "-u",
-        "http://localhost:8545",
-        "diamond-new" // , "--offline"
-      ]
-    },
-
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "list selectors",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/deploycli.js",
-      "args": [
-        "list-selectors",
-        "-i",
-        "${workspaceFolder:chaintrap-contracts}/build/forge/out",
-        "-n",
-        "HelloWorld",
-        "-F",
-        "json"
-      ]
-    },
-
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "list deployable",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/deploycli.js",
-      "args": [
-        "list",
-        "-i",
-        "${workspaceFolder:chaintrap-contracts}/build/forge/out"
-      ]
-    },
+  
     {
       "type": "node",
       "request": "launch",
