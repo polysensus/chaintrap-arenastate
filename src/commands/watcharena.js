@@ -39,7 +39,7 @@ export async function watchArena(program, options) {
   }
   const provider = signer || ctx.provider;
   const arenaAddress = await getArenaAddress(program, options, provider);
-  const arena = arenaConnect(provider, arenaAddress);
+  const arena = arenaConnect(arenaAddress, provider);
 
   const dispatcher = new Dispatcher(arena);
   dispatcher.addHandler((ev) => {

@@ -88,174 +88,13 @@ tasks:
           deploy-key: ${deploy-key}
           chain: polygon
 
-  build-pre-link:
-    run:
-      - command:
-          exec: |
-            #LIBLIB=$(${THIS_TUSK} liblink --chain caimst)
-            #echo $LIBLIB
-            #LIBLIB="lib/game.sol:Games.json:0xf88924661969b0d177e6883f5A6FA9A4F0962893,lib/mapstructure.sol:LocationMaps.json:0xBfA0794A14e2e7Bc2cC555446c9Cc318cb684261,lib/transcript.sol:Transcripts.json:0xFe00d7485d86c74d78b048e5AbA541Fcf7F7635d"
-            #LIBLIB=\
-            #--libraries lib/game.sol:Games.json:0xf88924661969b0d177e6883f5A6FA9A4F0962893 \
-            #--libraries lib/mapstructure.sol:LocationMaps.json:0xBfA0794A14e2e7Bc2cC555446c9Cc318cb684261 \
-            #--libraries lib/transcript.sol:Transcripts.json:0xFe00d7485d86c74d78b048e5AbA541Fcf7F7635d
-
-            cd ${contracts-dir}
-
-            forge build --sizes \
-              --libraries lib/mapstructure.sol:LocationMaps.json:0xBfA0794A14e2e7Bc2cC555446c9Cc318cb684261 \
-              --libraries lib/game.sol:Games.json:0xf88924661969b0d177e6883f5A6FA9A4F0962893 \
-              --libraries lib/transcript.sol:Transcripts.json:0xFe00d7485d86c74d78b048e5AbA541Fcf7F7635d
-
-  deploy-link-caimst:
-    options:
-      rpc:
-        default: ${deploy-caimst-url}
-      deploy-key:
-        default: ${deploy-key}
-    run:
-      - command:
-          exec: |
-            #LIBLIB=$(${THIS_TUSK} liblink --chain caimst)
-            #echo $LIBLIB
-            #LIBLIB="lib/game.sol:Games.json:0xf88924661969b0d177e6883f5A6FA9A4F0962893,lib/mapstructure.sol:LocationMaps.json:0xBfA0794A14e2e7Bc2cC555446c9Cc318cb684261,lib/transcript.sol:Transcripts.json:0xFe00d7485d86c74d78b048e5AbA541Fcf7F7635d"
-            #LIBLIB=\
-            #--libraries lib/game.sol:Games.json:0xf88924661969b0d177e6883f5A6FA9A4F0962893 \
-            #--libraries lib/mapstructure.sol:LocationMaps.json:0xBfA0794A14e2e7Bc2cC555446c9Cc318cb684261 \
-            #--libraries lib/transcript.sol:Transcripts.json:0xFe00d7485d86c74d78b048e5AbA541Fcf7F7635d
-
-            cd ${contracts-dir}
-
-            forge create \
-              --optimizer-runs 200 \
-              --legacy \
-              --rpc-url=${rpc} \
-              --private-key=${deploy-key} \
-              --gas-limit=${deploy-gaslimit} \
-              --libraries lib/mapstructure.sol:LocationMaps.json:0xBfA0794A14e2e7Bc2cC555446c9Cc318cb684261 \
-              --libraries lib/game.sol:Games.json:0xf88924661969b0d177e6883f5A6FA9A4F0962893 \
-              --libraries lib/transcript.sol:Transcripts.json:0xFe00d7485d86c74d78b048e5AbA541Fcf7F7635d \
-              chaintrap/arena.sol:Arena
-
-  deploy-link-polygon:
-    options:
-      rpc:
-        default: ${deploy-polygon-mumbai-url}
-      deploy-key:
-        default: ${deploy-key}
-    run:
-      - command:
-          exec: |
-            #LIBLIB=$(${THIS_TUSK} liblink --chain polygon)
-            echo $LIBLIB
-            cd ${contracts-dir}
-
-            forge create \
-              --optimizer-runs 200 \
-              --legacy \
-              --rpc-url=${rpc} \
-              --private-key=${deploy-key} \
-              --gas-limit=${deploy-gaslimit} \
-              $LIBLIB \
-              chaintrap/arena.sol:Arena
-
   deploy-hh:
     run:
       task:
         name: deploy-arena
         options:
           rpc: ${deploy-hh-url}
-          deploy-key: ${deploy-hh-private-key}
-
-  liblink:
-    options:
-      chain:
-    run:
-      - command:
-          exec: |
-            set -e
-            libdir=$(cd ${launchdir} && cd ${depdir} && pwd)
-            LIBLIB=""
-            for chainlib in ${libdir}/${chain}-*.json; do
-              libinfo=$(basename $chainlib)
-              path="${libinfo%%:*}"
-              name="${libinfo#*:}"
-              path="${path#*-}"
-              address=$(cat $chainlib | jq -r .deployedTo)
-              LIBLIB="$LIBLIB --libraries lib/$path:$name:$address"
-            done
-            echo "$LIBLIB"
-
-  deploy-libs:
-    options:
-      rpc:
-      deploy-key:
-      chain:
-    run:
-      - command:
-          exec: |
-            set -e
-            cd ${contracts-dir}
-            libdir=$(cd ${launchdir} && mkdir -p ${depdir} && cd ${depdir} && pwd)
-
-            libs="game.sol:Games;transcript.sol:Transcripts;mapstructure.sol:LocationMaps"
-
-            COMMON_OPTS="\
-              --optimizer-runs 200 \
-              --legacy \
-              --rpc-url=${rpc} \
-              --private-key=${deploy-key} \
-              --gas-limit=${deploy-gaslimit} \
-              --json"
-
-            for libname in game.sol:Games transcript.sol:Transcripts mapstructure.sol:LocationMaps; do
-              path="${libname%%:*}"
-              name="${libname#*:}"
-              forge create lib/$path:$name \
-                $COMMON_OPTS | tee $libdir/${chain}-$libname.json
-            done
-
-  deploy-lib:
-    options:
-      rpc:
-      deploy-key:
-      chain:
-    args:
-      path:
-      name:
-    run:
-      - command:
-          exec: |
-            set -e
-            cd ${contracts-dir}
-            libdir=$(cd ${launchdir} && mkdir -p ${depdir} && cd ${depdir} && pwd)
-
-            # forge create lib/game.sol:Games
-            forge create ${path}:${name} \
-              --optimizer-runs 200 \
-              --legacy \
-              --rpc-url=${rpc} \
-              --private-key=${deploy-key} \
-              --gas-limit=${deploy-gaslimit} \
-              --json | tee $libdir/${chain}-${name}.json
-
-  deploy-arena-diamond:
-    options:
-      rpc:
-      deploy-key:
-    run:
-      - command:
-          exec: |
-            set -e
-            cd ${contracts-dir}
-
-            export CHAINTRAP_CONTRACTS_OPERATOR_KEY="${deploy-key}"
-            ls -lad scripts/deploy.s.sol
-            forge script scripts/deploy.s.sol \
-              --ffi \
-              --rpc-url=${rpc} \
-              --broadcast \
-              -vvvv
+          deploy-key: hardhat
 
   deploy-arena:
     options:
@@ -265,11 +104,20 @@ tasks:
       - command:
           exec: |
             set -e
-            cd ${contracts-dir}
 
-            forge create chaintrap/arena.sol:Arena \
-              --optimizer-runs 200 \
-              --legacy \
-              --rpc-url=${rpc} \
-              --private-key=${deploy-key} \
-              --gas-limit=${deploy-gaslimit}
+            npx diamond-deploy list \
+              -I facet -n Diamond DiamondNew \
+              -i node_modules/@polysensus/chaintrap-contracts/abi \
+              --format json -x node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json \
+              | tee diamond-deploy.json
+
+            npx diamond-deploy \
+              -u "${rpc}" \
+              -d "${deploy-key}" \
+              diamond-new \
+              --diamond-name Diamond \
+              --diamond-cut-name DiamondCutFacet \
+              --diamond-init-name DiamondNew \
+              --diamond-init-args \
+                '[{"typeURIs": ["GAME_TYPE", "TRANSCRIPT_TYPE", "FURNITURE_TYPE"]}]' \
+              -f diamond-deploy.json

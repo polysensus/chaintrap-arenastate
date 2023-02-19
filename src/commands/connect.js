@@ -2,8 +2,6 @@ import { ethers } from "ethers";
 import { getArenaAddress } from "./arenaaddress.js";
 import { arenaConnect } from "../lib/chaintrapabi.js";
 import { isFile, readHexKey } from "./fsutil.js";
-import doc from "@polysensus/chaintrap-contracts/abi/Arena.json" assert { type: "json" };
-export const { abi } = doc;
 
 export function programConnect(program, polling = false, key = null) {
   const url = program.opts().url;
@@ -32,5 +30,5 @@ export function programConnect(program, polling = false, key = null) {
 export async function programConnectArena(program, options) {
   const provider = programConnect(program);
   const arena = await getArenaAddress(program, options, provider);
-  return arenaConnect(provider, arena, abi);
+  return arenaConnect(arena, provider);
 }

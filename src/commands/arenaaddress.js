@@ -12,12 +12,11 @@ const out = console.log;
 export async function getArenaAddress(program, _ /*options*/, provider) {
   const vout = program.opts().verbose ? console.log : () => {};
 
-  let deployjson = program.opts().deployjson;
   let key = program.opts().deploykey;
   let acc = program.opts().deployacc;
   let addr = program.opts().arena;
 
-  if (!deployjson && !key && !acc && !addr) {
+  if (!key && !acc && !addr) {
     throw new Error(
       "To identify the arena contract to interact with, you must supply the deployer wallet key, the deployer wallet, a hardhat deploy.json or the explicit arena contract address"
     );
@@ -32,12 +31,9 @@ export async function getArenaAddress(program, _ /*options*/, provider) {
       key = readHexKey(key);
     }
     acc = new ethers.Wallet(key).address;
-  } else if (deployjson) {
-    const hh = readJson(deployjson);
-    return hh.contracts.Arena.address;
   }
-
   vout(`deployer wallet: ${acc}`);
+
   if (!provider) {
     provider = programConnect(program);
   }

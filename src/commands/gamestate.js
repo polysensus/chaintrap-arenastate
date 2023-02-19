@@ -2,8 +2,6 @@ import { ethers } from "ethers";
 import { programConnect } from "./connect.js";
 import { getArenaAddress } from "./arenaaddress.js";
 import { arenaConnect } from "../lib/chaintrapabi.js";
-import doc from "@polysensus/chaintrap-contracts/abi/Arena.json" assert { type: "json" };
-export const { abi } = doc;
 
 import {
   findGameEvents,
@@ -41,7 +39,7 @@ export async function tokenuri(program, options, token) {
 
   const provider = programConnect(program);
   const address = await getArenaAddress(program, options, provider);
-  const arena = arenaConnect(provider, address, abi);
+  const arena = arenaConnect(provider, address);
 
   const tok = ethers.BigNumber.from(token);
   const uri = await arena.uri(tok);
@@ -56,7 +54,7 @@ export async function gamelog(program, options) {
 
   const provider = programConnect(program);
   const address = await getArenaAddress(program, options, provider);
-  const arena = arenaConnect(provider, address, abi);
+  const arena = arenaConnect(address, provider);
 
   if (typeof gid === "undefined" || gid < 0) {
     gid = await arena.lastGame();
@@ -82,7 +80,7 @@ export async function stateroster(program, options) {
 
   const provider = programConnect(program);
   const address = await getArenaAddress(program, options, provider);
-  const arena = arenaConnect(provider, address, abi);
+  const arena = arenaConnect(address, provider);
 
   let gid = options.gid;
   if (typeof gid === "undefined" || gid < 0) {

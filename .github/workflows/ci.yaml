@@ -14,6 +14,14 @@ jobs:
           APP_PEM: ${{ secrets.CICD_APP_PEM }}
           APP_ID: ${{ secrets.CICD_APP_ID }}
 
+
+      - name: Checkout the diamond-deploy repository
+        uses: actions/checkout@v3
+        with:
+          repository: polysensus/diamond-deploy
+          submodules: recursive
+          path: diamond-deploy
+
       - name: Checkout the contracts repository
         uses: actions/checkout@v3
         with:
@@ -54,12 +62,17 @@ jobs:
           CICD_APP_PEM: ${{ secrets.CICD_APP_PEM }}
 
         run: |
+          pushd diamond-deploy
+          npm install
+          popd
           pushd chaintrap-contracts
           npm install
           popd
           pushd chaintrap-arenastate
           npm uninstall --save "@polysensus/chaintrap-contracts"
           npm install ../chaintrap-contracts --save-dev
+          npm uninstall --save "@polysensus/diamond-deploy"
+          npm install ../diamond-deploy --save-dev
           npm install
 
       - name: build
