@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import diamondSol from "@ploysensus/chaintrap-contracts/abi/Diamond.json" assert { type: "json" };
+import diamondSol from "@polysensus/chaintrap-contracts/abi/Diamond.json" assert { type: "json" };
 import diamondCutFacetSol from "@polysensus/chaintrap-contracts/abi/DiamondCutFacet.json" assert { type: "json" };
 import diamondLoupeFacetSol from "@polysensus/chaintrap-contracts/abi/DiamondLoupeFacet.json" assert { type: "json" };
 import ownershipFacetSol from "@polysensus/chaintrap-contracts/abi/OwnershipFacet.json" assert { type: "json" };

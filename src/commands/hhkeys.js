@@ -23,14 +23,14 @@ const wellknown = [
 ];
 
 export function resolveHardhatKey(key) {
-  if (!key.constructor?.name === "String") return key;
+  if (!(key.constructor?.name === "String")) return key;
   if (key.startsWith("0x")) return key;
 
   // hardhat provides 10 wellknown and funded private keys
   const hhkey = key.toLowerCase();
   if (hhkey === "hardhat" || hhkey === "hh") return wellknown[0];
 
-  const parts = hhkey.split();
+  const parts = hhkey.split(":");
   if (parts[0] !== "hardhat" && parts[0] !== "hh") return key;
   if (parts.length !== 2) return key;
 

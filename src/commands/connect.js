@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 import { getArenaAddress } from "./arenaaddress.js";
 import { arenaConnect } from "../lib/chaintrapabi.js";
 import { isFile, readHexKey } from "./fsutil.js";
+import { resolveHardhatKey } from "./hhkeys.js";
 
 export function programConnect(program, polling = false, key = null) {
   const url = program.opts().url;
@@ -17,11 +18,9 @@ export function programConnect(program, polling = false, key = null) {
   if (signer) {
     if (isFile(signer)) {
       signer = readHexKey(signer);
+    } else if (signer.constructor?.name === 'String') {
+      signer = resolveHardhatKey(signer)
     }
-    // hardhat provides 10 wellknown and funded private keys
-    if (signer.toLowerCase() == "hardhat" || signer.toLowerCase() == "hh")
-      signer =
-        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
     signer = new ethers.Wallet(signer, provider);
   }
   return signer ? signer : provider;

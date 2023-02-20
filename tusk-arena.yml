@@ -94,12 +94,14 @@ tasks:
         name: deploy-arena
         options:
           rpc: ${deploy-hh-url}
-          deploy-key: hardhat
+          deploy-key: hardhat:10
+          owner-key: hardhat
 
   deploy-arena:
     options:
       rpc:
       deploy-key:
+      owner-key:
     run:
       - command:
           exec: |
@@ -115,6 +117,7 @@ tasks:
               -u "${rpc}" \
               -d "${deploy-key}" \
               diamond-new \
+              --diamond-owner-key ${owner-key} \
               --diamond-name Diamond \
               --diamond-cut-name DiamondCutFacet \
               --diamond-init-name DiamondNew \

@@ -5,6 +5,7 @@ import { deriveContractAddress } from "../lib/deriveaddress.js";
 import { programConnect } from "./connect.js";
 
 import { getLogger } from "../lib/log.js";
+import { resolveHardhatKey } from "./hhkeys.js";
 
 const log = getLogger("arenaaddress");
 const out = console.log;
@@ -29,6 +30,8 @@ export async function getArenaAddress(program, _ /*options*/, provider) {
   if (key) {
     if (isFile(key)) {
       key = readHexKey(key);
+    } else {
+      key = resolveHardhatKey(key)
     }
     acc = new ethers.Wallet(key).address;
   }
