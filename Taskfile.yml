@@ -92,8 +92,8 @@ tasks:
       - task: dev:hh:restart
       - |
         set -e
-        $CONTRACTS_DEVTOOL deploy-local -f .local/hh/deploy.json
-        echo "logs in $(pwd)/.local/hh/hh-log"
+        tusk -q -f tusk-arena.yml deploy-hh-new
+        tusk -q -f tusk-arena.yml find-hh | tee arenaproxy.addr
 
   dev:hh:start:
     desc: start a local hardhat node (if there isn't one running)
