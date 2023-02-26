@@ -7,7 +7,7 @@ export function isFile(maybe) {
     const stats = fs.statSync(maybe);
     return stats.isFile();
   } catch (err) {
-    console.log(err);
+    // console.log(err);
     return false;
   }
 }

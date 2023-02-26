@@ -18,14 +18,22 @@ options:
     default:
       command: cat .local/dev/wallets/wallet-deploy.key
 
-  libdeploy-key:
+  arena-owner-key:
     default:
-      command: cat .local/dev/wallets/libdeploy.key
+      command: cat .local/dev/wallets/arena-owner.key
 
   depdir:
     usage: the directory to store deployment json files in
     default: ./.local/dev/deployed
 
+  deploy-new:
+    type: bool
+
+  dry-run:
+    type: bool
+
+  diamond-address:
+  diamond-nonce:
   deploy-gaslimit:
     default: 3000000
   deploy-caimst-url:
@@ -34,74 +42,34 @@ options:
     default: https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf
   deploy-hh-url:
     default: http://localhost:8545
-  deploy-hh-private-key:
-    # the private key for hh is well known
-    default: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-  deploy-hh-account:
-    default: "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 
 tasks:
-  deploy-all:
-    run:
-      - task: deploy-caimst
-      - task: deploy-polygon
 
-  deploy-polygon:
+  diamond-find:
+    options:
+      rpc:
+      deploy-key:
+      diamond-nonce:
     run:
-      task:
-        name: deploy-arena
-        options:
-          rpc: ${deploy-polygon-mumbai-url}
-          deploy-key: ${deploy-key}
+      - command:
+          exec: |
+            set -e
 
-  deploy-polygon-diamond:
-    run:
-      task:
-        name: deploy-arena-diamond
-        options:
-          rpc: ${deploy-polygon-mumbai-url}
-          deploy-key: ${deploy-key}
-
-  deploy-caimst:
-    run:
-      task:
-        name: deploy-arena
-        options:
-          rpc: ${deploy-caimst-url}
-          deploy-key: ${deploy-key}
-
-  deploy-libs-caimst:
-    run:
-      task:
-        name: deploy-libs
-        options:
-          rpc: ${deploy-caimst-url}
-          deploy-key: ${deploy-key}
-          chain: caimst
-
-  deploy-libs-polygon:
-    run:
-      task:
-        name: deploy-libs
-        options:
-          rpc: ${deploy-polygon-mumbai-url}
-          deploy-key: ${deploy-key}
-          chain: polygon
-
-  deploy-hh:
-    run:
-      task:
-        name: deploy-arena
-        options:
-          rpc: ${deploy-hh-url}
-          deploy-key: hardhat:10
-          owner-key: hardhat
+            npx diamond-deploy \
+              -u "${rpc}" \
+              -d "${deploy-key}" \
+              find \
+                $([ -n '${diamond-nonce}' ] && echo -n '--diamond-nonce ${diamond-nonce}' )
 
   deploy-arena:
     options:
       rpc:
       deploy-key:
       owner-key:
+      diamond-address:
+      diamond-nonce:
+      dry-run:
+      gasprice:
     run:
       - command:
           exec: |
@@ -111,16 +79,155 @@ tasks:
               -I facet -n Diamond DiamondNew \
               -i node_modules/@polysensus/chaintrap-contracts/abi \
               --format json -x node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json \
-              | tee diamond-deploy.json
+              > diamond-deploy.json
+
+            npx diamond-deploy \
+              -u "${rpc}" \
+              -d "${deploy-key}" \
+              diamond-up \
+                $(${dry-run} && echo -n '--dry-run' ) \
+                $([ -n '${diamond-address}' ] && echo -n '--diamond-address ${diamond-address}' ) \
+                $([ -n '${diamond-nonce}' ] && echo -n '--diamond-nonce ${diamond-nonce}' ) \
+                --replace \
+                --gaslimit 3500000 \
+                $([ -n '${gasprice}' ] && echo -n '--gasprice ${gasprice}' ) \
+                --legacy \
+                --diamond-owner-key ${owner-key} \
+                --ignore-names DiamondNew \
+                -f diamond-deploy.json
+
+  deploy-arena-new:
+    options:
+      rpc:
+      deploy-key:
+      owner-key:
+      gasprice:
+      dry-run:
+        type: bool
+    run:
+      - command:
+          exec: |
+            set -e
+
+            npx diamond-deploy list \
+              -I facet -n Diamond DiamondNew \
+              -i node_modules/@polysensus/chaintrap-contracts/abi \
+              --format json -x node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json \
+              > diamond-deploy.json
 
             npx diamond-deploy \
               -u "${rpc}" \
               -d "${deploy-key}" \
               diamond-new \
-              --diamond-owner-key ${owner-key} \
-              --diamond-name Diamond \
-              --diamond-cut-name DiamondCutFacet \
-              --diamond-init-name DiamondNew \
-              --diamond-init-args \
-                '[{"typeURIs": ["GAME_TYPE", "TRANSCRIPT_TYPE", "FURNITURE_TYPE"]}]' \
-              -f diamond-deploy.json
+                $(${dry-run} && echo -n '--dry-run' ) \
+                --replace \
+                --gaslimit 3500000 \
+                $([ -n '${gasprice}' ] && echo -n '--gasprice ${gasprice}' ) \
+                --legacy \
+                --diamond-owner-key ${owner-key} \
+                --diamond-init-name DiamondNew \
+                --diamond-init-args \
+                  '[{"typeURIs": ["GAME_TYPE", "TRANSCRIPT_TYPE", "FURNITURE_TYPE"]}]' \
+                -f diamond-deploy.json
+  deploy-all:
+    run:
+      - task: deploy-caimst
+      - task: deploy-polygon
+
+  find-polygon:
+    run:
+      task:
+        name: diamond-find
+        options:
+          rpc: ${deploy-polygon-mumbai-url}
+          deploy-key: ${deploy-key}
+          diamond-nonce: ${diamond-nonce}
+
+  deploy-polygon:
+    run:
+      task:
+        name: deploy-arena
+        options:
+          rpc: ${deploy-polygon-mumbai-url}
+          deploy-key: ${deploy-key}
+          owner-key: ${arena-owner-key}
+          diamond-address: ${diamond-address}
+          diamond-nonce: ${diamond-nonce}
+          dry-run: ${dry-run}
+          gasprice: "2.6"
+
+  deploy-polygon-new:
+    run:
+      task:
+        name: deploy-arena-new
+        options:
+          rpc: ${deploy-polygon-mumbai-url}
+          deploy-key: ${deploy-key}
+          owner-key: ${arena-owner-key}
+          dry-run: ${dry-run}
+          gasprice: "2.6"
+
+  find-caimst:
+    run:
+      task:
+        name: diamond-find
+        options:
+          rpc: ${deploy-caimst-url}
+          deploy-key: ${deploy-key}
+          diamond-nonce: ${diamond-nonce}
+
+  deploy-caimst:
+    run:
+      task:
+        name: deploy-arena
+        options:
+          rpc: ${deploy-caimst-url}
+          deploy-key: ${deploy-key}
+          owner-key: ${arena-owner-key}
+          diamond-address: ${diamond-address}
+          diamond-nonce: ${diamond-nonce}
+          dry-run: ${dry-run}
+
+  deploy-caimst-new:
+    run:
+      task:
+        name: deploy-arena-new
+        options:
+          rpc: ${deploy-caimst-url}
+          deploy-key: ${deploy-key}
+          owner-key: ${arena-owner-key}
+          dry-run: ${dry-run}
+
+  find-hh:
+    run:
+      task:
+        name: diamond-find
+        options:
+          rpc: ${deploy-hh-url}
+          deploy-key: hardhat:10 
+          diamond-nonce: ${diamond-nonce}
+
+
+  deploy-hh:
+    run:
+      task:
+        name: deploy-arena
+        options:
+          rpc: ${deploy-hh-url}
+          deploy-key: hardhat:10
+          owner-key: hardhat
+          diamond-address: ${diamond-address}
+          diamond-nonce: ${diamond-nonce}
+          dry-run: ${dry-run}
+          gasprice: "2.6"
+
+  deploy-hh-new:
+    run:
+      task:
+        name: deploy-arena-new
+        options:
+          rpc: ${deploy-hh-url}
+          deploy-key: hardhat:10
+          owner-key: hardhat
+          dry-run: ${dry-run}
+          gasprice: "2.6"

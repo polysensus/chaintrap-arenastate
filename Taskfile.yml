@@ -29,10 +29,49 @@ tasks:
   deploy:
     desc: deploy the contracts to caimst and mumbai
     cmds:
-      - |
-        set -e
-        tusk -f tusk-arena.yml deploy-caimst
-        tusk -f tusk-arena.yml deploy-polygon
+      - task: deploy:caimst
+      - task: deploy:mumbai
+
+  find:mumbai:
+    desc: "find the arena diamond on polygon mumba"
+    cmds:
+      - tusk -q -f tusk-arena.yml find-mumbai
+
+  find:caimst:
+    desc: "find the arena diamond on caimst"
+    cmds:
+      - tusk -q -f tusk-arena.yml find-caimst
+
+  find:hh:
+    desc: "find the arena diamond on hardhat"
+    cmds:
+      - tusk -q -f tusk-arena.yml find-hh
+
+  deploy:caimst:
+    desc: deploy the contracts to caimst and mumbai
+    cmds:
+      - tusk -f tusk-arena.yml deploy-caimst
+  deploy:mumbai:
+    desc: deploy the contracts to polygon mumbai testnet
+    cmds:
+      - tusk -f tusk-arena.yml deploy-polygon --diamond-address 0xBCAEF1Bd82E444B68d9C47E14f22d623150CeFB5
+  deploy:hh:
+    desc: deploy the contracts to hardhata (assumes the local server is listening on 8545)
+    cmds:
+      - tusk -f tusk-arena.yml deploy-hh
+  deploy:caimst-new:
+    desc: deploy the contracts to caimst and mumbai
+    cmds:
+      - tusk -f tusk-arena.yml deploy-caimst-new
+  deploy:mumbai-new:
+    desc: deploy the contracts to polygon mumbai testnet
+    cmds:
+      - tusk -f tusk-arena.yml deploy-polygon-new
+  deploy:hh-new:
+    desc: deploy the contracts to hardhata (assumes the local server is listening on 8545)
+    cmds:
+      - tusk -f tusk-arena.yml deploy-hh-new
+
 
   test:unit:
     desc: run the unit tests

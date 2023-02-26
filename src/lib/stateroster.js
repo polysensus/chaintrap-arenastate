@@ -31,7 +31,7 @@ export async function prepareRoster(arena, gid, options = {}) {
   }
 
   if (!fromBlock) fromBlock = await getGameCreatedBlock(arena, gid);
-  const roster = new StateRoster(arena.interface, gid, options);
+  const roster = new StateRoster(arena.getFacetInterface(ABIName.ArenaFacetName), gid, options);
   const snap = roster.snapshot();
   return [snap, roster];
 }

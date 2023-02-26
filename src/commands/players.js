@@ -65,7 +65,7 @@ export async function commitexituse(program, options) {
   }
 
   if (!p.state?.sceneblob || hexStripZeros(p.state?.sceneblob) == "0x") {
-    out("scene not set for player ${p.address}");
+    out(`scene not set for player ${p.address}`);
     return;
   }
 
