@@ -45,7 +45,8 @@ export function parseEthersEvent(arenaInterface, txmemo, ...args) {
  */
 export function arenaEventFilter(arena, name, ...args) {
   try {
-    return arena.filters[name](undefined, ...args);
+    const facet = arena.getFacet("ArenaFacet");
+    return facet.filters[name](undefined, ...args);
   } catch (e) {
     log.debug(`${e}`);
     throw e;
@@ -67,8 +68,9 @@ export function gameEventFilter(arena, gid) {
 }
 
 export async function findGameCreated(arena, gid) {
+  const facet = arena.getFacet("ArenaFacet");
   const filter =
-    arena.filters["GameCreated(uint256,uint256,address,uint256)"](gid);
+    facet.filters["GameCreated(uint256,uint256,address,uint256)"](gid);
   const found = await arena.queryFilter(filter);
 
   if (found.length == 0) {
@@ -83,8 +85,9 @@ export async function findGameCreated(arena, gid) {
 }
 
 export async function findGames(arena) {
+  const facet = arena.getFacet("ArenaFacet");
   const filter =
-    arena.filters["GameCreated(uint256,uint256,address,uint256)"]();
+    facet.filters["GameCreated(uint256,uint256,address,uint256)"]();
   return arena.queryFilter(filter);
 }
 

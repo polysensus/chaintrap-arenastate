@@ -4,7 +4,6 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-  
     {
       "type": "node",
       "request": "launch",
@@ -16,7 +15,6 @@
         "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
         "-u",
         "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
-        "watch",
         "--providers",
         "${workspaceFolder}/.local/dev/providers.json"
       ]
@@ -38,21 +36,17 @@
         "${workspaceFolder}/.local/dev/providers.json"
       ]
     },
-
     {
       "type": "node",
       "request": "launch",
-      "name": "glog",
+      "name": "*** glog",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "args": [
-        // "-u",
-        // "http://localhost:8545",
-        // "-j",
-        // "${workspaceFolder}/.local/hh/deploy.json",
+        "--arena",
+        "0x029BEE334C9B3eB22401bAd1446519012b0e797B",
         "-u",
-        //"http://localhost:8300",
-        "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
+        "http://localhost:8545",
         "glog"
       ]
     },
@@ -123,19 +117,20 @@
 
       "args": [
         // "-u",
-        // "http://localhost:8545",
         // "-j",
         // "${workspaceFolder}/.local/hh/deploy.json",
         "-d",
-        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        // "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "hardhat:10",
         "-u",
-        // "http://localhost:8300",
-        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        "http://localhost:8545",
+        // "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
         // "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
         "--map",
         "${workspaceFolder}/data/tests/map02.json",
         "-k",
-        "${workspaceFolder}/.local/dev/wallets/guardian.key",
+        // "${workspaceFolder}/.local/dev/wallets/guardian.key",
+        "hardhat:1",
         "newgame"
       ]
     },
@@ -166,49 +161,39 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "setstart",
+      "name": "*** setstart",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "args": [
-        // "-u",
-        // "http://localhost:8545",
-        // "-j",
-        // "${workspaceFolder}/.local/hh/deploy.json",
+        "-u",
+        "http://localhost:8545",
+        "--arena",
+        "0x029BEE334C9B3eB22401bAd1446519012b0e797B",
         "--map",
         "${workspaceFolder}/data/tests/map02.json",
-        "-u",
-        // "http://localhost:8300",
-        "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
-        "-d",
-        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
         "-k",
-        "${workspaceFolder}/.local/dev/wallets/guardian.key",
+        "${workspaceFolder}/.local/dev/wallets/hardhat-0.key",
         "setstart",
-        "0x61ba3a9cEfd6CBbcF4e845e203a29A13c688e218",
-        "2" // bob
+        "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+        "2"
       ]
     },
 
     {
       "type": "node",
       "request": "launch",
-      "name": "commitexituse",
+      "name": "*** commitexituse",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "args": [
-        // "-u",
-        // "http://localhost:8545",
-        // "-j",
-        // "${workspaceFolder}/.local/hh/deploy.json",
+        "-u",
+        "http://localhost:8545",
+        "--arena",
+        "0x029BEE334C9B3eB22401bAd1446519012b0e797B",
         "--map",
         "${workspaceFolder}/data/tests/map02.json",
-        "-u",
-        // "http://localhost:8300",
-        "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
-        "-d",
-        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
         "-k",
-        "${workspaceFolder}/.local/dev/wallets/bob.key",
+        "${workspaceFolder}/.local/dev/wallets/hardhat-1.key",
         "commitexituse",
         "-e",
         "0:0" // side:egressIndex

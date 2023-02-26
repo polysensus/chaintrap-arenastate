@@ -25,8 +25,8 @@ const singlePlayer2MoveEthLogs = JSON.parse(
 );
 
 import { arenaInterface } from "./chaintrapabi.js";
-import doc from "@polysensus/chaintrap-contracts/abi/Arena.json" assert { type: "json" };
-export const { abi } = doc;
+import { arenaFacetABI } from "./chaintrapabi.js";
+const abi = arenaFacetABI;
 
 const bigOne = ethers.BigNumber.from(1);
 

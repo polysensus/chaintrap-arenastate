@@ -1,0 +1,77 @@
+interpreter: bash -c
+usage: arena-openai
+options:
+  launchdir:
+    default:
+      command: echo $PWD
+  openai-api-key:
+    default:
+      command: echo $ARENASTATE_OPENAI_API_KEY
+
+tasks:
+  oai-list:
+    run:
+      - command:
+          exec: |
+            set -e
+            curl https://api.openai.com/v1/models \
+              -H "Authorization: Bearer ${openai-api-key}"
+
+  oai-model:
+    args:
+      model:
+    run:
+      - command:
+          exec: |
+            set -e
+            curl https://api.openai.com/v1/models/${model} \
+              -H "Authorization: Bearer ${openai-api-key}"
+  oai-scene-text:
+    run:
+      - command:
+          exec: |
+            set -e
+            # "prompt": "In the voice of an adventure game, provide a discription of the scene observed by a player who just entered a room through its south door. Note that the room is part of a dungeon and the player is nervous of traps. The room has for sides. There are two doors in the east side. There is one door in the south side.",
+            curl -X POST https://api.openai.com/v1/completions \
+              -H 'Content-Type: application/json' \
+              -H 'Authorization: Bearer ${openai-api-key}' \
+              -d '{
+                "model": "text-davinci-003",
+                "prompt": "In the voice of an adventure game, provide a discription of the scene observed by a player who just entered a room through its south door. Note that the room is part of a dungeon and the player is nervous of traps. The room has for sides. There are two doors in the east side. There is one door in the south side.",
+                "max_tokens": 1024
+              }' | jq -r
+  oai-scene:
+    run:
+      - command:
+          exec: |
+            set -e
+            DIR=.local/dev/wallets
+            WALLET=$(cat $DIR/robin.addr)
+            curl -X POST https://api.openai.com/v1/images/generations \
+              -H 'Content-Type: application/json' \
+              -H 'Authorization: Bearer ${openai-api-key}' \
+              -d '{
+                "prompt": "Your eyes scan the room nervously, looking for traps. You note the door you just stepped through in the south side, and two doors on the east side. The walls of the room are lined with ancient stone and the air is humid and stale - a stark reminder that you are underground in a dungeon. You take a deep breath in preparation for what the next room may hold",
+                
+                "n": 2,
+                "size": "512x512",
+                "response_format": "url"
+              }' | jq -r
+
+  oai-game-icon:
+    run:
+      - command:
+          exec: |
+            set -e
+            DIR=.local/dev/wallets
+            WALLET=$(cat $DIR/robin.addr)
+            curl -X POST https://api.openai.com/v1/images/generations \
+              -H 'Content-Type: application/json' \
+              -H 'Authorization: Bearer ${openai-api-key}' \
+              -d '{
+                "prompt": "A stylised icon representing a turn based random dungeon crawler game",
+                
+                "n": 2,
+                "size": "512x512",
+                "response_format": "b64_json"
+              }' | jq -r

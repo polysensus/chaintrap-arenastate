@@ -1,5 +1,5 @@
 export class ABIName {
-  static ContractName = "Arena";
+  static ArenaFacetName = "ArenaFacet";
   static PlayerJoined = "PlayerJoined";
   static PlayerStartLocation = "PlayerStartLocation";
   static GameCreated = "GameCreated";

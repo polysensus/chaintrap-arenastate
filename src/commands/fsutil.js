@@ -1,19 +1,23 @@
 import fs from "fs";
 import { ethers } from "ethers";
+import { resolveHardhatKey } from "./hhkeys.js";
 
 export function isFile(maybe) {
   try {
     const stats = fs.statSync(maybe);
     return stats.isFile();
   } catch (err) {
-    console.log(err);
+    // console.log(err);
     return false;
   }
 }
 
 export function readHexKey(key) {
+  // Yes, if there is a file in the current working directory called 'hardhat'
+  // this will read the value from it and use it as the key
   key = fs.readFileSync(key, "utf-8");
   key = key.trim(); // deals with trailing newline
+  key = resolveHardhatKey(key);
   if (!key.startsWith("0x")) {
     key = "0x" + key;
   }
