@@ -42,6 +42,11 @@ jobs:
         with:
           node-version: 16.15.0
 
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
       - name: Install go-tusk and go-task
         run: |
           mkdir -p $GITHUB_WORKSPACE/bin
