@@ -72,7 +72,6 @@ tasks:
     cmds:
       - tusk -f tusk-arena.yml deploy-hh-new
 
-
   test:unit:
     desc: run the unit tests
     cmds:

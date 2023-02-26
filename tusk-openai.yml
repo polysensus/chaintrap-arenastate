@@ -8,7 +8,6 @@ options:
     default:
       command: echo $ARENASTATE_OPENAI_API_KEY
 
-
 tasks:
   oai-list:
     run:
@@ -76,5 +75,3 @@ tasks:
                 "size": "512x512",
                 "response_format": "b64_json"
               }' | jq -r
-
-

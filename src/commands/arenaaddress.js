@@ -31,7 +31,7 @@ export async function getArenaAddress(program, _ /*options*/, provider) {
     if (isFile(key)) {
       key = readHexKey(key);
     } else {
-      key = resolveHardhatKey(key)
+      key = resolveHardhatKey(key);
     }
     acc = new ethers.Wallet(key).address;
   }

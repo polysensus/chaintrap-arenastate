@@ -12,7 +12,6 @@ options:
       command: echo $ARENASTATE_OPENAI_API_KEY
 
 tasks:
-
   fileorvalue:
     usage: "echo the value, if value is a file read it from that."
     args:
@@ -44,7 +43,6 @@ tasks:
             ${address} && SUFFIX=.addr
             [ ! -f ${WALLETS_DIR}/${name}${SUFFIX} ] && echo "${name}${SUFFIX} not found" && exit 1
             printf "%s" "$(<${WALLETS_DIR}/${name}${SUFFIX})"
-
 
   gen-hh-wallets:
     usage: "usage save the well known hard hat keys as wallet files"

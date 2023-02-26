@@ -18,8 +18,8 @@ export function programConnect(program, polling = false, key = null) {
   if (signer) {
     if (isFile(signer)) {
       signer = readHexKey(signer);
-    } else if (signer.constructor?.name === 'String') {
-      signer = resolveHardhatKey(signer)
+    } else if (signer.constructor?.name === "String") {
+      signer = resolveHardhatKey(signer);
     }
     signer = new ethers.Wallet(signer, provider);
   }

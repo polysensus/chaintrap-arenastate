@@ -70,7 +70,13 @@ export async function gamelog(program, options) {
   }
   for (const elog of ethlogs) {
     log(
-      JSON.parse(JSON.stringify(parseEventLog(arena.getFacetInterface('ArenaFacet'), elog)), null, 2)
+      JSON.parse(
+        JSON.stringify(
+          parseEventLog(arena.getFacetInterface("ArenaFacet"), elog)
+        ),
+        null,
+        2
+      )
     );
   }
 }

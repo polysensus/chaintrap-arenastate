@@ -2,7 +2,14 @@ export { ABIName } from "./abiconst.js";
 export {
   arenaConnect,
   arenaInterface,
-  createArenaProxy,
+  arenaFacetABI,
+  diamondABI,
+  diamondCutFacetABI,
+  diamondLoupeFacetABI,
+  ownershipFacetABI,
+  arenaCallsFacetABI,
+  arenaTranscriptsFacetABI,
+  erc1155ArenaFacetABI,
 } from "./chaintrapabi.js";
 export * from "./nftmetadata.js";
 export * from "./map/scenecatalog.js";

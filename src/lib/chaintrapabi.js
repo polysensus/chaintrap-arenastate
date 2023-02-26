@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 // export { abi as diamondABI } from "@polysensus/chaintrap-contracts/abi/Diamond.json" assert { type: "json" };
-import  diamondSol from "@polysensus/chaintrap-contracts/abi/Diamond.json" assert { type: "json" };
+import diamondSol from "@polysensus/chaintrap-contracts/abi/Diamond.json" assert { type: "json" };
 export const diamondABI = diamondSol.abi;
 
 import diamondCutFacetSol from "@polysensus/chaintrap-contracts/abi/DiamondCutFacet.json" assert { type: "json" };

@@ -44,7 +44,6 @@ options:
     default: http://localhost:8545
 
 tasks:
-
   diamond-find:
     options:
       rpc:
@@ -204,9 +203,8 @@ tasks:
         name: diamond-find
         options:
           rpc: ${deploy-hh-url}
-          deploy-key: hardhat:10 
+          deploy-key: hardhat:10
           diamond-nonce: ${diamond-nonce}
-
 
   deploy-hh:
     run:

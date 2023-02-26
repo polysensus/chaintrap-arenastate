@@ -43,7 +43,8 @@
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "args": [
-        "--arena", "0x029BEE334C9B3eB22401bAd1446519012b0e797B",
+        "--arena",
+        "0x029BEE334C9B3eB22401bAd1446519012b0e797B",
         "-u",
         "http://localhost:8545",
         "glog"
@@ -166,7 +167,8 @@
       "args": [
         "-u",
         "http://localhost:8545",
-        "--arena", "0x029BEE334C9B3eB22401bAd1446519012b0e797B",
+        "--arena",
+        "0x029BEE334C9B3eB22401bAd1446519012b0e797B",
         "--map",
         "${workspaceFolder}/data/tests/map02.json",
         "-k",
@@ -186,7 +188,8 @@
       "args": [
         "-u",
         "http://localhost:8545",
-        "--arena", "0x029BEE334C9B3eB22401bAd1446519012b0e797B",
+        "--arena",
+        "0x029BEE334C9B3eB22401bAd1446519012b0e797B",
         "--map",
         "${workspaceFolder}/data/tests/map02.json",
         "-k",
