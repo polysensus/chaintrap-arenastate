@@ -1,11 +1,11 @@
 import { ethers } from "ethers";
-import { isFile, readHexKey, readJson } from "./fsutil.js";
+import { isFile, readHexKey } from "./fsutil.js";
 
-import { deriveContractAddress } from "../lib/deriveaddress.js";
+import { deriveContractAddress } from "@polysensus/diamond-deploy";
 import { programConnect } from "./connect.js";
 
 import { getLogger } from "../lib/log.js";
-import { resolveHardhatKey } from "./hhkeys.js";
+import { resolveHardhatKey } from "../lib/hhkeys.js";
 
 const log = getLogger("arenaaddress");
 const out = console.log;
@@ -41,11 +41,10 @@ export async function getArenaAddress(program, _ /*options*/, provider) {
     provider = programConnect(program);
   }
 
-  const arena = await deriveContractAddress(
-    provider,
-    acc,
-    program.opts().deploynonce
-  );
+  const arena = await deriveContractAddress(provider, acc, {
+    log,
+    nonce: program.opts().deploynonce,
+  });
   return arena;
 }
 

@@ -8,8 +8,6 @@ const defaultMemoBlockHorizon = 30;
 
 export class Dispatcher {
   constructor(contract, opts) {
-    this.interface = contract.interface;
-    this.filters = contract.filters;
     this.contract = contract;
 
     this.txmemo = opts?.txmemo ?? new TxMemo(defaultMemoBlockHorizon);
@@ -49,7 +47,21 @@ export class Dispatcher {
 
   wrapHandler(handler) {
     const wrapped = async (...args) => {
-      const ev = parseEthersEvent(this.interface, this.txmemo, ...args);
+      if (args.length === 0) {
+        log.info("bad callback from ethers, args empty");
+        return;
+      }
+
+      let ev = args[args.length - 1];
+      let iface;
+      // ask the proxy for the appropriate decoding interface
+      try {
+        iface = this.contract.getEventInterface(ev); // throws
+      } catch (err) {
+        log.info(`event ${ev?.topics?.[0]} not found: ${err}`);
+        return;
+      }
+      ev = parseEthersEvent(iface, this.txmemo, ev);
       if (!ev) return;
       log.debug({ name: ev.name, args: JSON.stringify(ev.args) });
       return handler(ev);
@@ -83,6 +95,6 @@ export class Dispatcher {
   }
 
   getFilter(signature, ...args) {
-    return this.contract.filters[signature](...args);
+    return this.contract.getFilter(signature, ...args);
   }
 }

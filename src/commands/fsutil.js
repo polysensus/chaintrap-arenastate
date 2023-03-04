@@ -1,6 +1,6 @@
 import fs from "fs";
 import { ethers } from "ethers";
-import { resolveHardhatKey } from "./hhkeys.js";
+import { resolveHardhatKey } from "../lib/hhkeys.js";
 
 export function isFile(maybe) {
   try {

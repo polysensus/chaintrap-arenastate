@@ -7,16 +7,17 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "watcharena",
+      "name": "roster",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "args": [
-        "-d",
-        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
         "-u",
-        "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
-        "--providers",
-        "${workspaceFolder}/.local/dev/providers.json"
+        "http://localhost:8545/",
+        "--arena",
+        "0xcA88B57549db9f89C1f9D3603b4e04A15242e100",
+        "roster",
+        "-g",
+        "0x02"
       ]
     },
 

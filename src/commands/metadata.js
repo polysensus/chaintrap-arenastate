@@ -11,7 +11,7 @@ import {
 
 import { NFTStorage, File, Blob } from "nft.storage";
 
-import { deriveContractAddress } from "../lib/deriveaddress.js";
+import { deriveContractAddress } from "@polysensus/diamond-deploy";
 import { programConnect } from "./connect.js";
 
 import { getLogger } from "../lib/log.js";
@@ -142,11 +142,10 @@ export async function storegame(program, options, provider) {
     provider = programConnect(program);
   }
 
-  const arena = await deriveContractAddress(
-    provider,
-    acc,
-    program.opts().deploynonce
-  );
+  const arena = await deriveContractAddress(provider, acc, {
+    log,
+    nonce: program.opts().deploynonce,
+  });
 
   // We include the proof in the initial metadata
   const mapfile = program.opts().map;

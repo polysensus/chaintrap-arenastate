@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { getArenaAddress } from "./arenaaddress.js";
 import { arenaConnect } from "../lib/chaintrapabi.js";
 import { isFile, readHexKey } from "./fsutil.js";
-import { resolveHardhatKey } from "./hhkeys.js";
+import { resolveHardhatKey } from "../lib/hhkeys.js";
 
 export function programConnect(program, polling = false, key = null) {
   const url = program.opts().url;

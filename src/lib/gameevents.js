@@ -5,13 +5,15 @@ import { getLogger } from "./log.js";
 
 const log = getLogger("gameevents");
 
-export function parseEthersEvent(arenaInterface, txmemo, ...args) {
+export function eventFromCallbackArgs(args) {
   if (args.length === 0) {
     log.info("bad callback from ethers, args empty");
     return;
   }
-  const ev = args[args.length - 1];
+  return args[args.length - 1];
+}
 
+export function parseEthersEvent(iface, txmemo, ev) {
   if (txmemo && txmemo.haveEvent(ev)) {
     log.debug(
       `discarding redundant event. have seen ${ev.transactionHash} before`
@@ -21,7 +23,7 @@ export function parseEthersEvent(arenaInterface, txmemo, ...args) {
 
   let parsed;
   try {
-    parsed = arenaInterface.parseLog(ev);
+    parsed = iface.parseLog(ev);
   } catch (err) {
     log.info("error parsing event from ethers", err);
     return;

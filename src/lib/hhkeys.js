@@ -1,3 +1,5 @@
+import { ethers } from "ethers";
+
 // note these keys are dumped to hardhats log every time it starts. look in .local/hh/hh-log
 const wellknown = [
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
@@ -22,9 +24,22 @@ const wellknown = [
   "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e",
 ];
 
+export function isHardhatAlias(key) {
+  if (key.constructor?.name !== "String") return false;
+  if (!key.startsWith("hardhat")) return false;
+  if (!(key === "hardhat" || key.startsWith("hardhat:"))) return false;
+  return true;
+}
+
+export function hardhatKeyAliasAddress(alias) {
+  if (!isHardhatAlias(alias))
+    throw new Error(`the supplied value is not a hard hat key alias`);
+  return new ethers.Wallet(ethers.utils.arrayify(resolveHardhatKey(alias)))
+    .address;
+}
+
 export function resolveHardhatKey(key) {
-  if (!(key.constructor?.name === "String")) return key;
-  if (key.startsWith("0x")) return key;
+  if (!isHardhatAlias(key)) return key;
 
   // hardhat provides 10 wellknown and funded private keys
   const hhkey = key.toLowerCase();

@@ -11,6 +11,11 @@ export {
   arenaTranscriptsFacetABI,
   erc1155ArenaFacetABI,
 } from "./chaintrapabi.js";
+export {
+  resolveHardhatKey,
+  isHardhatAlias,
+  hardhatKeyAliasAddress,
+} from "./hhkeys.js";
 export * from "./nftmetadata.js";
 export * from "./map/scenecatalog.js";
 export * from "./map/scene.js";
