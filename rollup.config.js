@@ -19,7 +19,7 @@ export default [
   {
     // Note: it is faster to generate multiple builds from the same config
     // where possible
-    name: pkg.name,
+    // name: pkg.name,
     input: "src/lib/main.js",
     external: ["ethers", "commander", "@msgpack/msgpack"],
     output: [
