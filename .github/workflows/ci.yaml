@@ -75,12 +75,13 @@ jobs:
           pushd chaintrap-arenastate
           npm uninstall "@polysensus/chaintrap-contracts" --save-dev
           npm link ../chaintrap-contracts --save-dev --force
+          grep version node_modules/@polysensus/chaintrap-contracts/package.json
+          find node_modules/@polysensus/chaintrap-contracts/abi
+
           npm uninstall "@polysensus/diamond-deploy" --save-dev
           npm link ../diamond-deploy --save-dev --force
           npm install
           grep version node_modules/@polysensus/diamond-deploy/package.json
-          find node_modules/@polysensus/chaintrap-contracts/abi
-          grep version node_modules/@polysensus/chaintrap-contracts/package.json
 
       - name: build
         working-directory: chaintrap-arenastate
@@ -100,8 +101,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: actions/delete-package-versions@v4
         if: ${{ startsWith(github.event.head_commit.message, 'release:v') ||
-                  startsWith(github.event.head_commit.message, 're-release:') ||
-                  startsWith(github.event.head_commit.message, 'fix:') }}
+          startsWith(github.event.head_commit.message, 're-release:') ||
+          startsWith(github.event.head_commit.message, 'fix:') }}
         with:
           package-name: "chaintrap-arenastate"
           min-versions-to-keep: 5
@@ -111,8 +112,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ startsWith(github.event.head_commit.message, 'release:v') ||
-                  startsWith(github.event.head_commit.message, 're-release:') ||
-                  startsWith(github.event.head_commit.message, 'fix:') }}
+          startsWith(github.event.head_commit.message, 're-release:') ||
+          startsWith(github.event.head_commit.message, 'fix:') }}
         run: |
           echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" > ~/.npmrc
 
