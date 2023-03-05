@@ -74,6 +74,11 @@ jobs:
           popd
           pushd chaintrap-arenastate
 
+          grep version node_modules/@polysensus/chaintrap-contracts/package.json
+          grep chaintrap-contracts package.json
+          grep chaintrap-contracts package-lock.json
+
+
           # npm uninstall "@polysensus/chaintrap-contracts" --save-dev
           # npm link ../chaintrap-contracts --save-dev --force
 
@@ -83,6 +88,11 @@ jobs:
 
           grep version node_modules/@polysensus/diamond-deploy/package.json
           grep version node_modules/@polysensus/chaintrap-contracts/package.json
+
+          grep version node_modules/@polysensus/chaintrap-contracts/package.json
+          grep chaintrap-contracts package.json
+          grep chaintrap-contracts package-lock.json
+
           find node_modules/@polysensus/chaintrap-contracts/abi
 
       - name: build
