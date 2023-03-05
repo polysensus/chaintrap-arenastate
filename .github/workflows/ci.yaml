@@ -73,15 +73,17 @@ jobs:
           npm install
           popd
           pushd chaintrap-arenastate
+
           npm uninstall "@polysensus/chaintrap-contracts" --save-dev
           npm link ../chaintrap-contracts --save-dev --force
-          grep version node_modules/@polysensus/chaintrap-contracts/package.json
-          find node_modules/@polysensus/chaintrap-contracts/abi
 
           npm uninstall "@polysensus/diamond-deploy" --save-dev
           npm link ../diamond-deploy --save-dev --force
           npm install
+
           grep version node_modules/@polysensus/diamond-deploy/package.json
+          grep version node_modules/@polysensus/chaintrap-contracts/package.json
+          find node_modules/@polysensus/chaintrap-contracts/abi
 
       - name: build
         working-directory: chaintrap-arenastate
