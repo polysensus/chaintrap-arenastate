@@ -66,6 +66,10 @@ jobs:
           CICD_APP_PEM: ${{ secrets.CICD_APP_PEM }}
 
         run: |
+
+          echo "" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> ~/.npmrc
+
           pushd diamond-deploy
           npm install
           popd
@@ -105,7 +109,8 @@ jobs:
           startsWith(github.event.head_commit.message, 'fix:') }}
         with:
           package-name: "chaintrap-arenastate"
-          min-versions-to-keep: 5
+          min-versions-to-keep: 3
+          num-old-versions-to-delete: 0
 
       - name: publish npm package
         working-directory: chaintrap-arenastate
