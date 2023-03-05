@@ -78,9 +78,8 @@ jobs:
           npm uninstall "@polysensus/diamond-deploy" --save-dev
           npm link ../diamond-deploy --save-dev --force
           npm install
-          find node_modules/@polysensus/diamond-deploy/
           grep version node_modules/@polysensus/diamond-deploy/package.json
-          find node_modules/@polysensus/chaintrap-contracts/
+          find node_modules/@polysensus/chaintrap-contracts/abi
           grep version node_modules/@polysensus/chaintrap-contracts/package.json
 
       - name: build
