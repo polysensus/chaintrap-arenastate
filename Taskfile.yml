@@ -13,7 +13,13 @@ tasks:
     desc: fetch the shared cicd development infra we use here
     cmds:
       - |
-        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.1 -O
+        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.2 -O
+
+  release:fix:
+    desc: create patch release
+    cmds:
+      - |
+        tusk -q -f {{.TUSKS}}/tusk-jspkg.yml version-update {{.CLI_ARGS}}
 
   fmt:
     - npm run format

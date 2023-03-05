@@ -74,7 +74,7 @@ jobs:
           popd
           pushd chaintrap-arenastate
 
-          grep version node_modules/@polysensus/chaintrap-contracts/package.json
+          # grep version node_modules/@polysensus/chaintrap-contracts/package.json
           grep chaintrap-contracts package.json
           grep chaintrap-contracts package-lock.json
 
