@@ -74,11 +74,11 @@ jobs:
           popd
           pushd chaintrap-arenastate
 
-          npm uninstall "@polysensus/chaintrap-contracts" --save-dev
-          npm link ../chaintrap-contracts --save-dev --force
+          # npm uninstall "@polysensus/chaintrap-contracts" --save-dev
+          # npm link ../chaintrap-contracts --save-dev --force
 
-          npm uninstall "@polysensus/diamond-deploy" --save-dev
-          npm link ../diamond-deploy --save-dev --force
+          # npm uninstall "@polysensus/diamond-deploy" --save-dev
+          # npm link ../diamond-deploy --save-dev --force
           npm install
 
           grep version node_modules/@polysensus/diamond-deploy/package.json
