@@ -6,14 +6,23 @@ env:
   CHAINTRAP_CONTRACTS_DIR: "../chaintrap-contracts"
   CONTRACTS_DEVTOOL: "../chaintrap-contracts/scripts/devtool.sh"
 vars:
-  CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
+  CICD_DEV_CURL: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
+  TUSKS: ".local/dev"
 
 tasks:
   bootstrap:
-    desc: fetch the shared cicd development infra we use here
+    desc: fetch the pre-requisits for all workflows
+    cmds:
+      - task: bootstrap:release
+
+  bootstrap:release:
+    desc: fetch infra for releasing
     cmds:
       - |
-        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.2 -O
+        mkdir -p {{.TUSKS}}
+        cd {{.TUSKS}}
+        {{.CICD_DEV_CURL}}/js/tusk-jspkg.yml?ref=v0.0.2 -O
+
 
   release:fix:
     desc: create patch release
