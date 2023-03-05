@@ -5,8 +5,16 @@ silent: true
 env:
   CHAINTRAP_CONTRACTS_DIR: "../chaintrap-contracts"
   CONTRACTS_DEVTOOL: "../chaintrap-contracts/scripts/devtool.sh"
+vars:
+  CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
 
 tasks:
+  bootstrap:
+    desc: fetch the shared cicd development infra we use here
+    cmds:
+      - |
+        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=main -O
+
   fmt:
     - npm run format
   format:

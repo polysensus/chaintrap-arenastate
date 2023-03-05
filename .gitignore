@@ -2,6 +2,7 @@ diamond-deploy.json
 facets.json
 assets
 data/metadata
+tusk-jspkg.yml
 tusk-tests.yml
 dist
 node_modules
