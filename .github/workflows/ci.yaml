@@ -103,9 +103,7 @@ jobs:
         working-directory: chaintrap-arenastate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ startsWith(github.event.head_commit.message, 'release:v') ||
-          startsWith(github.event.head_commit.message, 're-release:') ||
-          startsWith(github.event.head_commit.message, 'fix:') }}
+        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         run: |
           git checkout .npmrc
           echo "" > .npmrc
@@ -123,9 +121,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: actions/delete-package-versions@v4
-        if: ${{ startsWith(github.event.head_commit.message, 'release:v') ||
-          startsWith(github.event.head_commit.message, 're-release:') ||
-          startsWith(github.event.head_commit.message, 'fix:') }}
+        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         with:
           package-name: "chaintrap-arenastate"
           package-type: "npm"
