@@ -99,19 +99,6 @@ jobs:
           ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
           task test:unit:ci
 
-      - name: package cleanup
-        # note this hasn't been tested yet
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: actions/delete-package-versions@v4
-        if: ${{ startsWith(github.event.head_commit.message, 'release:v') ||
-          startsWith(github.event.head_commit.message, 're-release:') ||
-          startsWith(github.event.head_commit.message, 'fix:') }}
-        with:
-          package-name: "chaintrap-arenastate"
-          package-type: "npm"
-          min-versions-to-keep: 3
-
       - name: publish npm package
         working-directory: chaintrap-arenastate
         env:
@@ -131,6 +118,18 @@ jobs:
             export FORCE=--force
           fi
           npm publish $FORCE
+
+      - name: package cleanup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/delete-package-versions@v4
+        if: ${{ startsWith(github.event.head_commit.message, 'release:v') ||
+          startsWith(github.event.head_commit.message, 're-release:') ||
+          startsWith(github.event.head_commit.message, 'fix:') }}
+        with:
+          package-name: "chaintrap-arenastate"
+          package-type: "npm"
+          min-versions-to-keep: 3
 
       # this didn't work, despite looking like jest/junit format the reporter
       # crashed when looking at the time property
