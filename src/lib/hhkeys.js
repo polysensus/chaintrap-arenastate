@@ -33,7 +33,7 @@ export function isHardhatAlias(key) {
 
 export function hardhatKeyAliasAddress(alias) {
   if (!isHardhatAlias(alias))
-    throw new Error(`the supplied value is not a hard hat key alias`);
+    return alias;
   return new ethers.Wallet(ethers.utils.arrayify(resolveHardhatKey(alias)))
     .address;
 }
