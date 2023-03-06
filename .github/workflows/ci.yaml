@@ -67,8 +67,8 @@ jobs:
 
         run: |
 
-          echo "" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> ~/.npmrc
+          echo "" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc
 
           pushd diamond-deploy
           npm install
@@ -107,9 +107,9 @@ jobs:
           startsWith(github.event.head_commit.message, 're-release:') ||
           startsWith(github.event.head_commit.message, 'fix:') }}
         run: |
-          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" > ~/.npmrc
-
-          tree dist abi
+          git checkout .npmrc
+          echo "" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc
 
           # github has scale issues when there are a large (> 20 ) npm packages in
           # a repo, so force for fixes seems like the right thing for now.
