@@ -7,7 +7,6 @@ import { arenaConnect } from "../lib/chaintrapabi.js";
 import { ABIName } from "../lib/abiconst.js";
 import { Dispatcher } from "../lib/dispatcher.js";
 import { ProviderContext, ProviderSwitch } from "../lib/providercontexts.js";
-import { ProviderType } from "../lib/providertypes.js";
 const out = console.log;
 
 export async function watchArena(program, options) {
@@ -24,7 +23,7 @@ export async function watchArena(program, options) {
       );
     },
   });
-  await providers.prepare(cfgs, (cfg) => new ProviderContextWithHH(cfg));
+  await providers.prepare(cfgs, (cfg) => new ProviderContext(cfg));
   const ctx = await providers.select(options.which);
   let signer = ctx.signer;
 
@@ -54,27 +53,4 @@ export async function watchArena(program, options) {
   setTimeout(() => {
     spinner.color = "yellow";
   }, 1000);
-}
-
-class ProviderContextWithHH extends ProviderContext {
-  async prepareProvider() {
-    // --- check for the hardhat test provider first, importing dynamically so
-    // that it is not a hard dependency.
-    if (this.cfg.type === ProviderType.Hardhat) {
-      const provider = await import("@nomiclabs/hardhat-ethers").catch((err) =>
-        console.log(
-          `could not import hardhat-ethers: ${err}, trying JsonRpcProvider`
-        )
-      );
-
-      if (isUndefined(provider)) {
-        return;
-      }
-      await this.setProvider(provider);
-      this.stopListening();
-      return this;
-    }
-    out(`calling preparePRovider for ${this.cfg.type}`);
-    return super.prepareProvider();
-  }
 }

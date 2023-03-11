@@ -1,0 +1,7 @@
+{
+    "mochaExplorer.configFile": ".mocharc.json",
+    "mochaExplorer.env": {
+        "DIAMOND_DEPLOY_JSON": "${workspaceFolder:chaintrap-contracts}/.local/dev/diamond-deploy.json"
+    }//,
+    //"mochaExplorer.files": "test/**/*.js"
+}
