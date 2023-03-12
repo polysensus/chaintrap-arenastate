@@ -52,7 +52,11 @@ export async function creategame(program, options) {
     url = token.url;
   }
 
-  const tx = await arena.createGame(options.maxplayers, url);
+  const tx = await arena.createGame({
+    maxPlayers: options.maxplayers,
+    tokenURI: url,
+    mapVRFBeta: "0x",
+  });
   const r = await tx.wait();
   out(jfmt(r));
   out(Object.keys(r));
