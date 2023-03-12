@@ -72,7 +72,14 @@ export class RosterSnapshot {
  */
 export class StateRoster {
   constructor(arenaInterface, gid, options = {}) {
-    const { txmemo, model, hashAlpha } = options;
+    const { txmemo, model } = options;
+    let { hashAlpha } = options;
+    if (hashAlpha) {
+      // allow for 'shaxxx:' prefixes
+      hashAlpha = hashAlpha.split(":", 2);
+      hashAlpha = hashAlpha[hashAlpha.length - 1];
+    }
+
     // note: if the signer on the contract changes, this will be updated to the
     // new contract instance by the older of the roster
     this.arenaInterface = arenaInterface;
