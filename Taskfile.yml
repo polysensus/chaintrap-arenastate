@@ -23,7 +23,6 @@ tasks:
         cd {{.TUSKS}}
         {{.CICD_DEV_CURL}}/js/tusk-jspkg.yml?ref=v0.0.2 -O
 
-
   release:patch:
     desc: create patch release
     cmds:

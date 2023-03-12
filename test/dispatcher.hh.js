@@ -1,9 +1,9 @@
-import hre from 'hardhat';
+import hre from "hardhat";
 const { ethers } = hre;
 // const fs = require("fs");
 // const dd = require("@polysensus/diamond-deploy");
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { deployArenaFixture } from './lib/deployarena.js';
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { deployArenaFixture } from "./lib/deployarena.js";
 
 // const {
 //   time,
@@ -16,8 +16,7 @@ import { deployArenaFixture } from './lib/deployarena.js';
 
 describe("Dispatcher", function () {
   it("Should work", async function () {
-
     const [arena, owner] = await loadFixture(deployArenaFixture);
-    console.log(JSON.stringify(owner))
-  })
-})
+    console.log(JSON.stringify(owner));
+  });
+});

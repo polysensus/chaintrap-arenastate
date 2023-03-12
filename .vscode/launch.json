@@ -62,7 +62,11 @@
         "0xcA88B57549db9f89C1f9D3603b4e04A15242e100",
         "-u",
         "http://localhost:8545",
-        "watch", "-p", "data/providers/only-hardhat.json", "--which", "hardhat"
+        "watch",
+        "-p",
+        "data/providers/only-hardhat.json",
+        "--which",
+        "hardhat"
       ]
     },
     {
