@@ -148,7 +148,7 @@
         "${workspaceFolder}/data/tests/map02.json",
         "-k",
         // "${workspaceFolder}/.local/dev/wallets/guardian.key",
-        "hardhat:1",
+        "hardhat:0",
         "newgame"
       ]
     },
@@ -160,17 +160,14 @@
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "args": [
-        // "-u",
-        // "http://localhost:8545",
         // "-j",
         // "${workspaceFolder}/.local/hh/deploy.json",
         "-u",
+        "http://localhost:8545",
         //"http://localhost:8300",
-        "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
-        "-d",
-        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
-        "-k",
-        "${workspaceFolder}/.local/dev/wallets/bob.key",
+        // "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
+        "-d", "hardhat:10",
+        "-k", "hardhat:1",
         "join",
         "bob"
       ]

@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import { Game } from "@polysensus/chaintrap-contracts";
 import { programConnectArena } from "./connect.js";
+import { isHardhatAlias, hardhatKeyAliasAddress } from "../lib/hhkeys.js";
 import { Scene, scenetoken } from "../lib/map/scene.js";
 import { PlayerProfile } from "../lib/playerprofile.js";
 
@@ -33,7 +34,7 @@ export async function creategame(program, options) {
   const map = readJson(mapfile);
 
   let url = "";
-  if (true || options.withmetadata) {
+  if (options.withmetadata) {
     const { stored, token } = await storeERC1155GameMetadata(
       arena.address,
       map,
@@ -90,6 +91,10 @@ export async function completegame(program, options) {
 
 export async function setstart(program, options, player, room) {
   if (program.opts().verbose) vout = out;
+
+  if (isHardhatAlias(player)) {
+    player = hardhatKeyAliasAddress(player);
+  }
 
   const mapfile = program.opts().map;
   if (!mapfile) {
