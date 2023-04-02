@@ -5,9 +5,13 @@ import {
   readHexKey,
   readJson,
   readBinary,
-  writeBinary,
-  writeText,
 } from "./fsutil.js";
+
+import {
+  readKey
+} from "./readkey.js";
+
+import { resolveHardhatKey } from "../lib/hhkeys.js";
 
 import { NFTStorage, File, Blob } from "nft.storage";
 
@@ -131,9 +135,7 @@ export async function storegame(program, options, provider) {
   }
 
   if (key) {
-    if (isFile(key)) {
-      key = readHexKey(key);
-    }
+    key = readKey(key);
     acc = new ethers.Wallet(key).address;
   }
 
@@ -195,7 +197,7 @@ export async function storegame(program, options, provider) {
       },
       vrf_proof: {
         beta: map.vrf_inputs.proof.beta,
-        pi: map.vrf_inputs.proof.pi,
+        // pi: map.vrf_inputs.proof.pi,
         public_key: map.vrf_inputs.proof.public_key,
       },
     },

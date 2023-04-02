@@ -2,7 +2,7 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import { program } from "commander";
+import { program, Option } from "commander";
 
 import {
   tokenuri,
@@ -33,36 +33,42 @@ import { watchArena } from "./src/commands/watcharena.js";
 program
   .enablePositionalOptions()
   .option("-v, --verbose", "more verbose reporting")
-  .option("-u, --url <url>", "provider url", "http://localhost:8300")
-  .option("--openaikey", "openai api key")
-  .option("--nftstorage", "nftstorage api key")
-  .option(
-    "-j, --deployjson <deployjson>",
-    "derive the areana address from the hardhat deploy formatted json file"
-  )
-
-  .option(
-    "-d, --deploykey <deploykey>",
-    "derive the areana address from private key that deployed the arena contract"
-  )
-  .option(
-    "--deployacc <deployacc>",
-    "derive the arena address from the arena contract deployer wallet"
-  )
   .option(
     "--deploynonce <nonce>",
     "get the arena address for a particular deployer account nonce rather than the current",
     undefined
   )
   .option(
-    "--arena <address>",
-    "provide the arena contract address directly",
-    undefined
+    "-j, --deployjson <deployjson>",
+    "derive the arena address from the hardhat deploy formatted json file"
   )
-
-  .option("-k, --key <privatekey>", "private key for signing transactions")
   .option("-b, --abi <abifile>")
   .option("-m, --map <mapfile>");
+
+  // Now we are using ERC 2535, the arena address is stable on all chains
+  program.addOption(new Option(
+    "--arena <address>",
+    "provide the arena contract address directly"
+  ).env("ARENASTATE_ARENA"));
+
+  program.addOption(new Option("-k, --key <privatekey>", "private key for signing transactions")
+    .env("ARENASTATE_USER1_KEY"));
+  program.addOption(new Option("-u, --url <url>", "provider url")
+    .env("ARENASTATE_PROVIDER_URL"));
+  program.addOption(new Option("--openaikey <key>", "openai api key")
+    .env("ARENASTATE_OPENAI_API_KEY"));
+  program.addOption(new Option("--nftstorage", "nftstorage api key")
+    .env("ARENASTATE_NFTSTORAGE_API_KEY"));
+
+  program.addOption(new Option(
+    "-d, --deploykey <deploykey>",
+    "derive the areana address from private key that deployed the arena contract"
+  ).env("ARENASTATE_DEPLOY_KEY"));
+
+  program.addOption(new Option(
+    "--deployacc <deployacc>",
+    "derive the arena address from the arena contract deployer wallet"
+  ).env("ARENASTATE_DEPLOY_ACCOUNT"));
 
 // ---
 program

@@ -2,26 +2,21 @@
 version: "3"
 silent: true
 
-env:
-  CHAINTRAP_CONTRACTS_DIR: "../chaintrap-contracts"
-  CONTRACTS_DEVTOOL: "../chaintrap-contracts/scripts/devtool.sh"
 vars:
-  CICD_DEV_CURL: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
+  CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
   TUSKS: ".local/dev"
+
+dotenv: ['.env']
 
 tasks:
   bootstrap:
-    desc: fetch the pre-requisits for all workflows
-    cmds:
-      - task: bootstrap:release
-
-  bootstrap:release:
-    desc: fetch infra for releasing
+    desc: fetch the pre-requisites for all workflows
     cmds:
       - |
         mkdir -p {{.TUSKS}}
         cd {{.TUSKS}}
-        {{.CICD_DEV_CURL}}/js/tusk-jspkg.yml?ref=v0.0.2 -O
+        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.2 -O
+        {{.CURL_CICD_DEV}}/hardhat/tusk-hardhat.yml?ref=v0.0.4 -O
 
   release:patch:
     desc: create patch release
@@ -54,45 +49,46 @@ tasks:
       - task: deploy:caimst
       - task: deploy:mumbai
 
-  find:mumbai:
-    desc: "find the arena diamond on polygon mumba"
-    cmds:
-      - tusk -q -f tusk-arena.yml find-mumbai
-
-  find:caimst:
-    desc: "find the arena diamond on caimst"
-    cmds:
-      - tusk -q -f tusk-arena.yml find-caimst
-
-  find:hh:
-    desc: "find the arena diamond on hardhat"
-    cmds:
-      - tusk -q -f tusk-arena.yml find-hh
-
   deploy:caimst:
     desc: deploy the contracts to caimst and mumbai
     cmds:
       - tusk -f tusk-arena.yml deploy-caimst
-  deploy:mumbai:
-    desc: deploy the contracts to polygon mumbai testnet
-    cmds:
-      - tusk -f tusk-arena.yml deploy-polygon --diamond-address 0xBCAEF1Bd82E444B68d9C47E14f22d623150CeFB5
-  deploy:hh:
-    desc: deploy the contracts to hardhata (assumes the local server is listening on 8545)
-    cmds:
-      - tusk -f tusk-arena.yml deploy-hh
   deploy:caimst-new:
     desc: deploy the contracts to caimst and mumbai
+    dotenv: ['.env.caimst']
     cmds:
-      - tusk -f tusk-arena.yml deploy-caimst-new
-  deploy:mumbai-new:
+      - tusk -f tusk-arena.yml deploy-arena-new
+
+
+  deploy:mumbai:
+    dotenv: ['.env.mumbai']
     desc: deploy the contracts to polygon mumbai testnet
     cmds:
-      - tusk -f tusk-arena.yml deploy-polygon-new
+      - tusk -f tusk-arena.yml deploy-arena --gasprice "2.6"
+  deploy:mumbai-new:
+    desc: deploy the contracts to polygon mumbai testnet
+    dotenv: ['.env.mumbai']
+    cmds:
+      - tusk -f tusk-arena.yml deploy-arena-new --gasprice "2.6"
+
+  deploy:hh:
+    dotenv: ['.env.hh']
+    desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
+    cmds:
+      - |
+        tusk -f tusk-arena.yml deploy-arena
   deploy:hh-new:
+    dotenv: ['.env.hh']
     desc: deploy the contracts to hardhata (assumes the local server is listening on 8545)
     cmds:
-      - tusk -f tusk-arena.yml deploy-hh-new
+      - |
+        tusk -f tusk-arena.yml deploy-arena-new
+  find:hh:
+    dotenv: ['.env.hh']
+    desc: find the arena on hardhat
+    cmds:
+      - |
+        tusk -f tusk-arena.yml diamond-find
 
   test:unit:
     desc: run the unit tests
@@ -119,7 +115,7 @@ tasks:
   dev:hh:start:
     desc: start a local hardhat node (if there isn't one running)
     cmds:
-      - $CONTRACTS_DEVTOOL start-node -d .local/hh
+      - tusk -q -f {{.TUSKS}}/tusk-hardhat.yml start-node -d .local/hh
 
   dev:hh:restart:
     desc: restart the local hardhat node
@@ -130,4 +126,4 @@ tasks:
   dev:hh:stop:
     desc: stop a local hardhat node (according to pid in .local/hh/hh-pid)
     cmds:
-      - $CONTRACTS_DEVTOOL stop-node -d .local/hh
+      - tusk -q -f {{.TUSKS}}/tusk-hardhat.yml stop-node -d .local/hh

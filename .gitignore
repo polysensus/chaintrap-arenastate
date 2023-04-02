@@ -9,6 +9,6 @@ node_modules
 coverage
 jest-junit.xml
 .env
-.env.local
+.env.*
 .envrc
 .local

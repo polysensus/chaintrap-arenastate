@@ -5,22 +5,18 @@ options:
     # this is a go-tusk quirk
     environment: PWD
 
-  contracts-dir:
-    default: ../chaintrap-contracts
-
   THIS_TUSK:
     default: "tusk -qf tusk-arena.yml"
-
-  CONTRACTS_DEVTOOL:
-    default: "tusk -qf ../chaintrap-contracts/tusk.yml"
 
   deploy-key:
     default:
       command: cat .local/dev/wallets/wallet-deploy.key
+    environment: ARENASTATE_DEPLOY_KEY
 
-  arena-owner-key:
+  owner-key:
     default:
       command: cat .local/dev/wallets/arena-owner.key
+    environment: ARENASTATE_OWNER_KEY
 
   depdir:
     usage: the directory to store deployment json files in
@@ -36,18 +32,12 @@ options:
   diamond-nonce:
   deploy-gaslimit:
     default: 3000000
-  deploy-caimst-url:
-    default: https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==
-  deploy-polygon-mumbai-url:
-    default: https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf
-  deploy-hh-url:
-    default: http://localhost:8545
 
 tasks:
   diamond-find:
     options:
       rpc:
-      deploy-key:
+        environment: ARENASTATE_PROVIDER_URL
       diamond-nonce:
     run:
       - command:
@@ -63,11 +53,12 @@ tasks:
   deploy-arena:
     options:
       rpc:
-      deploy-key:
-      owner-key:
+        environment: ARENASTATE_PROVIDER_URL
       diamond-address:
+        environment: ARENASTATE_ARENA
       diamond-nonce:
       dry-run:
+        type: bool
       gasprice:
     run:
       - command:
@@ -98,8 +89,7 @@ tasks:
   deploy-arena-new:
     options:
       rpc:
-      deploy-key:
-      owner-key:
+        environment: ARENASTATE_PROVIDER_URL
       gasprice:
       dry-run:
         type: bool
@@ -128,104 +118,3 @@ tasks:
                 --diamond-init-args \
                   '[{"typeURIs": ["GAME_TYPE", "TRANSCRIPT_TYPE", "FURNITURE_TYPE"]}]' \
                 -f diamond-deploy.json
-  deploy-all:
-    run:
-      - task: deploy-caimst
-      - task: deploy-polygon
-
-  find-polygon:
-    run:
-      task:
-        name: diamond-find
-        options:
-          rpc: ${deploy-polygon-mumbai-url}
-          deploy-key: ${deploy-key}
-          diamond-nonce: ${diamond-nonce}
-
-  deploy-polygon:
-    run:
-      task:
-        name: deploy-arena
-        options:
-          rpc: ${deploy-polygon-mumbai-url}
-          deploy-key: ${deploy-key}
-          owner-key: ${arena-owner-key}
-          diamond-address: ${diamond-address}
-          diamond-nonce: ${diamond-nonce}
-          dry-run: ${dry-run}
-          gasprice: "2.6"
-
-  deploy-polygon-new:
-    run:
-      task:
-        name: deploy-arena-new
-        options:
-          rpc: ${deploy-polygon-mumbai-url}
-          deploy-key: ${deploy-key}
-          owner-key: ${arena-owner-key}
-          dry-run: ${dry-run}
-          gasprice: "2.6"
-
-  find-caimst:
-    run:
-      task:
-        name: diamond-find
-        options:
-          rpc: ${deploy-caimst-url}
-          deploy-key: ${deploy-key}
-          diamond-nonce: ${diamond-nonce}
-
-  deploy-caimst:
-    run:
-      task:
-        name: deploy-arena
-        options:
-          rpc: ${deploy-caimst-url}
-          deploy-key: ${deploy-key}
-          owner-key: ${arena-owner-key}
-          diamond-address: ${diamond-address}
-          diamond-nonce: ${diamond-nonce}
-          dry-run: ${dry-run}
-
-  deploy-caimst-new:
-    run:
-      task:
-        name: deploy-arena-new
-        options:
-          rpc: ${deploy-caimst-url}
-          deploy-key: ${deploy-key}
-          owner-key: ${arena-owner-key}
-          dry-run: ${dry-run}
-
-  find-hh:
-    run:
-      task:
-        name: diamond-find
-        options:
-          rpc: ${deploy-hh-url}
-          deploy-key: hardhat:10
-          diamond-nonce: ${diamond-nonce}
-
-  deploy-hh:
-    run:
-      task:
-        name: deploy-arena
-        options:
-          rpc: ${deploy-hh-url}
-          deploy-key: hardhat:10
-          owner-key: hardhat
-          diamond-address: ${diamond-address}
-          diamond-nonce: ${diamond-nonce}
-          dry-run: ${dry-run}
-          gasprice: "2.6"
-
-  deploy-hh-new:
-    run:
-      task:
-        name: deploy-arena-new
-        options:
-          rpc: ${deploy-hh-url}
-          deploy-key: hardhat:10
-          owner-key: hardhat
-          dry-run: ${dry-run}
-          gasprice: "2.6"
