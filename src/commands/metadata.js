@@ -1,15 +1,8 @@
 import { ethers } from "ethers";
 import fetch from "node-fetch";
-import {
-  isFile,
-  readHexKey,
-  readJson,
-  readBinary,
-} from "./fsutil.js";
+import { isFile, readHexKey, readJson, readBinary } from "./fsutil.js";
 
-import {
-  readKey
-} from "./readkey.js";
+import { readKey } from "./readkey.js";
 
 import { resolveHardhatKey } from "../lib/hhkeys.js";
 

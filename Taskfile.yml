@@ -6,7 +6,7 @@ vars:
   CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
   TUSKS: ".local/dev"
 
-dotenv: ['.env']
+dotenv: [".env"]
 
 tasks:
   bootstrap:
@@ -55,36 +55,35 @@ tasks:
       - tusk -f tusk-arena.yml deploy-caimst
   deploy:caimst-new:
     desc: deploy the contracts to caimst and mumbai
-    dotenv: ['.env.caimst']
+    dotenv: [".env.caimst"]
     cmds:
       - tusk -f tusk-arena.yml deploy-arena-new
 
-
   deploy:mumbai:
-    dotenv: ['.env.mumbai']
+    dotenv: [".env.mumbai"]
     desc: deploy the contracts to polygon mumbai testnet
     cmds:
       - tusk -f tusk-arena.yml deploy-arena --gasprice "2.6"
   deploy:mumbai-new:
     desc: deploy the contracts to polygon mumbai testnet
-    dotenv: ['.env.mumbai']
+    dotenv: [".env.mumbai"]
     cmds:
       - tusk -f tusk-arena.yml deploy-arena-new --gasprice "2.6"
 
   deploy:hh:
-    dotenv: ['.env.hh']
+    dotenv: [".env.hh"]
     desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
     cmds:
       - |
         tusk -f tusk-arena.yml deploy-arena
   deploy:hh-new:
-    dotenv: ['.env.hh']
+    dotenv: [".env.hh"]
     desc: deploy the contracts to hardhata (assumes the local server is listening on 8545)
     cmds:
       - |
         tusk -f tusk-arena.yml deploy-arena-new
   find:hh:
-    dotenv: ['.env.hh']
+    dotenv: [".env.hh"]
     desc: find the arena on hardhat
     cmds:
       - |

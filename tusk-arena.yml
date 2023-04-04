@@ -8,15 +8,21 @@ options:
   THIS_TUSK:
     default: "tusk -qf tusk-arena.yml"
 
+  rpc:
+    default: http://localhost:8545
+    environment: ARENASTATE_PROVIDER_URL
+    short: "u"
+
   deploy-key:
     default:
       command: cat .local/dev/wallets/wallet-deploy.key
     environment: ARENASTATE_DEPLOY_KEY
+    short: "d"
 
   owner-key:
     default:
       command: cat .local/dev/wallets/arena-owner.key
-    environment: ARENASTATE_OWNER_KEY
+    short: "k"
 
   depdir:
     usage: the directory to store deployment json files in
@@ -36,8 +42,6 @@ options:
 tasks:
   diamond-find:
     options:
-      rpc:
-        environment: ARENASTATE_PROVIDER_URL
       diamond-nonce:
     run:
       - command:
@@ -52,8 +56,6 @@ tasks:
 
   deploy-arena:
     options:
-      rpc:
-        environment: ARENASTATE_PROVIDER_URL
       diamond-address:
         environment: ARENASTATE_ARENA
       diamond-nonce:
@@ -88,8 +90,6 @@ tasks:
 
   deploy-arena-new:
     options:
-      rpc:
-        environment: ARENASTATE_PROVIDER_URL
       gasprice:
       dry-run:
         type: bool

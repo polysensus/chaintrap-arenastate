@@ -118,8 +118,8 @@ export class ProviderSwitch {
     this.current = undefined;
   }
 
-  async prepare(cfgs, contextfactory) {
-    this.available = await this.beginPrepare(cfgs, contextfactory);
+  async prepare(cfgs, contextfactory, opts) {
+    this.available = await this.beginPrepare(cfgs, contextfactory, opts);
     // issue the prepared callbacks after _all_ have had a chance to finish. may
     // revisit this, depending on how responsive it is. it may  be better ux to
     // just kick these immediately, but it makes the connection & start up logs
@@ -133,8 +133,10 @@ export class ProviderSwitch {
     }
   }
 
-  async beginPrepare(cfgs, contextfactory) {
+  async beginPrepare(cfgs, contextfactory, opts) {
     await this.stopAll();
+
+    const { fetch } = opts;
 
     if (isUndefined(contextfactory)) {
       contextfactory = (cfg) => new ProviderContext(cfg);
@@ -144,7 +146,13 @@ export class ProviderSwitch {
 
     // Take the injected providers as is. Accumulate an array of promises for the
     // rest
-    for (const each of Object.values(cfgs)) {
+    for (let each of Object.values(cfgs)) {
+      if (each.fetch && !fetch) {
+        log.info(
+          `fetch config '${each.name}' skipped - fetching provider configs is not enabled`
+        );
+        continue;
+      }
       const ctx = contextfactory({
         ...each,
         chainChanged: async (chainId) => this.chainChanged(each.name, ctx),

@@ -28,7 +28,8 @@
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "args": [
-        "--arena", "0xcA88B57549db9f89C1f9D3603b4e04A15242e100",
+        "--arena",
+        "0xcA88B57549db9f89C1f9D3603b4e04A15242e100",
 
         "-u",
         "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
@@ -82,7 +83,7 @@
       "args": [
         "--map",
         "${workspaceFolder}/data/tests/map02.json",
-        "storegame"// ,
+        "storegame" // ,
         // "--iconfile", "${workspaceFolder}/assets/game-ico-1.png"
       ]
     },
@@ -153,8 +154,10 @@
         "http://localhost:8545",
         //"http://localhost:8300",
         // "https://chains.hoy.polysensus.io/chains/caimst-209301/node/ethnode0/WWdEOHJUNVFDRXpPZ0VDb1IxTVpYOmFyZ29uMmlkIDMgNjRNQiAzMi5Kdkt6cEU5U09HNW02a3RBXzViYk8yRFZNeUw3cXBEdm5vQjhlOEtQMk5rPS5pR2JMMXpDRzBxbVRKdnRUN2RkLURxWlhSbDkxTWlYQm1RNDlKVzhjOF9jPQ==",
-        "-d", "hardhat:10",
-        "-k", "hardhat:1",
+        "-d",
+        "hardhat:10",
+        "-k",
+        "hardhat:1",
         "join",
         "bob"
       ]
