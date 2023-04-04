@@ -125,4 +125,7 @@ tasks:
   dev:hh:stop:
     desc: stop a local hardhat node (according to pid in .local/hh/hh-pid)
     cmds:
-      - tusk -q -f {{.TUSKS}}/tusk-hardhat.yml stop-node -d .local/hh
+      - |
+        set -x
+        ls -la {{.TUSKS}}
+        tusk -q -f {{.TUSKS}}/tusk-hardhat.yml stop-node -d .local/hh
