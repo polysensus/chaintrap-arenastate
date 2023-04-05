@@ -8,6 +8,10 @@ options:
   THIS_TUSK:
     default: "tusk -qf tusk-arena.yml"
 
+  diamond-deploy:
+    usage: "defaults to npx diamond-deploy to use the version installed for this package development tree"
+    default: "npx diamond-deploy"
+
   rpc:
     default: http://localhost:8545
     environment: ARENASTATE_PROVIDER_URL
@@ -48,7 +52,7 @@ tasks:
           exec: |
             set -e
 
-            npx diamond-deploy \
+            ${diamond-deploy} \
               -u "${rpc}" \
               -d "${deploy-key}" \
               find \
@@ -67,13 +71,13 @@ tasks:
           exec: |
             set -e
 
-            npx diamond-deploy list \
+            ${diamond-deploy} list \
               -I facet -n Diamond DiamondNew \
               -i node_modules/@polysensus/chaintrap-contracts/abi \
               --format json -x node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json \
               > diamond-deploy.json
 
-            npx diamond-deploy \
+            ${diamond-deploy} \
               -u "${rpc}" \
               -d "${deploy-key}" \
               diamond-up \
@@ -98,7 +102,7 @@ tasks:
           exec: |
             set -e
 
-            npx diamond-deploy list \
+            ${diamond-deploy} list \
               -I facet -n Diamond DiamondNew \
               -i node_modules/@polysensus/chaintrap-contracts/abi \
               --format json -x node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json \
