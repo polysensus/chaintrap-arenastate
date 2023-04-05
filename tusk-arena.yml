@@ -11,6 +11,7 @@ options:
   diamond-deploy:
     usage: "defaults to npx diamond-deploy to use the version installed for this package development tree"
     default: "npx diamond-deploy"
+    environment: "ARENASTATE_DIAMOND_DEPLOY_CMD"
 
   rpc:
     default: http://localhost:8545
@@ -108,7 +109,7 @@ tasks:
               --format json -x node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json \
               > diamond-deploy.json
 
-            npx diamond-deploy \
+            ${diamond-deploy} \
               -u "${rpc}" \
               -d "${deploy-key}" \
               diamond-new \
