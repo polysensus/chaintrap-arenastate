@@ -65,10 +65,10 @@
     "node-fetch": "^3.3.0",
     "ora": "^6.1.2",
     "prettier": "^2.8.0",
-    "rollup": "^3.5.1",
+    "rollup": "^3.20.2",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "rollup-plugin-polyfill-node": "^0.11.0",
-    "vitest": "^0.25.3"
+    "vitest": "^0.29.8"
   },
   "dependencies": {
     "@msgpack/msgpack": "^2.8.0",
