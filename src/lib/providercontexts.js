@@ -45,6 +45,10 @@ export class ProviderContext extends EIP1193ProviderContext {
     this.stopListening();
     return this;
   }
+
+  logout() {
+    log.info(`no-op logout`);
+  }
 }
 
 export class ProviderSwitch {
