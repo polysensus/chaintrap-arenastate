@@ -20,6 +20,20 @@ export function isPromise(value) {
   return false;
 }
 
+/**
+ * A variant of instanceof that also considers if o.constructor.name ===
+ * class_.name Works where objects are passed across package boundaries, where
+ * bundling causes the instanceof check to fail
+ *
+ * @param {*} o is any object
+ * @param {*} class_ should be a class, but can be anything with a defined name property
+ */
+export function constructedLikeClass(o, class_) {
+  return (
+    o instanceof class_ || (class_.name && o.constructor.name == class_.name)
+  );
+}
+
 export function etherrmsg(err) {
   if (!err.body) return `${err}`;
   try {

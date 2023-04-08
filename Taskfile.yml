@@ -15,8 +15,8 @@ tasks:
       - |
         mkdir -p {{.TUSKS}}
         cd {{.TUSKS}}
-        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.2 -o tusk-jspkg.yml
-        {{.CURL_CICD_DEV}}/hardhat/tusk-hardhat.yml?ref=v0.0.4 -o tusk-hardhat.yml
+        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.5 -o tusk-jspkg.yml
+        {{.CURL_CICD_DEV}}/hardhat/tusk-hardhat.yml?ref=v0.0.5 -o tusk-hardhat.yml
 
   release:patch:
     desc: create patch release
@@ -63,12 +63,18 @@ tasks:
     dotenv: [".env.mumbai"]
     desc: deploy the contracts to polygon mumbai testnet
     cmds:
-      - tusk -f tusk-arena.yml deploy-arena --gasprice "2.6"
+      - tusk -f tusk-arena.yml deploy-arena --gasprice "2.6" {{.CLI_ARGS}}
   deploy:mumbai-new:
     desc: deploy the contracts to polygon mumbai testnet
     dotenv: [".env.mumbai"]
     cmds:
       - tusk -f tusk-arena.yml deploy-arena-new --gasprice "2.6"
+  find:mumbai:
+    dotenv: [".env.mumbai"]
+    desc: find the arena on mumbai
+    cmds:
+      - |
+        tusk -f tusk-arena.yml diamond-find
 
   deploy:hh:
     dotenv: [".env.hh"]
@@ -104,12 +110,13 @@ tasks:
 
   test:integ:deploy:
     desc: start hardhat and deploy contracts for test:integ
+    dotenv: [".env.hh"]
     cmds:
       - task: dev:hh:restart
+      - task: deploy:hh-new
       - |
         set -e
-        tusk -q -f tusk-arena.yml deploy-hh-new
-        tusk -q -f tusk-arena.yml find-hh | tee arenaproxy.addr
+        tusk -q -f tusk-arena.yml diamond-find | tee arenaproxy.addr
 
   dev:hh:start:
     desc: start a local hardhat node (if there isn't one running)

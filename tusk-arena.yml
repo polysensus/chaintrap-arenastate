@@ -27,6 +27,7 @@ options:
   owner-key:
     default:
       command: cat .local/dev/wallets/arena-owner.key
+    environment: ARENASTATE_OWNER_KEY
     short: "k"
 
   depdir:

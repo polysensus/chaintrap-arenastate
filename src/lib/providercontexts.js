@@ -11,8 +11,18 @@ export class ProviderContext extends EIP1193ProviderContext {
     this.cfg = cfg;
   }
 
+  /**
+   *
+   * @param {*} eip1193Provider
+   * @param {string|number} addressOrIndex
+   * @returns
+   */
   async setProvider(eip1193Provider, addressOrIndex = 0) {
-    return super.setProvider(eip1193Provider, addressOrIndex, this.cfg.chainId);
+    return await super.setProvider(
+      eip1193Provider,
+      addressOrIndex,
+      this.cfg.chainId
+    );
   }
 
   async prepareProvider() {

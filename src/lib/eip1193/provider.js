@@ -1,6 +1,11 @@
 import { ethers } from "ethers";
 
-import { isAsync, isUndefined, etherrmsg } from "../idioms.js";
+import {
+  isAsync,
+  isUndefined,
+  etherrmsg,
+  constructedLikeClass,
+} from "../idioms.js";
 import { getLogger } from "../log.js";
 
 const log = getLogger("eip1193/provider");
@@ -119,12 +124,12 @@ export class EIP1193ProviderContext {
 export async function getSignerAddress(provider, addressOrIndex) {
   let signer, signerAddress;
 
-  if (addressOrIndex === null || typeof addressOrIndex === "undefined") {
-    return { signer, signerAddress };
-  }
   try {
     // XXX some providers do not support getSigner
-    if (typeof provider.listAccounts === "function") {
+    if (
+      typeof provider.listAccounts === "function" &&
+      (addressOrIndex === null || typeof addressOrIndex === "undefined")
+    ) {
       signer = provider.getSigner(addressOrIndex);
     } else {
       signer = provider.getSigner();
@@ -150,15 +155,20 @@ export async function setProvider(
         "Please authorize browser extension (Metamask or similar) or provide an RPC based provider"
       );
     provider.autoRefreshOnNetworkChange = false;
-    const prepared = prepare1193Provider(provider, addressOrIndex, chainId, {
-      accountsChanged,
-      chainChanged,
-      disconnected,
-    });
+    const prepared = await prepare1193Provider(
+      provider,
+      addressOrIndex,
+      chainId,
+      {
+        accountsChanged,
+        chainChanged,
+        disconnected,
+      }
+    );
 
     // Wrap the injected provider in a Web3 to make it behave consistently
     prepared.provider = new ethers.providers.Web3Provider(prepared.provider);
-    const { signer, signerAddress } = getSignerAddress(
+    const { signer, signerAddress } = await getSignerAddress(
       provider,
       addressOrIndex
     );
@@ -169,10 +179,9 @@ export async function setProvider(
 
   // If we already have a Web3Provider wrapper, prepare the original provider
   // again and make a fresh wrapper
-  if (
-    Object.getPrototypeOf(provider) instanceof ethers.providers.Web3Provider
-  ) {
-    const prepared = prepare1193Provider(
+  if (constructedLikeClass(provider, ethers.providers.Web3Provider)) {
+    log.debug("EIP1193ProviderContext#setProvider: Web3Provider");
+    const prepared = await prepare1193Provider(
       provider.provider,
       addressOrIndex,
       chainId,
@@ -183,54 +192,77 @@ export async function setProvider(
       }
     );
     prepared.provider = new ethers.providers.Web3Provider(prepared.provider);
-    const { signer, signerAddress } = getSignerAddress(
+    const { signer, signerAddress } = await getSignerAddress(
       provider,
       addressOrIndex
     );
     prepared.signer = signer;
     prepared.signerAddress = signerAddress;
+    log.info(
+      `EIP1193ProviderContext#setProvider: prepared.signerAddress: ${prepared.signerAddress}`
+    );
     return prepared;
   }
+  log.debug("EIP1193ProviderContext#setProvider: NOT Web3Provider");
 
   // If the caller wants an explicitly provider type,eg the not-polling
   // StaticJsonRpcProvider, they can just intsance it and pass it in and this
   // case deals with it.
   if (typeof provider === "object" && provider.request) {
-    const prepared = prepare1193Provider(provider, addressOrIndex, chainId, {
-      accountsChanged,
-      chainChanged,
-      disconnected,
-    });
-    const { signer, signerAddress } = getSignerAddress(
+    log.debug("EIP1193ProviderContext#setProvider: has request");
+
+    const prepared = await prepare1193Provider(
+      provider,
+      addressOrIndex,
+      chainId,
+      {
+        accountsChanged,
+        chainChanged,
+        disconnected,
+      }
+    );
+    const { signer, signerAddress } = await getSignerAddress(
       provider,
       addressOrIndex
     );
     prepared.signer = signer;
     prepared.signerAddress = signerAddress;
+    log.info(
+      `EIP1193ProviderContext#setProvider: prepared.signerAddress: ${prepared.signerAddress}`
+    );
     return prepared;
   }
 
   if (
     typeof provider !== "object" ||
-    (!(
-      Object.getPrototypeOf(provider) instanceof ethers.providers.BaseProvider
-    ) &&
-      !(
-        Object.getPrototypeOf(provider) instanceof
-        ethers.providers.UrlJsonRpcProvider
-      ))
+    (!constructedLikeClass(provider, ethers.providers.BaseProvider) &&
+      !constructedLikeClass(provider, ethers.providers.UrlJsonRpcProvider))
   ) {
+    log.debug("EIP1193ProviderContext#setProvider: forcing json rpc");
+
     provider = new ethers.providers.JsonRpcProvider(provider);
   }
+  log.debug("EIP1193ProviderContext#setProvider: assume generic 1193");
 
-  const prepared = prepare1193Provider(provider, addressOrIndex, chainId, {
-    accountsChanged,
-    chainChanged,
-    disconnected,
-  });
-  const { signer, signerAddress } = getSignerAddress(provider, addressOrIndex);
+  const prepared = await prepare1193Provider(
+    provider,
+    addressOrIndex,
+    chainId,
+    {
+      accountsChanged,
+      chainChanged,
+      disconnected,
+    }
+  );
+  const { signer, signerAddress } = await getSignerAddress(
+    provider,
+    addressOrIndex
+  );
   prepared.signer = signer;
   prepared.signerAddress = signerAddress;
+  log.info(
+    `EIP1193ProviderContext#setProvider: prepared.signerAddress: ${prepared.signerAddress}`
+  );
   return prepared;
 }
 
@@ -313,7 +345,9 @@ export async function prepare1193Provider(
   try {
     accounts = await request({ method: "eth_requestAccounts" });
   } catch (err) {
-    log.info(etherrmsg(err));
+    log.info(
+      `eth_requestAccounts not available on provider ${eip1193Provider.constructor.name}`
+    );
   }
 
   if (isUndefined(addressOrIndex)) {

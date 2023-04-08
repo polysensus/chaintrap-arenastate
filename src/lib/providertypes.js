@@ -6,5 +6,6 @@ export class ProviderType {
   static EthersRPC = "ethersrpc";
   static Injected = "injected";
   static Metamask = "metamask";
+  static Web3AuthModal = "web3auth_modal";
   static Hardhat = "hardhat";
 }
