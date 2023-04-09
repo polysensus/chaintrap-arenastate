@@ -113,14 +113,36 @@ export class ProviderSwitch {
     };
   }
 
-  async select(name) {
+  getCurrent() {
+    return this.available?.[this.current];
+  }
+
+  /** get the context. throw an error if it is not available. intended for derived implementations of select */
+  requireContext(name) {
     const ctx = this.available[name];
     if (!ctx) {
       throw new Error(`provider ${name} is not currently available`);
     }
-    await ctx.resume();
-    this.current = name;
     return ctx;
+  }
+
+  /** impotently stopListening on the current context. intended for derived
+   * implementations of select */
+  stopCurrent() {
+    const currentCtx = this.getCurrent();
+    if (currentCtx) {
+      currentCtx.stopListening();
+      this.current = undefined;
+    }
+  }
+
+  async select(name) {
+    const newCtx = this.requireContext(name);
+    this.stopCurrent();
+
+    await newCtx.resume(this);
+    this.current = name;
+    return newCtx;
   }
 
   async stopAll() {
@@ -179,7 +201,7 @@ export class ProviderSwitch {
         prepared[each.name] = ctx;
         continue;
       }
-      preparing.push(ctx.prepareProvider());
+      preparing.push(ctx.prepareProvider(this));
     }
 
     // If we don't have any non injected providers we are done
