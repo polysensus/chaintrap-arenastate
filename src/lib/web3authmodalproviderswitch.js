@@ -1,13 +1,6 @@
 /**
  * Abstract implementation of a ProviderSwitch for Web3Auth
- * Expected use
- *  import { Web3Auth } from "@web3auth/modal";
- *  import { Web3ModalProviderSwitchAbstract } from "@polysensus/chaintrap-arenastate";
- *  class Web3ModalProviderSwitch extends Web3ModalProviderSwitchAbstract {
- *    newWeb3Auth(cfg) {
- *      return new Web3Auth(cfg);
- *    }
- *  }
+ * Expected use is to inherit and implement newWeb3Auth with just  "return new Web3Auth(cfg)"
  */
 
 // --- lib deps
