@@ -49,6 +49,27 @@ tasks:
       - task: deploy:caimst
       - task: deploy:mumbai
 
+  deploy:opgoerli:
+    dotenv: [".env.opgoerli"]
+    desc: deploy the contracts to optimism goerli (testnet)
+    cmds:
+      - tusk -f tusk-arena.yml deploy-arena {{.CLI_ARGS}}
+      # - tusk -f tusk-arena.yml deploy-arena --gasprice "2.6" {{.CLI_ARGS}}
+  deploy:opgoerli-new:
+    desc: deploy the contracts to polygon mumbai testnet
+    dotenv: [".env.opgoerli"]
+    cmds:
+      # - tusk -f tusk-arena.yml deploy-arena-new --gasprice "2.6"
+      - tusk -f tusk-arena.yml deploy-arena-new
+  find:opgoerli:
+    dotenv: [".env.opgoerli"]
+    desc: find the arena on mumbai
+    cmds:
+      - |
+        tusk -f tusk-arena.yml diamond-find
+
+
+
   deploy:caimst:
     desc: deploy the contracts to caimst and mumbai
     cmds:

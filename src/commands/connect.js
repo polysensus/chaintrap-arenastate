@@ -20,6 +20,23 @@ export function programConnect(program, polling = false, key = null) {
   return signer ? signer : provider;
 }
 
+export function urlConnect(url, opts) {
+  let { key, polling } = opts;
+
+  let provider;
+  if (!polling) {
+    provider = new ethers.providers.StaticJsonRpcProvider(url);
+  } else {
+    provider = new ethers.providers.JsonRpcProvider(url);
+  }
+
+  let signer = readKey(key);
+  if (signer) {
+    signer = new ethers.Wallet(signer, provider);
+  }
+  return signer ? signer : provider;
+}
+
 export async function programConnectArena(program, options) {
   const provider = programConnect(program);
   const arena = await getArenaAddress(program, options, provider);
