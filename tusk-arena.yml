@@ -42,8 +42,6 @@ options:
 
   diamond-address:
   diamond-nonce:
-  deploy-gaslimit:
-    default: 3000000
 
 tasks:
   diamond-find:
@@ -83,11 +81,10 @@ tasks:
               -u "${rpc}" \
               -d "${deploy-key}" \
               diamond-up \
-                $(${dry-run} && echo -n '--dry-run' ) \
+                $(!${dry-run} && echo -n '--commit' ) \
                 $([ -n '${diamond-address}' ] && echo -n '--diamond-address ${diamond-address}' ) \
                 $([ -n '${diamond-nonce}' ] && echo -n '--diamond-nonce ${diamond-nonce}' ) \
                 --replace \
-                --gaslimit 3500000 \
                 $([ -n '${gasprice}' ] && echo -n '--gasprice ${gasprice}' ) \
                 --legacy \
                 --diamond-owner-key ${owner-key} \
@@ -114,9 +111,8 @@ tasks:
               -u "${rpc}" \
               -d "${deploy-key}" \
               diamond-new \
-                $(${dry-run} && echo -n '--dry-run' ) \
+                $(!${dry-run} && echo -n '--commit' ) \
                 --replace \
-                --gaslimit 3500000 \
                 $([ -n '${gasprice}' ] && echo -n '--gasprice ${gasprice}' ) \
                 --legacy \
                 --diamond-owner-key ${owner-key} \

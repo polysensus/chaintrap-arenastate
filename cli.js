@@ -1,11 +1,9 @@
 #! /usr/bin/env node
 import * as dotenv from "dotenv";
 
-dotenv.config({path: process.env.DOTENV_FILE ?? '.env'});
+dotenv.config({ path: process.env.DOTENV_FILE ?? ".env" });
 
 import { program, Option } from "commander";
-
-import { opeth } from "./src/commands/opbridge.js";
 
 import {
   tokenuri,
@@ -96,18 +94,10 @@ program.addOption(
     "--deployacc <deployacc>",
     "derive the arena address from the arena contract deployer wallet"
   ).env("ARENASTATE_DEPLOY_ACCOUNT")
-);
+); // On L1:1810633 Gwei    On L2:14923769 Gwei
 
 // ---
-program
-    .command("op-eth <eth> <key>")
-    .description("optimism eth bridging for the dev accounts and test faucets")
-    .option("--chainid-l1 <chainidl1>", "l1 chain id", 5)
-    .option("--chainid-l2 <chainidl2>", "l1 chain id", 420)
-    .option("-c, --commit", "default is dry-run, set -c to issue the transfer")
-    .action((eth, key, options) => opeth(program, options, eth, key));
-
-;
+// ---
 
 // ---
 program

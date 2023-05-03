@@ -7,6 +7,27 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "op-send",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "envFile": "${workspaceFolder}/.env.op-eth",
+      "args": [
+        "op-send",
+        "--eth-fiat",
+        "1514.67",
+        "--adjust-for-costs",
+        "--margin-percent",
+        "0",
+        "--commit",
+        "${workspaceFolder}/.local/dev/wallets/ann-goerli.key",
+        "0xd5A03137D5a03162b9C82f66934440655E4C41Bf",
+        "0.001"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
       "name": "roster",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",

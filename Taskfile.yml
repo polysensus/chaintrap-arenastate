@@ -60,15 +60,13 @@ tasks:
     dotenv: [".env.opgoerli"]
     cmds:
       # - tusk -f tusk-arena.yml deploy-arena-new --gasprice "2.6"
-      - tusk -f tusk-arena.yml deploy-arena-new
+      - tusk -f tusk-arena.yml deploy-arena-new {{.CLI_ARGS}}
   find:opgoerli:
     dotenv: [".env.opgoerli"]
     desc: find the arena on mumbai
     cmds:
       - |
-        tusk -f tusk-arena.yml diamond-find
-
-
+        tusk -f tusk-arena.yml diamond-find {{.CLI_ARGS}}
 
   deploy:caimst:
     desc: deploy the contracts to caimst and mumbai
