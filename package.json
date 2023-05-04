@@ -46,6 +46,7 @@
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@openzeppelin/merkle-tree": "^1.0.4",
     "@polysensus/chaintrap-contracts": "file:../chaintrap-contracts",
     "@polysensus/diamond-deploy": "file:../diamond-deploy",
     "@rollup/plugin-commonjs": "^23.0.3",
