@@ -24,7 +24,57 @@ export const arenaTranscriptsFacetABI = arenaTranscriptsFacetSol.abi;
 import erc1155ArenaFacetSol from "@polysensus/chaintrap-contracts/abi/ERC1155ArenaFacet.json" assert { type: "json" };
 export const erc1155ArenaFacetABI = erc1155ArenaFacetSol.abi;
 
-import { createERC2535Proxy } from "@polysensus/chaintrap-contracts/chaintrap/erc2535proxy.mjs";
+import { createERC2535Proxy } from "@polysensus/chaintrap-contracts";
+
+export function matchCustomError(selectErrors, err) {
+  if (!err.reason) return [undefined, "no reason property on err"];
+  const matched = err.reason.match(
+    /reverted with an unrecognized custom error.*data: (0x[0-9a-f]{8})([0-9a-f]*)/
+  );
+  if (!matched)
+    return [undefined, "custom error indicator not matched in reason"];
+  return [selectErrors[matched[1]], matched[2]];
+}
+export function customError(selectErrors, err) {
+  const [f, data] = matchCustomError(selectErrors, err);
+  if (!f) return err;
+  return new Error(f.format(), { cause: err });
+}
+
+export function reduceErrors(fragments, abi) {
+  errors = abi.reduce((fragments, current) => {
+    if (current.type !== "error") return errors;
+    fragments.push(ethers.utils.ErrorFragment.from(current));
+    return fragments;
+  }, fragments);
+  return errors;
+}
+
+export function errorABISelectors() {
+  const errors = {};
+  for (const abi of [
+    diamondABI,
+    diamondCutFacetABI,
+    diamondLoupeFacetABI,
+    ownershipFacetABI,
+    arenaFacetABI,
+    arenaTranscriptsFacetABI,
+    erc1155ArenaFacetABI,
+  ]) {
+    abi.reduce((errors, current) => {
+      if (current.type !== "error") return errors;
+      const fragment = ethers.utils.ErrorFragment.from(current);
+      const selector = ethers.utils.hexDataSlice(
+        ethers.utils.id(fragment.format()),
+        0,
+        4
+      );
+      errors[selector] = fragment;
+      return errors;
+    }, errors);
+  }
+  return errors;
+}
 
 export function arenaConnect(diamondAddress, providerOrSigner) {
   const arena = createERC2535Proxy(

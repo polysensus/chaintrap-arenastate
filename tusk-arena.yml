@@ -63,7 +63,7 @@ tasks:
       diamond-address:
         environment: ARENASTATE_ARENA
       diamond-nonce:
-      dry-run:
+      commit:
         type: bool
       gasprice:
     run:
@@ -81,7 +81,7 @@ tasks:
               -u "${rpc}" \
               -d "${deploy-key}" \
               diamond-up \
-                $(!${dry-run} && echo -n '--commit' ) \
+                $(${commit} && echo -n '--commit' ) \
                 $([ -n '${diamond-address}' ] && echo -n '--diamond-address ${diamond-address}' ) \
                 $([ -n '${diamond-nonce}' ] && echo -n '--diamond-nonce ${diamond-nonce}' ) \
                 --replace \
@@ -94,8 +94,9 @@ tasks:
   deploy-arena-new:
     options:
       gasprice:
-      dry-run:
+      commit:
         type: bool
+        default: true
     run:
       - command:
           exec: |
@@ -111,7 +112,7 @@ tasks:
               -u "${rpc}" \
               -d "${deploy-key}" \
               diamond-new \
-                $(!${dry-run} && echo -n '--commit' ) \
+                $(${commit} && echo -n '--commit' ) \
                 --replace \
                 $([ -n '${gasprice}' ] && echo -n '--gasprice ${gasprice}' ) \
                 --legacy \

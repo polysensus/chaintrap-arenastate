@@ -14,18 +14,18 @@ export class LocationFlags {
 
 export class Location {
   /**
-   * Note that a join can be listed at most *once* in the an side joins list. A
-   * single join cannot enter the same room in two different exits. This is why
-   * we don't bother encoding the join exit index explicitly. we can always
-   * search for it and the N for the search is very small.
-   * @param {[number[], number[], number[], number[]]} joins
+   * Note that a join can be listed at most *once* in the any single side joins
+   * list. Because a single join cannot enter the same room in two different
+   * exits. This is why we don't bother encoding the join exit index explicitly.
+   * we can always search for it and the N for the search is very small.
+   * @param {[number[], number[], number[], number[]]} sides
    * indexes the joins table for each SIDE. NORTH, WEST, SOUTH, EAST clockwise
    * from TOP
    * @param {Object.<string, boolean>} flags
    */
-  constructor(joins, flags) {
+  constructor(sides, flags) {
     /** @readonly*/
-    this.joins = joins;
+    this.sides = sides;
     /** @readonly*/
     this.flags = flags;
   }

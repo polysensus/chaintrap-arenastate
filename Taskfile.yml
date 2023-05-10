@@ -5,6 +5,9 @@ silent: true
 vars:
   CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
   TUSKS: ".local/dev"
+  FACETS_EXCLUDE: node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json
+  CHAINTRAP_CONTRACTS_ABI_DIR: node_modules/@polysensus/chaintrap-contracts/abi
+  DIAMOND_DEPLOY_JSON: .local/dev/diamond-deploy.json
 
 dotenv: [".env"]
 
@@ -38,6 +41,16 @@ tasks:
     deps: [format]
     cmds:
       - npm run build
+
+  build:diamond-deploy:
+    desc: generate the deployable list of facets
+    cmds:
+      - |
+        npx diamond-deploy list \
+          -I facet -i {{.CHAINTRAP_CONTRACTS_ABI_DIR}} \
+          --exclude {{.FACETS_EXCLUDE}} \
+          -n Diamond DiamondNew \
+          --format json | tee {{.DIAMOND_DEPLOY_JSON}}
 
   test:
     cmds:
@@ -117,7 +130,10 @@ tasks:
   test:unit:
     desc: run the unit tests
     cmds:
-      - npm run test -- {{.CLI_ARGS}}
+      - |
+        set -e
+        npm run test -- --coverage
+        npx mocha '**/*.mocha.{mjs,js}'
 
   test:unit:ci:
     desc: run the unit tests for the ci (juint output)
@@ -126,6 +142,7 @@ tasks:
         set -e
         # npm run test -- --reporter junit --outputFile jest-junit.xml
         npm run test -- --coverage
+        npx mocha --timeout 20000  '**/*.mocha.{mjs,js}'
 
   test:integ:deploy:
     desc: start hardhat and deploy contracts for test:integ

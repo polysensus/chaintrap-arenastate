@@ -1,3 +1,28 @@
+# A review of chaintrap events, game states and player states
+
+## game states
+
+`game.started`, `game.completed`
+
+## player states
+
+`player.halted` (dead or victorious)
+
+## game events
+
+PlayerEnteredLocation
+PlayerKilledByTrap
+PlayerDied
+PlayerGainedLife
+PlayerLostLife
+PlayerVictory
+PlayerUsedFurniture
+
+`UseExit`, `ExitUsed`
+`EntryReject`
+`UseToken`
+`FurnitureUsed`
+
 # A review of chaintrap map definitions
 
 A `JOIN` is a pair of location indices and a pair of location sides:
@@ -75,3 +100,62 @@ I have a commitment to
 pedersen (nullifier, secret) as per tornado cash. for movement, don't save the nulifier (always allow re spend ?). For consumable traps, save the nullifier
 
 in the torndado cash case the guardian is the depositor and withdrawer. on deposit they are recording the map locations. on withdrawal they are confirming the moves
+
+# new model notes
+
+We currently have
+
+        H(H([[LOCATION, SIDE, EXIT][LOCATION, SIDE, EXIT]]))
+
+We don't put the bi-directionals in currently, so if we have A -> B, we don't
+include B -> A. This is anoying in various ways. But particularly because we
+don't normalise the order. So it is tempting to do something like this
+
+        H(H(SORT([[LOCATION, SIDE, EXIT][LOCATION, SIDE, EXIT]])))
+
+The A -> B, Action -> Outcome general form makes a lot of sense. And sorting
+breaks that. So instead we can just add both directions independently. This does
+actually make one-way-doors possible. Being a bit forward looking to when we
+include placed items, we will either have separate item placement trie or we can
+have an ACTION -> OUTCOME format in what is currently the map trie that allows
+for USE-OBJECT style interactions. In addition to USE-EXIT which is what we
+currently have.
+
+It would make sense that the participant can create the 'A' side of the node,
+this will make the link between the player commitment and the outcome much
+clearer
+
+        H([USE-EXIT, [LOCATION, SIDE, EGRESS-EXIT], [LOCATION, SIDE, INGRESS-EXIT]])
+        DATA = ROOM-BLOB
+
+The `ROOM-BLOB` is currently
+
+        {
+                corridors: [[join-indices], [join-indices], [join-indices], [join-indices]],
+                main: true|false,
+                inter: true|false,
+                x, y, w, l
+        }
+
+Player can commit by providing `[COMMIT-SIDE, COMMIT-EGRESS-EXIT]`. The advocate uses their knowlege of the current player location to produce the node
+
+        [CURRENT-LOCATION, COMMIT-SIDE, COMMIT-EGRESS-EXIT][LOCATION, SIDE, INGRESS-EXIT]
+
+And then submits the proof
+
+The exclusion proof would be anoying and, importantly, it would force us to reveal a lot.
+
+We need a second trie for this I think:
+
+trie([LOCATION, SIDE, EXIT])
+
+So we can always show directly that any `[COMMIT-SIDE, COMMIT-EGRESS-EXIT]` is valid or not. not by creating an exclusion proof for this second trie
+
+trie(links)
+trie(locations)
+
+We will probably also want
+
+trie(furniture)
+
+We can doubl

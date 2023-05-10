@@ -1,5 +1,5 @@
 // @ts-check
-import { describe, it, expect } from "vitest";
+import { expect } from "chai";
 
 import { Join } from "./join.js";
 import { Location } from "./location.js";
@@ -28,15 +28,15 @@ describe("Maptrie Location tests", function () {
 
   it("Should create location", function () {
     const j = new Location([[0], [1, 2], [3], []], {});
-    expect(j.joins[0][0]).to.equal(0);
-    expect(j.joins[0].length).to.equal(1);
+    expect(j.sides[0][0]).to.equal(0);
+    expect(j.sides[0].length).to.equal(1);
 
-    expect(j.joins[1][0]).to.equal(1);
-    expect(j.joins[1][1]).to.equal(2);
-    expect(j.joins[1].length).to.equal(2);
+    expect(j.sides[1][0]).to.equal(1);
+    expect(j.sides[1][1]).to.equal(2);
+    expect(j.sides[1].length).to.equal(2);
 
-    expect(j.joins[2][0]).to.equal(3);
-    expect(j.joins[2].length).to.equal(1);
-    expect(j.joins[3].length).to.equal(0);
+    expect(j.sides[2][0]).to.equal(3);
+    expect(j.sides[2].length).to.equal(1);
+    expect(j.sides[3].length).to.equal(0);
   });
 });

@@ -16,6 +16,7 @@ export async function deployArenaFixture() {
 }
 
 export async function deployArena(signer, owner, options = {}) {
+  options.commit = true;
   options.diamondOwner = owner;
   options.diamondLoupeName = "DiamondLoupeFacet";
   options.diamondCutName = "DiamondCutFacet";

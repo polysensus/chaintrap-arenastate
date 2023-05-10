@@ -31,6 +31,8 @@ import { arenaAddress } from "./src/commands/arenaaddress.js";
 import { showProviders } from "./src/commands/providers.js";
 import { watchArena } from "./src/commands/watcharena.js";
 
+import { addMaptrie, addMaptrieProof } from "./src/commands/maptrie.js";
+
 program
   .enablePositionalOptions()
   .option("-v, --verbose", "more verbose reporting")
@@ -97,6 +99,8 @@ program.addOption(
 ); // On L1:1810633 Gwei    On L2:14923769 Gwei
 
 // ---
+addMaptrie(program);
+addMaptrieProof(program);
 // ---
 
 // ---

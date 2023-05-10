@@ -39,9 +39,9 @@ module.exports = {
     artifacts: "test/artifacts",
   },
   mocha: {
-    spec: ["test/**/*.hh.js"],
+    spec: ["test/**/*.js", "src/**/*.mocha.js"],
     watch: true,
-    "watch-files": ["test/lib/**/*.js", "test/**/*.hh.js"],
-    "watch-ignore": ["src"],
+    "watch-files": ["test/lib/**/*.js", "test/**/*.js", "src/**/*.mocha.js"],
+    "watch-ignore": ["src/**/*.spec.js"],
   },
 };

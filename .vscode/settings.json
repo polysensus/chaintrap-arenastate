@@ -3,6 +3,6 @@
   "mochaExplorer.env": {
     "DIAMOND_DEPLOY_JSON": "${workspaceFolder:chaintrap-contracts}/.local/dev/diamond-deploy.json"
   },
-  "cSpell.words": ["Arrayish", "gasoracleabi"] //,
-  //"mochaExplorer.files": "test/**/*.js"
+  "cSpell.words": ["Arrayish", "gasoracleabi"],
+  "mochaExplorer.files": ["test/**/*.js", "src/**/*.mocha.js"]
 }

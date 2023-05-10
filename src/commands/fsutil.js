@@ -39,3 +39,9 @@ export function writeBinary(filename, data) {
 export function writeText(filename, data) {
   return fs.writeFileSync(filename, data, { encoding: "utf-8" });
 }
+
+export function writeJson(filename, data) {
+  return fs.writeFileSync(filename, JSON.stringify(data, null, " "), {
+    encoding: "utf-8",
+  });
+}
