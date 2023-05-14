@@ -2,7 +2,7 @@ import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import { LogicalTopology } from "../../src/lib/maptrie/logical.js";
 import { ObjectCodec, LeafObject } from "../../src/lib/maptrie/objects.js";
 
-import map02_json from "../../src/lib/map/mocks/map02.json" assert { type: "json" };
+import map02_json from "../../data/maps/map02.json" assert { type: "json" };
 const { map02 } = map02_json;
 
 export function topologyForMap02() {

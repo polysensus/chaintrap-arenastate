@@ -374,7 +374,7 @@ export class StateRoster {
   }
 
   _haveSeenEvent(e) {
-    return this._txmemo.haveEventTx(e);
+    return this._txmemo.haveEvent(e);
   }
 
   _eventMemo(e) {

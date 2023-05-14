@@ -116,7 +116,7 @@ tasks:
         tusk -f tusk-arena.yml deploy-arena
   deploy:hh-new:
     dotenv: [".env.hh"]
-    desc: deploy the contracts to hardhata (assumes the local server is listening on 8545)
+    desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
     cmds:
       - |
         tusk -f tusk-arena.yml deploy-arena-new
@@ -153,6 +153,11 @@ tasks:
       - |
         set -e
         tusk -q -f tusk-arena.yml diamond-find | tee arenaproxy.addr
+  test:integ:
+    desc: run the integration tests
+    cmds:
+      - |
+        npx mocha 'test/**/*.mocha-integ.{mjs,js}'
 
   dev:hh:start:
     desc: start a local hardhat node (if there isn't one running)

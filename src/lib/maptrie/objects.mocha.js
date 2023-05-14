@@ -12,7 +12,7 @@ describe("Object trie Access tests", function () {
     const access = new Access({ location: 2, side: 3, exit: 4 });
     const o = new LeafObject({ type: ObjectType.Access, leaf: access });
     const data = ObjectCodec.prepare(o);
-    const decoded = ObjectCodec.hydrate({type: data[0], leaf: data[1]});
+    const decoded = ObjectCodec.hydrate({ type: data[0], leaf: data[1] });
     // // const access = [2, 3, 4];
     // const data = Access.encode(access);
     // const decoded = Access.decode(data);

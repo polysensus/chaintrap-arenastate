@@ -24,6 +24,11 @@ import {
   completegame,
   allowexituse,
 } from "./src/commands/guardian.js";
+
+import { addCreategame2 } from "./src/commands/creategame2.js";
+import { addJoingame2 } from "./src/commands/joingame2.js";
+import { addStartgame2 } from "./src/commands/startgame2.js";
+
 import { storegame, defaultGameIconPrompt } from "./src/commands/metadata.js";
 
 import { arenaAddress } from "./src/commands/arenaaddress.js";
@@ -74,20 +79,9 @@ program.addOption(
 );
 
 program.addOption(
-  new Option("--openaikey <key>", "openai api key").env(
-    "ARENASTATE_OPENAI_API_KEY"
-  )
-);
-program.addOption(
-  new Option("--nftstorage", "nftstorage api key").env(
-    "ARENASTATE_NFTSTORAGE_API_KEY"
-  )
-);
-
-program.addOption(
   new Option(
     "-d, --deploykey <deploykey>",
-    "derive the areana address from private key that deployed the arena contract"
+    "derive the arena address from private key that deployed the arena contract"
   ).env("ARENASTATE_DEPLOY_KEY")
 );
 
@@ -101,22 +95,23 @@ program.addOption(
 // ---
 addMaptrie(program);
 addMaptrieProof(program);
+addCreategame2(program);
 // ---
 
 // ---
 program
   .command("providers")
   .description("get the address of the most recently deployed arena contract")
-  .option("-p, --providers <providersfile>")
+  .option("-p, --providers <filename>")
   .action((options) => showProviders(program, options));
 
 program
   .command("watch")
   .description("watch for events on the arena contract")
-  .option("-p, --providers <providersfile>")
+  .option("-p, --providers <filename>")
   .option(
     "-w, --which <which>",
-    "name of the provider entry in providersfile",
+    "name of the provider entry in providers file",
     "caimst"
   )
   .action((options) => watchArena(program, options));
@@ -191,7 +186,7 @@ program
   .description("create a new game")
   .option(
     "-g, --maxplayers <max>",
-    "maximum number of players allwoed to register",
+    "maximum number of players allowed to register",
     5
   )
   .action((options) => creategame(program, options));
@@ -224,7 +219,7 @@ program
   .option("-c, --commit", "default is dry-run, set -c to issue the transaction")
   .option(
     "-H, --halt",
-    "halt the player, when an allow also halts it generaly indicates success/completion or player death",
+    "halt the player, when an allow also halts it generally indicates success/completion or player death",
     false
   )
   .action((options) => allowexituse(program, options));
@@ -236,8 +231,8 @@ program
   .option("-g, --gid <gid>")
   .option(
     "-c, --character <character>",
-    "character name, 'viking' or 'assasin'",
-    "assasin"
+    "character name, 'viking' or 'assassin'",
+    "assassin"
   )
   .action((nickname, options) => joingame(program, options, nickname));
 

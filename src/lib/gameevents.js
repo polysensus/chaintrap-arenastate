@@ -109,14 +109,14 @@ export async function findGameEvents(arena, gid, fromBlock) {
     address: arena.address,
     topics: [
       null, // any event on the contract
-      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the game id as the first indexed paramater
+      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the game id as the first indexed parameter
     ],
   };
   return arena.queryFilter(filter, fromBlock);
 }
 
 /**
- * parseEventLog returns a normalised and (abi) parsed representation of an ethereum event log
+ * parseEventLog returns a normalized and (abi) parsed representation of an ethereum event log
  * @param {any} iface contract interface (ethers.utils.Interface eg arenaInterface() result)
  * @param {*} ethlog
  * @returns

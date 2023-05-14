@@ -2,7 +2,7 @@ import hre from "hardhat";
 const { ethers } = hre;
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { deployArenaFixture } from "./lib/deployarena.js";
+import { deployArenaFixture } from "./support/deployarena.js";
 import { arenaConnect } from "../src/lib/chaintrapabi.js";
 
 describe("Deployment", function () {

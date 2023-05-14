@@ -14,5 +14,6 @@ coverage
 jest-junit.xml
 .env
 .env.*
+!.env.example.*
 .envrc
 .local

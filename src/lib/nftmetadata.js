@@ -59,6 +59,32 @@ const maptoolImage = "eu.gcr.io/hoy-dev-1/chaintrap-maptool:main-20";
 const maptoolImageDigest =
   "sha256:9806aaeb3805f077753b7e94eae2ba371fd0a3cc64ade502f6bc5a99a9aba4e9";
 
+export async function generateGameIconBinary(options) {
+  const body = {
+    prompt: options.openaiImagePrompt,
+    n: 1,
+    size: "256x256",
+    response_format: "b64_json",
+  };
+  const path = options.openaiImagesUrl;
+  delete body["path"];
+
+  const result = await fetch(path, {
+    method: "post",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${options.openaiApiKey}`,
+    },
+  });
+  const j = await result.json();
+  const b64json = j["data"][0]?.b64_json;
+  if (!b64json) {
+    throw new Error("No data item in response");
+  }
+  return ethers.utils.base64.decode(b64json);
+}
+
 export async function fetchGameIconBinary(path, prompt, options) {
   if (!options.fetch)
     throw new Error("you must provide a fetch implementation");
@@ -99,26 +125,40 @@ export async function storeERC1155GameMetadata(
   metadata,
   options
 ) {
-  if (!options.openaiImagesURL)
-    throw new Error("you must provide the url for openai image generation api");
-  if (!options.fetch)
-    throw new Error("you must provide a fetch implementation");
-  if (!options.openaiAPIKey)
-    throw new Error("the openaiAPIKey option is required");
+  if (options.nftstorageApiKey)
+    options.nftstorageAPIKey = options.nftstorageApiKey;
+  if (options.nftstorageApiKey)
+    options.nftstorageAPIKey = options.nftstorageApiKey;
+  if (options.options.openaiApiKey)
+    options.openaiAPIKey = options.options.openaiApiKey;
+
+  if (!options.gameIconBytes) {
+    if (!options.openaiImagesURL)
+      throw new Error(
+        "you must provide the url for openai image generation api OR you must instead provide the image bytes to use"
+      );
+    if (!options.fetch)
+      throw new Error("you must provide a fetch implementation");
+    if (!options.openaiAPIKey)
+      throw new Error("the openaiAPIKey option is required");
+  }
+
   if (!options.nftstorageAPIKey)
     throw new Error("the nftstoragekey option is required");
 
-  const bytes = await fetchGameIconBinary(
-    options.openaiImagesURL,
-    options.prompt ?? defaultGameIconPrompt,
-    options
-  );
-  const gameIcon = nftStorageImageFromBinary(
-    bytes,
+  let gameIconBytes = options.gameIconBytes;
+  if (!gameIconBytes) {
+    gameIconBytes = await fetchGameIconBinary(
+      options.openaiImagesURL,
+      options.prompt ?? defaultGameIconPrompt,
+      options
+    );
+  }
+  gameIcon = nftStorageImageFromBinary(
+    gameIconBytes,
     options.filename ?? "game-icon.png"
   );
 
-  // TODO: put the generator image in ipfs too
   metadata = {
     title: "Token Metadata",
     name: metadata.name ?? "a chaintrap game",
@@ -136,7 +176,7 @@ export async function storeERC1155GameMetadata(
         image: options.maptoolImage,
         image_digest: options.maptoolImageDigest,
       },
-      // beta, pi, public_key from map.vrf_inputs.proof
+      // beta, pi, public_key from map.vrf_inputs.proof, trie root commitments
       public_proof,
     },
   };

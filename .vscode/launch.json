@@ -7,21 +7,49 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "op-send",
+      "name": "joingame2",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
-      "envFile": "${workspaceFolder}/.env.op-eth",
+      "envFile": "${workspaceFolder}/.env.gamehost",
       "args": [
-        "op-send",
-        "--eth-fiat",
-        "1514.67",
-        "--adjust-for-costs",
-        "--margin-percent",
-        "0",
-        "--commit",
-        "${workspaceFolder}/.local/dev/wallets/ann-goerli.key",
-        "0xd5A03137D5a03162b9C82f66934440655E4C41Bf",
-        "0.001"
+        "joingame2",
+        "--id", "0x040000000000000000000000000000000c",
+        "--nickname", "player1"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "startgame2",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "envFile": "${workspaceFolder}/.env.gamehost",
+      "args": [
+        "joingame2",
+        "--id", "0x040000000000000000000000000000000c"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "creategame2",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "envFile": "${workspaceFolder}/.env.gamehost",
+      "args": [
+        "--map",
+        "${workspaceFolder}/data/maps/map02.json",
+        "creategame2",
+        "--name",
+        "A chaintrap game created by developer testing",
+        "--description",
+        "The description of a chaintrap game created by developer testing",
+        "--max-participants",
+        "3",
+        "--openai-image-prompt",
+        "A stylised icon representing a turn based random dungeon crawler game"
       ]
     },
 

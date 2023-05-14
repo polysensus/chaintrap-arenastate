@@ -22,10 +22,20 @@ export class TxMemo {
     this._highestBlock = 0;
   }
 
+  /**
+   * @template {{transactionHash}} EventLike
+   * @param {EventLike} e
+   * @returns
+   */
   haveEvent(e) {
     return typeof this._recentTx[e.transactionHash] !== "undefined";
   }
 
+  /**
+   * @template {{blockNumber, transactionHash}} EventLike
+   * @param {EventLike} e
+   * @returns
+   */
   eventTxMemo(e) {
     if (this.haveEvent(e)) {
       log.debug(fmt(`<<<<<< Have memo for ${e.transactionHash}`));
@@ -54,9 +64,9 @@ export class TxMemo {
     }
 
     // We may not see events in all blocks. We probably wont. This arrangement
-    // means if we only have two blocks but they are > horizon appart, we will
+    // means if we only have two blocks but they are > horizon apart, we will
     // drop the lowest and stop. ie this is a true horizon not a count of blocks
-    // to retain. A priority queue would be nice here
+    // to retain.
     if (this._highestBlock - this._lowestBlock > this._blockHorizon) {
       const known = Object.keys(this._recentBlockTx).map(Number);
       known.sort();

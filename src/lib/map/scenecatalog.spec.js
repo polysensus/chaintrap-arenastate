@@ -15,18 +15,22 @@ import { parseEventLog, playerFromParsedEvent } from "../gameevents.js";
 
 const keccak = ethers.utils.keccak256;
 
+function dataPath(dataFile) {
+  return path.join(__dirname, "..", "..", "..", "data/", dataFile);
+}
+
 const maps01 = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "mocks/map01-model-two-rooms.json"))
+  fs.readFileSync(dataPath("maps/map01-model-two-rooms.json"))
 );
 
 const maps02 = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "mocks/map02.json"))
+  fs.readFileSync(dataPath("maps/map02.json"))
 );
 
 // Note: this set of logs were made using mocks/map02.json
 const singlePlayer2MoveEthLogs = JSON.parse(
   fs.readFileSync(
-    path.join(__dirname, "../../mocks/single-player-two-move-ethlogs.json")
+    dataPath("tests/transaction-logs/single-player-two-move-ethlogs.json")
   )
 );
 

@@ -9,3 +9,27 @@ export class ABIName {
   static ExitUsed = "ExitUsed";
   static EntryReject = "EntryReject";
 }
+
+export class ABIName2 {
+  static ActionCommitted = "ActionCommitted";
+  static ArgumentProven = "ArgumentProven";
+  static OutcomeResolved = "OutcomeResolved";
+}
+
+/**
+ * Returns true if the event is from the v1 game events interface
+ * @param {any} ev ethers parsed event (parsed according to the contract ABI)
+ * @returns
+ */
+export function isV1GameEvent(ev) {
+  return !!ABIName[ev.event];
+}
+
+/**
+ * Returns true if the event is from the v1 game events interface
+ * @param {any} ev ethers parsed event (parsed according to the contract ABI)
+ * @returns
+ */
+export function isV2GameEvent(ev) {
+  return !!ABIName2[ev.event];
+}

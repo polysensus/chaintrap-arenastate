@@ -5,8 +5,8 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { Access } from "../../src/lib/maptrie/access.js";
 import { ObjectCodec, LeafObject } from "../../src/lib/maptrie/objects.js";
 
-import { deployArenaFixture } from "../lib/deployarena.js";
-import { topologyForMap02 } from "../lib/maptrie.js";
+import { deployArenaFixture } from "../support/deployarena.js";
+import { topologyForMap02 } from "../support/maptrie.js";
 import {
   arenaConnect,
   errorABISelectors,
@@ -88,7 +88,6 @@ describe("LibTranscript_createGame2", async function () {
       ethers.utils.toUtf8Bytes("player1")
     );
 
-    // XXX: TODO: startGame2
     await expectReceipt(owner.startGame2, gid);
 
     // location 2 has sides: [[2], [], [3], [10]]

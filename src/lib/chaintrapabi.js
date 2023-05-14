@@ -87,7 +87,7 @@ export function arenaConnect(diamondAddress, providerOrSigner) {
       ArenaCallsFacet: arenaCallsFacetABI,
       ArenaFacet: arenaFacetABI,
       ArenaTranscriptsFacet: arenaTranscriptsFacetABI,
-      ERC1155ArenaFacetSol: erc1155ArenaFacetABI,
+      ERC1155ArenaFacet: erc1155ArenaFacetABI,
     },
     providerOrSigner
   );

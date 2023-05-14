@@ -4,8 +4,6 @@ import { isFile, readHexKey, readJson, readBinary } from "./fsutil.js";
 
 import { readKey } from "./readkey.js";
 
-import { resolveHardhatKey } from "../lib/hhkeys.js";
-
 import { NFTStorage, File, Blob } from "nft.storage";
 
 import { deriveContractAddress } from "@polysensus/diamond-deploy";
@@ -16,11 +14,35 @@ import { getLogger } from "../lib/log.js";
 const log = getLogger("arenaaddress");
 const out = console.log;
 
-const openaiCompletionsURL = "https://api.openai.com/v1/completions";
-const openaiImagesURL = "https://api.openai.com/v1/images/generations";
-const nftStorageURL = "https://api.nft.storage";
+const openaiImagesUrl = "https://api.openai.com/v1/images/generations";
 export const defaultGameIconPrompt =
   "A stylised icon representing a turn based random dungeon crawler game";
+
+export async function generateGameIconBinary(options) {
+  const body = {
+    prompt: options.openaiImagePrompt,
+    n: 1,
+    size: "256x256",
+    response_format: "b64_json",
+  };
+  const path = options.openaiImagesUrl;
+  delete body["path"];
+
+  const result = await fetch(path, {
+    method: "post",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${options.openaiApiKey}`,
+    },
+  });
+  const j = await result.json();
+  const b64json = j["data"][0]?.b64_json;
+  if (!b64json) {
+    throw new Error("No data item in response");
+  }
+  return ethers.utils.base64.decode(b64json);
+}
 
 export async function fetchGameIconBinary(prompt, apiKey, options) {
   const body = {
@@ -30,7 +52,7 @@ export async function fetchGameIconBinary(prompt, apiKey, options) {
     response_format: "b64_json",
     ...options,
   };
-  const path = body.path ?? openaiImagesURL;
+  const path = body.path ?? openaiImagesUrl;
   delete body["path"];
 
   const result = await fetch(path, {

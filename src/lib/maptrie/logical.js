@@ -5,12 +5,25 @@ import { Link } from "./link.js";
 import { ObjectType, ObjectCodec, LeafObject } from "./objects.js";
 import { Location } from "./location.js";
 
+/**
+ * LogicalTopology encodes maps as a set of linked locations. A->B, B->A and a
+ * set of placed objects.
+ *
+ * proof that "an entry exists in joins which laves location i via side m, exit
+ * n, and enters location j, via side r, exit s"
+ */
 export class LogicalTopology {
   /**
-   * proof that "an entry exists in joins which laves location i via side m, exit n, and enters location j, via side r, exit s"
+   * @constructor
+   * @template {{map,name}} Source
+   * @param {Source} name
    */
-
-  constructor() {
+  constructor(source) {
+    /**
+     * The the json map source and name of the map, if there is one. typically
+     * the name is the attribute in a map collection file that holds the specific map
+     */
+    this.source = source;
     /**
      * Each this.joins[i].joins is a pair of indices into this.locations
      * @type {Join[]}
@@ -24,6 +37,27 @@ export class LogicalTopology {
      * @readonly
      */
     this.locations = [];
+  }
+
+  /**
+   *
+   * @param {object} mapCollection
+   * @param {string|undefined} entryName
+   */
+  static fromCollectionJSON(mapCollection, entryName = undefined) {
+    if (!entryName) {
+      const names = Object.keys(mapCollection);
+      if (names.length === 0) throw new Error("empty map collection");
+
+      entryName = names.sort()[0];
+    }
+    const map = mapCollection[entryName];
+    if (!map) throw new Error(`${entryName} not found in map collection`);
+
+    const topo = new LogicalTopology({ map, name: entryName });
+    topo.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
+    topo.extendLocations(map.model.rooms);
+    return topo;
   }
 
   /**
@@ -99,17 +133,17 @@ export class LogicalTopology {
    * @returns {[number, number, number]}
    */
   _accessJoin(loc, side, which) {
-    const ijoin = this.locations[loc]?.sides[side]?.[which];
-    if (typeof ijoin === "undefined")
+    const iJoin = this.locations[loc]?.sides[side]?.[which];
+    if (typeof iJoin === "undefined")
       throw new Error(`invalid egress ${loc}:${side}${which}`);
-    const join = this.joins[ijoin];
+    const join = this.joins[iJoin];
 
     // get the other side by matching the egress side in the join and then taking the other entry
     const ingressSide = join.joins[0] === loc ? join.sides[1] : join.sides[0];
     // similarly for the ingress location
     const ingressLoc = join.joins[0] === loc ? join.joins[1] : join.joins[0];
     // now we find the exit index by searching the ingress location, side for the join
-    const ingressWhich = this.exitIndex(ijoin, ingressLoc, ingressSide);
+    const ingressWhich = this.exitIndex(iJoin, ingressLoc, ingressSide);
     if (typeof ingressWhich === "undefined")
       throw new Error(
         `invalid map, exitIndex not found for ${join}:${loc}:${ingressSide}`

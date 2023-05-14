@@ -8,7 +8,7 @@ import { LinkLeaf } from "./leaves.js";
 import { Link } from "./link.js";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 //
-import maps from "../map/mocks/map02.json" assert { type: "json" };
+import maps from "../../../data/maps/map02.json" assert { type: "json" };
 const { map02 } = maps;
 
 describe("LogicalTopology tests", function () {
