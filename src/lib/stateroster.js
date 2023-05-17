@@ -10,32 +10,25 @@ import { TxMemo } from "./txmemo.js";
 import { ABIName } from "./abiconst.js";
 import { Player } from "./player.js";
 import { PlayerState } from "./playerstate.js";
-import {
-  findGameEvents,
-  parseEventLog,
-  getGameCreatedBlock,
-} from "./gameevents.js";
+import { findGameEvents, getGameCreatedBlock } from "./gameevents.js";
 
 export const log = getLogger("StateRoster");
 
 export const fmtev = (e) =>
   `gid: ${e.args.gid}, eid: ${e.args.eid}, ${e.event} bn: ${e.blockNumber}, topics: ${e.topics}, tx: ${e.transactionHash}`;
 
-export async function prepareRoster(arena, gid, options = {}) {
-  log.debug(`Arena: ${arena.address} ${gid}, ${options}`);
+export async function prepareRoster(arena, options = {}) {
+  log.debug(`Arena: ${arena.address} ${options.gid}, ${options}`);
 
-  let { fromBlock, model } = options;
+  let { fromBlock } = options;
+  let { gid } = options;
 
   if (typeof gid === "undefined" || gid < 0) {
     gid = await arena.lastGame();
   }
 
   if (!fromBlock) fromBlock = await getGameCreatedBlock(arena, gid);
-  const roster = new StateRoster(
-    arena.getFacetInterface(ABIName.ArenaFacetName),
-    gid,
-    options
-  );
+  const roster = new StateRoster(gid, options);
   const snap = roster.snapshot();
   return [snap, roster];
 }
@@ -48,6 +41,9 @@ export async function loadRoster(arena, gid, options) {
   return [snap, roster, gameStates];
 }
 
+/**
+ * @typedef { import("./gameevent.js").GameEvent } GameEvent
+ */
 export class RosterSnapshot {
   constructor() {
     this.players = {};
@@ -71,7 +67,7 @@ export class RosterSnapshot {
  * This class manages a roster of player states for the game.
  */
 export class StateRoster {
-  constructor(arenaInterface, gid, options = {}) {
+  constructor(gid, options = {}) {
     const { txmemo, model } = options;
     let { hashAlpha } = options;
     if (hashAlpha) {
@@ -80,9 +76,7 @@ export class StateRoster {
       hashAlpha = hashAlpha[hashAlpha.length - 1];
     }
 
-    // note: if the signer on the contract changes, this will be updated to the
-    // new contract instance by the older of the roster
-    this.arenaInterface = arenaInterface;
+    /**@readonly */
     this.gid = gid;
     this._players = {};
     this._txmemo = txmemo ?? new TxMemo();
@@ -128,10 +122,6 @@ export class StateRoster {
         return p;
       }
     }
-  }
-
-  applyEvent(event) {
-    return this.applyParsedEvent(parseEventLog(this.arenaInterface, event));
   }
 
   // --- batched state updates, used to reduce state thrashing
@@ -218,8 +208,8 @@ export class StateRoster {
 
     // Begin the batch for any we have already.
 
-    for (const ethlog of events) {
-      const e = parseEventLog(this.arenaInterface, ethlog);
+    for (const e of events) {
+      // const e = parseEventLog(this.arenaInterface, ethlog);
 
       if (typeof e.args.player !== "undefined") {
         addr = ethers.utils.getAddress(e.args.player); // normalize to checksum addr
@@ -373,10 +363,10 @@ export class StateRoster {
     return p;
   }
 
-  _haveSeenEvent(e) {
-    return this._txmemo.haveEvent(e);
-  }
-
+  /**
+   * @param {GameEvent} e
+   * @returns
+   */
   _eventMemo(e) {
     try {
       return this._txmemo.eventTxMemo(e);

@@ -13,27 +13,28 @@ export function envConnect(options) {
 
   const arenaAddress = options?.arena ?? process.env.ARENASTATE_ARENA;
 
-  const signer = urlConnect(url, {key, polling});
+  const signer = urlConnect(url, { key, polling });
   return arenaConnect(arenaAddress, signer);
 }
 
-export const HH_DEPLOYER_ACCOUNT_INDEX=0;
-export const HH_OWNER_ACCOUNT_INDEX=1;
-export const HH_GUARDIAN_ACCOUNT_INDEX=10;
-export const HH_USER1_ACCOUNT_INDEX=11;
+export const HH_DEPLOYER_ACCOUNT_INDEX = 0;
+export const HH_OWNER_ACCOUNT_INDEX = 1;
+export const HH_GUARDIAN_ACCOUNT_INDEX = 10;
+export const HH_USER1_ACCOUNT_INDEX = 11;
 
 /**
  * Connect an arena signer using an indexed hardhat (hre) account. See the HH_*
  * constants for well known uses.
- * 
- * @param {string} arenaAddress 
- * @param {{account:Number}} options 
- * @returns 
+ *
+ * @param {string} arenaAddress
+ * @param {{account:Number}} options
+ * @returns
  */
 export function hreConnect(arenaAddress, options) {
   const signers = hre.getSigners();
   let accountIndex = options.account;
-  if (typeof accountIndex === "undefined") accountIndex = HH_USER1_ACCOUNT_INDEX;
+  if (typeof accountIndex === "undefined")
+    accountIndex = HH_USER1_ACCOUNT_INDEX;
   return arenaConnect(arenaAddress, signers[accountIndex]);
 }
 
@@ -44,6 +45,6 @@ export function envConnectProvider(options) {
 
   const arenaAddress = options?.arena ?? process.env.ARENASTATE_ARENA;
 
-  const provider = urlConnect(url, {polling});
+  const provider = urlConnect(url, { polling });
   return arenaConnect(arenaAddress, provider);
 }

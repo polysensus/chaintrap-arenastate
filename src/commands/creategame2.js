@@ -1,6 +1,6 @@
 import { Option } from "commander";
 import fetch from "node-fetch";
-import {ethers} from "ethers";
+import { ethers } from "ethers";
 
 import { readJson } from "./fsutil.js";
 import { programConnectArena } from "./connect.js";
@@ -143,8 +143,8 @@ async function creategame2(program, options) {
   const r = await minter.mint(arena);
   out(r.transactionHash);
   const o = {
-    roots: {}
-  }
+    roots: {},
+  };
   for (const log of r.logs) {
     try {
       const parsed = iface.parseLog(log);
@@ -159,7 +159,8 @@ async function creategame2(program, options) {
           o.uri = parsed.args.tokenURI;
           break;
         case "SetMerkleRoot":
-          o.roots[ethers.utils.parseBytes32String(parsed.args.label)] = ethers.utils.hexlify(parsed.args.root);
+          o.roots[ethers.utils.parseBytes32String(parsed.args.label)] =
+            ethers.utils.hexlify(parsed.args.root);
           break;
         case "GameCreated":
           o.maxParticipants = parsed.args.maxParticipants.toNumber();
@@ -171,5 +172,5 @@ async function creategame2(program, options) {
   }
   o.id = o.idHex;
   delete o.idHex;
-  out(`${JSON.stringify(o, null, '  ')}`);
+  out(`${JSON.stringify(o, null, "  ")}`);
 }

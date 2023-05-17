@@ -11,6 +11,10 @@ export class ABIName {
 }
 
 export class ABIName2 {
+  static GameCreated = "GameCreated";
+  static GameStarted = "GameStarted";
+  static GameCompleted = "GameCompleted";
+  static ParticipantRegistered = "ParticipantRegistered";
   static ActionCommitted = "ActionCommitted";
   static ArgumentProven = "ArgumentProven";
   static OutcomeResolved = "OutcomeResolved";
@@ -22,7 +26,7 @@ export class ABIName2 {
  * @returns
  */
 export function isV1GameEvent(ev) {
-  return !!ABIName[ev.event];
+  return !!ABIName[ev.name];
 }
 
 /**
@@ -31,5 +35,5 @@ export function isV1GameEvent(ev) {
  * @returns
  */
 export function isV2GameEvent(ev) {
-  return !!ABIName2[ev.event];
+  return !!ABIName2[ev.name];
 }

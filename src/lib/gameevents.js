@@ -1,9 +1,73 @@
 import { ethers } from "ethers";
 
-// app
 import { getLogger } from "./log.js";
 
+import { GameEvent } from "./gameevent.js";
+import { matchCustomError } from "./chaintrapabi.js";
+
 const log = getLogger("gameevents");
+
+/**
+ * A helper class for finding and processing events emitted from the chaintrap
+ * arena diamond.
+ */
+export class ArenaEvents {
+  /**
+   * @constructor
+   * @param {ethers.Contract |
+   *  import("@polysensus/chaintrap-contracts").ERC2535DiamondFacetProxyHandler
+   * } arena - the contract instance or diamond proxy
+   */
+  constructor(arena) {
+    /** readonly */
+    this.arena = arena;
+  }
+
+  async *queryGameEvents(gid, fromBlock) {
+    for (const log of await findGameEvents(this.arena, gid, fromBlock)) {
+      const iface = this.arena.getEventInterface(log);
+      if (!iface) continue;
+      const gev = GameEvent.fromParsedEvent(iface.parseLog(log));
+      if (!gev) continue;
+      yield gev;
+    }
+  }
+
+  /**
+   * Return a GameEvent for the first log matching eventNameOrSignature. Or undefined if none match.
+   * @param {ethers.TransactionReceipt} receipt - the receipt for the transaction that will have the log from which to build the event
+   * @param {*} receipt
+   */
+  receiptLog(receipt, eventNameOrSignature) {
+    for (const gev of this.receiptLogs(receipt)) {
+      if (
+        gev?.name === eventNameOrSignature ||
+        gev.log.signature === eventNameOrSignature
+      )
+        return gev;
+    }
+  }
+
+  /**
+   * Return a GameEvent for each logs that is a recognized GameEvent
+   * @param {ethers.TransactionReceipt} receipt - the receipt for the transaction that will have the log from which to build the event
+   * @param {*} receipt
+   * @returns {GameEvent[]}
+   */
+  receiptLogs(receipt) {
+    const gameEvents = [];
+    if (receipt.status !== 1) throw new Error("bad receipt status");
+    for (const log of receipt.logs) {
+      const iface = this.arena.getEventInterface(log);
+      if (!iface) continue;
+      const gev = GameEvent.fromParsedEvent(iface.parseLog(log));
+      if (!gev) continue;
+      // yield gev;
+      gameEvents.push(gev);
+    }
+    return gameEvents;
+  }
+}
 
 export function eventFromCallbackArgs(args) {
   if (args.length === 0) {
@@ -45,10 +109,9 @@ export function parseEthersEvent(iface, txmemo, ev) {
  * @param  {...any} args
  * @returns
  */
-export function arenaEventFilter(arena, name, ...args) {
+export function arenaEventFilter(arena, nameOrSignature, ...args) {
   try {
-    const facet = arena.getFacet("ArenaFacet");
-    return facet.filters[name](undefined, ...args);
+    return arena.getFilter(nameOrSignature, ...args);
   } catch (e) {
     log.debug(`${e}`);
     throw e;
@@ -71,8 +134,7 @@ export function gameEventFilter(arena, gid) {
 
 export async function findGameCreated(arena, gid) {
   const facet = arena.getFacet("ArenaFacet");
-  const filter =
-    facet.filters["GameCreated(uint256,uint256,address,uint256)"](gid);
+  const filter = facet.filters["GameCreated(uint256,address,uint256)"](gid);
   const found = await arena.queryFilter(filter);
 
   if (found.length == 0) {
@@ -88,8 +150,7 @@ export async function findGameCreated(arena, gid) {
 
 export async function findGames(arena) {
   const facet = arena.getFacet("ArenaFacet");
-  const filter =
-    facet.filters["GameCreated(uint256,uint256,address,uint256)"]();
+  const filter = facet.filters["GameCreated(uint256,address,uint256)"]();
   return arena.queryFilter(filter);
 }
 
@@ -117,9 +178,10 @@ export async function findGameEvents(arena, gid, fromBlock) {
 
 /**
  * parseEventLog returns a normalized and (abi) parsed representation of an ethereum event log
+ * @template {{topics:[]string, data:string}} LogLike
  * @param {any} iface contract interface (ethers.utils.Interface eg arenaInterface() result)
- * @param {*} ethlog
- * @returns
+ * @param {LogLike} ethlog
+ * @returns {ethers.utils.LogDescription}
  */
 export function parseEventLog(iface, ethlog) {
   // See https://github.com/ethers-io/ethers.js/blob/master/packages/contracts/src.ts/index.ts addContractWait ~#342

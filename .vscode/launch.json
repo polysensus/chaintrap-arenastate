@@ -13,8 +13,10 @@
       "envFile": "${workspaceFolder}/.env.gamehost",
       "args": [
         "joingame2",
-        "--id", "0x040000000000000000000000000000000c",
-        "--nickname", "player1"
+        "--id",
+        "0x040000000000000000000000000000000c",
+        "--nickname",
+        "player1"
       ]
     },
 
@@ -25,10 +27,7 @@
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.gamehost",
-      "args": [
-        "joingame2",
-        "--id", "0x040000000000000000000000000000000c"
-      ]
+      "args": ["joingame2", "--id", "0x040000000000000000000000000000000c"]
     },
 
     {

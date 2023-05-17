@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import {readBinaryData, readJsonData} from "./data.js";
+import { readBinaryData, readJsonData } from "./data.js";
 
 import { LogicalTopology } from "../../src/lib/maptrie/logical.js";
 import { GameMint } from "../../src/lib/mint/gamemint.js";
@@ -12,15 +12,13 @@ import { GameMint } from "../../src/lib/mint/gamemint.js";
 export class MinterFixture {
   constructor(arena, options) {
     this.arena = arena;
-    this.options = {...options}
+    this.options = { ...options };
     if (!options.gameIconBytes)
       this.options.gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
-    if (!options.name)
-      this.options.name = "minter.js:MinterFixture# test game"
+    if (!options.name) this.options.name = "minter.js:MinterFixture# test game";
     if (!options.description)
-      this.options.description = "minter.js:MinterFixture# test game"
-    if (!options.fetch)
-      this.options.fetch = fetch;
+      this.options.description = "minter.js:MinterFixture# test game";
+    if (!options.fetch) this.options.fetch = fetch;
     if (!options.mapRootLabel)
       this.options.mapRootLabel = "chaintrap-dungeon:static";
 
@@ -37,7 +35,6 @@ export class MinterFixture {
       topology: this.topology,
       trie: this.trie,
     });
-
   }
 
   async mint() {

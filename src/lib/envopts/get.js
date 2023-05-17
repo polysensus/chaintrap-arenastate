@@ -1,5 +1,4 @@
 export function getAllNames(names, cfg) {
-
   const prefix = cfg?.prefix ?? "ARENASTATE_";
   const group = cfg?.group;
 
@@ -9,14 +8,19 @@ export function getAllNames(names, cfg) {
   for (const name of names) {
     const value = process.env[`${prefix}${name}`];
     if (typeof value === "undefined") {
-      missing.push(name)
+      missing.push(name);
       continue;
     }
-   
-    const parts = name.split('_');
-    let titleCased = group + parts.map((word) => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase()).join('');
-    if (!group)
-      titleCased.charAt(0).toLowerCase();
+
+    const parts = name.split("_");
+    let titleCased =
+      group +
+      parts
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase()
+        )
+        .join("");
+    if (!group) titleCased.charAt(0).toLowerCase();
 
     options[titleCased] = value;
   }
@@ -24,6 +28,6 @@ export function getAllNames(names, cfg) {
   return {
     options,
     missing,
-    missingAny: missing.length !== 0 && names.length != 0
-  }
+    missingAny: missing.length !== 0 && names.length != 0,
+  };
 }

@@ -1,7 +1,4 @@
 {
   "timeout": "40000",
-  "require": [
-     "hardhat/register",
-     "test/mocha-root-hooks.js"
-  ]
+  "require": ["hardhat/register", "test/mocha-root-hooks.js"]
 }

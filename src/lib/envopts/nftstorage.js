@@ -1,7 +1,7 @@
-import {haveAllNames} from "./have.js";
-import {getAllNames} from "./get.js";
+import { haveAllNames } from "./have.js";
+import { getAllNames } from "./get.js";
 
-export const REQUIRED = [ "URL", "API_KEY" ];
+export const REQUIRED = ["URL", "API_KEY"];
 export const ALL = [...REQUIRED, "GAME_ICON_FILENAME"];
 
 /**
@@ -9,9 +9,12 @@ export const ALL = [...REQUIRED, "GAME_ICON_FILENAME"];
  * @returns {boolean}
  */
 export function have() {
-  return haveAllNames(REQUIRED, {prefix:"ARENASTATE_NFTSTORAGE_"});
+  return haveAllNames(REQUIRED, { prefix: "ARENASTATE_NFTSTORAGE_" });
 }
 
 export function get() {
-  return getAllNames(ALL, {prefix:"ARENASTATE_NFTSTORAGE_", group: "nftstorage"});
+  return getAllNames(ALL, {
+    prefix: "ARENASTATE_NFTSTORAGE_",
+    group: "nftstorage",
+  });
 }

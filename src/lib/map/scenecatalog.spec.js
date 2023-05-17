@@ -23,9 +23,7 @@ const maps01 = JSON.parse(
   fs.readFileSync(dataPath("maps/map01-model-two-rooms.json"))
 );
 
-const maps02 = JSON.parse(
-  fs.readFileSync(dataPath("maps/map02.json"))
-);
+const maps02 = JSON.parse(fs.readFileSync(dataPath("maps/map02.json")));
 
 // Note: this set of logs were made using mocks/map02.json
 const singlePlayer2MoveEthLogs = JSON.parse(

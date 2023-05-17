@@ -3,29 +3,32 @@ const ethers = hre.ethers;
 import { expect } from "chai";
 import fetch from "node-fetch";
 
-import {readBinaryData} from "./support/data.js";
+import { readBinaryData } from "./support/data.js";
 
 import { LogicalTopology } from "../src/lib/maptrie/logical.js";
 import { GameMint } from "../src/lib/mint/gamemint.js";
 
-import collection from "../data/maps/map02.json" assert {type: "json"};
+import collection from "../data/maps/map02.json" assert { type: "json" };
 
 // Note: see test/hook.js to see how the various this.xxxArena's are configured
 
-describe("GameMint.mint tests", async function() {
-
-  before(async function() {
-    if (!this.openaiOptions || !this.nftstorageOptions || !this.maptoolOptions) {
+describe("GameMint.mint tests", async function () {
+  before(async function () {
+    if (
+      !this.openaiOptions ||
+      !this.nftstorageOptions ||
+      !this.maptoolOptions
+    ) {
       this.skip();
     }
     this.mdOptions = {
       ...this.openaiOptions.options,
       ...this.nftstorageOptions.options,
-      ...this.maptoolOptions.options
-    }
+      ...this.maptoolOptions.options,
+    };
   });
 
-  it("Should mint a game", async function() {
+  it("Should mint a game", async function () {
     const arena = this.guardianArena;
     const iface = arena.getFacetInterface("ERC1155ArenaFacet");
 
@@ -38,8 +41,8 @@ describe("GameMint.mint tests", async function() {
       fetch,
       gameIconBytes: readBinaryData("gameicons/game-ico-1.png"),
       name: "test# should mint a game",
-      description: "test# should mint a game description"
-    }
+      description: "test# should mint a game description",
+    };
     const mapRootLabel = "chaintrap-dungeon:static";
     minter.configureMetadataOptions(mdOptions);
     minter.configureNFTStorageOptions(mdOptions);
@@ -57,8 +60,8 @@ describe("GameMint.mint tests", async function() {
     const r = await minter.mint(arena);
     expect(r.transactionHash).to.exist;
     const o = {
-      roots: {}
-    }
+      roots: {},
+    };
     for (const log of r.logs) {
       try {
         const parsed = iface.parseLog(log);
@@ -72,7 +75,8 @@ describe("GameMint.mint tests", async function() {
             o.uri = parsed.args.value;
             break;
           case "SetMerkleRoot":
-            o.roots[ethers.utils.parseBytes32String(parsed.args.label)] = ethers.utils.hexlify(parsed.args.root);
+            o.roots[ethers.utils.parseBytes32String(parsed.args.label)] =
+              ethers.utils.hexlify(parsed.args.root);
             break;
           case "GameCreated":
             o.maxParticipants = parsed.args.maxParticipants.toNumber();

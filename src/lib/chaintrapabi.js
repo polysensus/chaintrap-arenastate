@@ -26,17 +26,38 @@ export const erc1155ArenaFacetABI = erc1155ArenaFacetSol.abi;
 
 import { createERC2535Proxy } from "@polysensus/chaintrap-contracts";
 
-export function matchCustomError(selectErrors, err) {
+let _defaultSelectErrors; // lazy create
+
+export function defaultSelectErrors() {
+  if (_defaultSelectErrors) return _defaultSelectErrors;
+  _defaultSelectErrors = errorABISelectors();
+  return _defaultSelectErrors;
+}
+
+export function chaseCustomError(error) {
+  while (error?.reason) {
+    let matched = error.reason.match(
+      /reverted with an unrecognized custom error.*data: (0x[0-9a-f]{8})([0-9a-f]*)/
+    );
+    if (matched) return matched;
+    error = error.error;
+  }
+  return;
+}
+
+export function matchCustomError(err, selectErrors) {
+  if (!selectErrors) selectErrors = defaultSelectErrors();
+
   if (!err.reason) return [undefined, "no reason property on err"];
-  const matched = err.reason.match(
-    /reverted with an unrecognized custom error.*data: (0x[0-9a-f]{8})([0-9a-f]*)/
-  );
+
+  const matched = chaseCustomError(err);
   if (!matched)
     return [undefined, "custom error indicator not matched in reason"];
   return [selectErrors[matched[1]], matched[2]];
 }
-export function customError(selectErrors, err) {
-  const [f, data] = matchCustomError(selectErrors, err);
+
+export function customError(err, selectErrors) {
+  const [f, data] = matchCustomError(err, selectErrors);
   if (!f) return err;
   return new Error(f.format(), { cause: err });
 }

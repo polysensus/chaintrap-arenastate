@@ -28,6 +28,23 @@ export class LeafObject {
   }
 
   /**
+   * Prepare the leaf object for encoding as a trie node
+   * @returns {[number, ethers.utils.BytesLike]}
+   */
+  prepare() {
+    return ObjectCodec.prepare(this);
+  }
+
+  /**
+   * Create a new LeafObject instance from a previously prepared one
+   * @param {[number, ethers.utils.BytesLike]} prepared
+   * @returns {LeafObject}
+   */
+  static hydrate(prepared) {
+    return ObjectCodec.hydrate(prepared);
+  }
+
+  /**
    * @template {{location: number, side: number, exit: number}} AccessLike
    * @template {{a: AccessLike, b: AccessLike}} LinkLike
    * @param {LinkLike} link
@@ -41,7 +58,7 @@ export class LeafObject {
    * @param {AccessLike} access
    */
   static accessLeaf(access) {
-    return new LeafObject({ type: ObjectType.Access, leaf: acess });
+    return new LeafObject({ type: ObjectType.Access, leaf: access });
   }
 }
 

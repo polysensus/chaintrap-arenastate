@@ -1,12 +1,10 @@
-
 /**
  * return true if all entries in names are in the env and are not empty, undefined or false
- * @param {[]string} names 
- * @param {string} prefix 
- * @returns 
+ * @param {[]string} names
+ * @param {string} prefix
+ * @returns
  */
 export function haveAllNames(names, options) {
-
   const prefix = options?.prefix ?? "ARENASTATE_";
 
   for (const name of names) {

@@ -250,7 +250,8 @@ export class GameMint {
     );
 
     // this.initArgs.maxParticipants = ethers.BigNumber.from(options.maxParticipants);
-    this.initArgs.maxParticipants = options.maxParticipants ?? defaultMaxParticipants;
+    this.initArgs.maxParticipants =
+      options.maxParticipants ?? defaultMaxParticipants;
     this.initArgs.rootLabels = [
       ethers.utils.formatBytes32String(options.mapRootLabel),
     ];

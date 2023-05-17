@@ -2,12 +2,6 @@
 
 export const Names = [
   "Invalid",
-  "GameCreated",
-  "GameReset",
-  "GameStarted",
-  "GameCompleted",
-  "PlayerJoined",
-  "PlayerStartLocation",
   "UseExit",
   "ExitUsed",
   "EntryReject",

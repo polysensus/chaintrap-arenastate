@@ -14,6 +14,7 @@ The organisation here is:
 ## /test/support
 
 general test support facilities
+
 ## test/<directory>
 
 where <directory> matches src/<directory> contains integration tests for that src directory sources. Eg., test/mint covers new game creation via GameMint.
@@ -21,5 +22,3 @@ where <directory> matches src/<directory> contains integration tests for that sr
 ## test/libtranscript
 
 hardhat tests of the LibTranscript solidity from chaintrap-contracts. This will likely move
-
-
