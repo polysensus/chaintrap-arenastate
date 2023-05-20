@@ -1,9 +1,9 @@
 import { ethers } from "ethers";
 
-import { getLogger } from "./log.js";
+import { getLogger } from "../log.js";
 
-import { GameEvent } from "./gameevent.js";
-import { matchCustomError } from "./chaintrapabi.js";
+import { ArenaEvent } from "./arenaevent.js";
+import { matchCustomError } from "../chaintrapabi.js";
 
 const log = getLogger("gameevents");
 
@@ -11,7 +11,7 @@ const log = getLogger("gameevents");
  * A helper class for finding and processing events emitted from the chaintrap
  * arena diamond.
  */
-export class ArenaEvents {
+export class EventParser {
   /**
    * @constructor
    * @param {ethers.Contract |
@@ -23,18 +23,18 @@ export class ArenaEvents {
     this.arena = arena;
   }
 
-  async *queryGameEvents(gid, fromBlock) {
+  async *queryArenaEvents(gid, fromBlock) {
     for (const log of await findGameEvents(this.arena, gid, fromBlock)) {
       const iface = this.arena.getEventInterface(log);
       if (!iface) continue;
-      const gev = GameEvent.fromParsedEvent(iface.parseLog(log));
+      const gev = ArenaEvent.fromParsedEvent(iface.parseLog(log));
       if (!gev) continue;
       yield gev;
     }
   }
 
   /**
-   * Return a GameEvent for the first log matching eventNameOrSignature. Or undefined if none match.
+   * Return a ArenaEvent for the first log matching eventNameOrSignature. Or undefined if none match.
    * @param {ethers.TransactionReceipt} receipt - the receipt for the transaction that will have the log from which to build the event
    * @param {*} receipt
    */
@@ -49,10 +49,10 @@ export class ArenaEvents {
   }
 
   /**
-   * Return a GameEvent for each logs that is a recognized GameEvent
+   * Return a ArenaEvent for each logs that is a recognized ArenaEvent
    * @param {ethers.TransactionReceipt} receipt - the receipt for the transaction that will have the log from which to build the event
    * @param {*} receipt
-   * @returns {GameEvent[]}
+   * @returns {ArenaEvent[]}
    */
   receiptLogs(receipt) {
     const gameEvents = [];
@@ -60,7 +60,7 @@ export class ArenaEvents {
     for (const log of receipt.logs) {
       const iface = this.arena.getEventInterface(log);
       if (!iface) continue;
-      const gev = GameEvent.fromParsedEvent(iface.parseLog(log));
+      const gev = ArenaEvent.fromParsedEvent(iface.parseLog(log));
       if (!gev) continue;
       // yield gev;
       gameEvents.push(gev);

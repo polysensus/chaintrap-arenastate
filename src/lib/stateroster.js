@@ -7,10 +7,10 @@ import { ethers } from "ethers";
 import { getLogger } from "./log.js";
 
 import { TxMemo } from "./txmemo.js";
-import { ABIName } from "./abiconst.js";
+import { ABIName2 } from "./abiconst.js";
 import { Player } from "./player.js";
 import { PlayerState } from "./playerstate.js";
-import { findGameEvents, getGameCreatedBlock } from "./gameevents.js";
+import { findGameEvents, getGameCreatedBlock } from "./arenaevents/eventparser.js";
 
 export const log = getLogger("StateRoster");
 
@@ -42,7 +42,7 @@ export async function loadRoster(arena, gid, options) {
 }
 
 /**
- * @typedef { import("./gameevent.js").GameEvent } GameEvent
+ * @typedef { import("./arenaevents/arenaevent.js").ArenaEvent } ArenaEvent
  */
 export class RosterSnapshot {
   constructor() {
@@ -364,7 +364,7 @@ export class StateRoster {
   }
 
   /**
-   * @param {GameEvent} e
+   * @param {ArenaEvent} e
    * @returns
    */
   _eventMemo(e) {
