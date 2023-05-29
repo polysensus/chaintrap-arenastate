@@ -15,6 +15,8 @@ export class ABIName2 {
   static GameStarted = "GameStarted";
   static GameCompleted = "GameCompleted";
   static ParticipantRegistered = "ParticipantRegistered";
+  static SetMerkleRoot = "SetMerkleRoot";
+  static RevealedChoices = "RevealedChoices";
   static ActionCommitted = "ActionCommitted";
   static ArgumentProven = "ArgumentProven";
   static OutcomeResolved = "OutcomeResolved";

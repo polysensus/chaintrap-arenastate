@@ -1,91 +1,30 @@
-// deps
-import { ethers } from "ethers";
 // app
 import { getLogger } from "./log.js";
 
-import { ABIName } from "./abiconst.js";
+import { ABIName2 } from "./abiconst.js";
 import { PlayerState } from "./playerstate.js";
-import { findConnectedRoomToken, findRoomToken } from "./map/rooms.js";
-import { Scene } from "./map/scene.js";
 const log = getLogger("Player");
 
 export class Player {
-  /** clone a new player from the target player t
-   *
-   * A clone is necessary because changing the signer forces a re construction
-   * of the contract interface. which would otherwise force us to rebuild the
-   * state. */
-  static clone(target) {
-    const p = new Player();
-    const t = target;
-
-    p.state.update(target.state.toObject());
-    p.eids = { ...t.eids };
-    // Only need a shallow copy of these
-    p.eidsComplete = { ...t.eidsComplete };
-    p.useExit = { ...t.useExit };
-    p.exitUsed = { ...t.exitUsed };
-    p.entryReject = { ...t.entryReject };
-    p._batchingUpdate = t._batchingUpdate;
-    return p;
-  }
-
   constructor() {
-    // transcript state
-
     this.eids = {};
-    // and eid represents a round. a round has two turns. one player turn and
-    // one host turn.  when both the player and the host turns have been
-    // processed we put them in here so we don't reprocess the host turn
-    this.eidsComplete = {};
-    this.useExit = {};
-    this.exitUsed = {};
-    this.entryReject = {};
+    /**@readonly
+     * The player or host may commit to actions
+     */
+    this.committedActions = {};
+    /**@readonly
+     * A participant, typically the guardian or an advocate for the guardian,
+     * proposes an outcome proof.
+     */
+    this.proposedOutcomes = {};
 
-    this.state = new PlayerState();
+    /**@readonly
+     * The contract emitted OutcomeResolved event data for the proposed outcome
+     */
+    this.resolvedOutcomes = {};
   }
 
   // --- read only external accessors for chain state
-  get registered() {
-    return this.state.registered;
-  }
-
-  get address() {
-    return this.state.address;
-  }
-
-  get profile() {
-    return this.state.profile;
-  }
-
-  get startLocation() {
-    return this.state.startLocation;
-  }
-
-  get location() {
-    return this.state.location;
-  }
-
-  get sceneblob() {
-    return this.state.sceneblob;
-  }
-
-  get side() {
-    return this.state.locationIngress[0];
-  }
-
-  get locationIngress() {
-    return this.state.locationIngress;
-  }
-
-  get pendingExitUsed() {
-    return this.state.pendingExitUsed;
-  }
-
-  get halted() {
-    return this.state.halted;
-  }
-
   get lastEID() {
     if (typeof this.state.lastEID === "undefined") return 0;
     return this.state.lastEID;
@@ -99,210 +38,66 @@ export class Player {
 
   // --- direct change method (these don't require updateBegin)
 
-  /**
-   * Set any or all of the player properties
-   */
-  // @ts-ignore
-  setState(state) {
-    return this.state.update(state);
-  }
-
   // --- update methods
   applyEvent(event, options = {}) {
     if (this._haveEvent(event)) return;
 
+    const currentState = this.state.toObject();
+    const stateUpdate = {};
+
     switch (event.event) {
-      case ABIName.PlayerStartLocation:
-        return this._addStartLocation(event, options);
-      case ABIName.UseExit:
-        return this._addUseExit(event, options);
-      case ABIName.ExitUsed:
-        return this._addExitUsed(event, options);
-      case ABIName.EntryReject:
-        return this._addEntryReject(event, options);
-      default:
-        throw new Error(`Unrecognised event: ${event.event}`);
-    }
-  }
+      case ABIName2.ActionCommitted: {
+        if (this.eidIsKnown(event.eid))
+          throw new Error(
+            `event for eid ${event.eid} is already pending or committed`
+          );
 
-  /**
-   * Process apply events to the player state, starting from the provided eid
-   * or apply them all if undefined
-   * @param {*} fromEID the eid to start from. undefined forces all
-   * @returns
-   */
-  processPending(fromEID, options = {}) {
-    // available if the caller has the map
-    const { model, hashAlpha } = options;
-
-    this.state.pendingExitUsed = false;
-
-    // note: the props are integers, we just get them as strings from Object.keys
-    const eids = Object.keys(this.eids)
-      .map((i) => Number(i))
-      .sort((a, b) => a - b);
-    if (eids.length === 0) {
-      log.debug("no transcript entries (pending or otherwise)");
-      return;
-    }
-
-    let istart = 0;
-    if (typeof fromEID !== "undefined" && fromEID !== 0) {
-      for (; istart < eids.length; istart++) {
-        if (eids[istart] === fromEID) {
-          // we always re-process the matching eid. as the outcome is on the same eid as the player move
-          break;
-        }
-      }
-    } else {
-      istart = 0;
-    }
-
-    if (istart === eids.length) {
-      throw new Error(`${fromEID} not found`);
-    }
-
-    for (let i = istart; i < eids.length; i++) {
-      const eid = eids[i];
-
-      this.state.lastEID = eid;
-      if (this.eidsComplete[eid]) {
-        log.debug(`eid ${eid} is complete, continuing`);
-        continue;
+        const eventData = EventData.decode(event.data);
+        this.committedActions[event.eid] = event;
+        stateUpdate.rootLabel = event.rootLabel;
+        stateUpdate.pendingOutcomeType = eventData.type;
+        break;
       }
 
-      const ue = this.useExit[eid];
-      const eu = this.exitUsed[eid];
-      const er = this.entryReject[eid];
+      case ABIName2.OutcomeResolved: {
+        if (!this.eidHasProposal(event.eid))
+          throw new Error(`proposal not found for eid ${event.eid}`);
 
-      if (typeof er !== "undefined") {
-        // whatever the useExit was it is irrelevant as the host has rejected it.
-
-        this.state.pendingExitUsed = false;
-
-        if (er.halted) {
-          /* never 'un halt' */
-          this.state.halted = true;
-        }
-        this.eids[eid] = er.halted;
-        log.debug(`${eid} *rejected*`);
-        continue;
-      }
-
-      if (typeof ue !== "undefined" && typeof eu !== "undefined") {
-        this.state.pendingExitUsed = false;
-
-        // ok, we have player exit commitment and we have a corresponding host endorsment
-        if (eu.outcome.halt) {
-          /* never 'un halt' */
-          this.state.halted = true;
-        }
-
-        // if we have the model and alpha hash, we update the location
-        let location;
-
-        if (model && hashAlpha) {
-          const [token] = Scene.decodeblob(eu.outcome.sceneblob);
-
-          // the location currently on the player is the room the player left. The token
-          // will be for TOK()
-          if (typeof this.location != "undefined") {
-            location = findConnectedRoomToken(
-              model,
-              this.address,
-              this.location,
-              token,
-              eid,
-              hashAlpha
-            );
-          } else {
-            location = findRoomToken(
-              model.rooms.length,
-              this.address,
-              token,
-              eid,
-              hashAlpha
-            );
-          }
-        }
-
-        this.state.location = location;
-        this.state.locationIngress = [eu.outcome.side, eu.outcome.ingressIndex];
-        this.state.sceneblob = eu.outcome.sceneblob;
-        this.eidsComplete[eid] = true;
-
-        log.debug(`${eid} outcome processed`);
-        continue;
-      }
-
-      if (typeof ue !== "undefined") {
-        this.state.pendingExitUsed = true;
-        log.debug(`${eid} outcome pending`);
+        const eventData = EventData.decode(event.data);
+        const { outcome, update } = options.dungeon.outcomeResolved(
+          this.state.toObject(),
+          this.proposedOutcomes[event.eid],
+          eventData
+        );
+        stateUpdate = { ...stateUpdate, ...update };
+        this.resolvedOutcomes[event.eid] = outcome;
+        break;
       }
     }
+    this.state.update(stateUpdate);
   }
 
-  _addStartLocation(event, options) {
-    // Note: StartLocation is not a transcript event. It sets where the player
-    // begins and the host may set it many times before finally starting the
-    // game.
-
-    // If we have the model and hashAlpha we can derive the start location
-
-    let location;
-
-    const { model, hashAlpha } = options;
-    if (model && hashAlpha) {
-      const [token] = Scene.decodeblob(event.args.sceneblob);
-      const playerAddress = ethers.utils.getAddress(event.args.player);
-
-      // lastused is always zero as we don't get to set start location after the game is started.
-      location = findRoomToken(
-        model.rooms.length,
-        playerAddress,
-        token,
-        0,
-        hashAlpha
-      );
-    }
-
-    // @ts-ignore
-    this.setState({
-      location: location,
-      startLocation: location,
-      sceneblob: event.args.sceneblob,
-    });
+  eidIsKnown(eid) {
+    return (
+      !!this.committedActions[eid] ||
+      !!this.proposedOutcomes[eid] ||
+      !!this.resolvedOutcomes[eid]
+    );
   }
 
-  _addUseExit(event) {
-    const eid = Number(event.args.eid);
-    if (this.eids[eid]?.transactionHash === event.transactionHash) {
-      // log.debug(`duplicate transaction hash, ignoring event: ${event.event}, tx: ${event.transactionHash}`)
-      return;
-    }
-
-    this.eids[eid] = event;
-    this.useExit[eid] = event.args;
-  }
-
-  _addExitUsed(event) {
-    const eid = Number(event.args.eid);
-    this.eids[eid] = event;
-    this.exitUsed[eid] = event.args;
-  }
-
-  _addEntryReject(event) {
-    const eid = Number(event.args.eid);
-    this.eids[eid] = event;
-    this.entryReject[eid] = event.args;
-    this.state.halted = event.args.halted;
+  eidHasProposal(eid) {
+    return (
+      !!this.committedActions[eid] &&
+      !!this.proposedOutcomes[eid] &&
+      !!!this.resolvedOutcomes[eid]
+    );
   }
 
   // --- update state control
 
   // --- private update methods
   _haveEvent(event) {
-    let eid = event?.args?.eid;
+    let eid = event?.eid;
     if (!eid) {
       return false;
     }
@@ -358,15 +153,5 @@ export class Player {
     }
 
     return isin[isin.length - 1];
-  }
-
-  /** returns the eid of the last committed (which may also have been confrimed) */
-  uselast() {
-    return this._lastEIDOf(this.useExit);
-  }
-
-  /** returns the eid of the last confirmed (which must also have been commited) */
-  lastused() {
-    return this._lastEIDOf(this.exitUsed);
   }
 }

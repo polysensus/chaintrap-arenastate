@@ -80,6 +80,9 @@ export const mochaHooks = {
       this.user1Arena = envConnect(proxyAddress, {
         key: process.env.ARENASTATE_USER1_KEY,
       });
+      this.user2Arena = envConnect(proxyAddress, {
+        key: process.env.ARENASTATE_USER2_KEY,
+      });
 
       // provider only instance, no signer
       this.arena = envConnect(proxyAddress, {});

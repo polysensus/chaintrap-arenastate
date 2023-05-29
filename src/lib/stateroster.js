@@ -5,12 +5,14 @@ import { ethers } from "ethers";
 
 // app
 import { getLogger } from "./log.js";
-
-import { TxMemo } from "./txmemo.js";
+//
 import { ABIName2 } from "./abiconst.js";
 import { Player } from "./player.js";
 import { PlayerState } from "./playerstate.js";
-import { findGameEvents, getGameCreatedBlock } from "./arenaevents/eventparser.js";
+import {
+  findGameEvents,
+  getGameCreatedBlock,
+} from "./arenaevents/eventparser.js";
 
 export const log = getLogger("StateRoster");
 
@@ -44,10 +46,59 @@ export async function loadRoster(arena, gid, options) {
 /**
  * @typedef { import("./arenaevents/arenaevent.js").ArenaEvent } ArenaEvent
  */
-export class RosterSnapshot {
+export class RosterStateChange {
   constructor() {
     this.players = {};
   }
+
+  captureCurrentState(addresses, roster) {
+    this.players = {};
+
+    for (const state of roster.currentStates(addresses)) {
+      this.players[addr] = state;
+    }
+  }
+
+  eventStateUpdate(event, roster, options) {
+    const before = this.players[event.subject];
+    if (!before) before = new PlayerState();
+
+    const p = roster.players[event.subject];
+    if (!p && event.name !== ABIName2.ParticipantRegistered)
+      throw new Error(`subject ${event.subject} not registered`);
+    p.processPending(p.lastEID);
+
+    return { state: p.state.toObject(), delta: before.diff(p.state) };
+  }
+
+  *currentChanges(addresses, roster, options) {
+    if (!addresses) addresses = Object.keys(roster.players);
+
+    for (const addr of addresses) {
+      const before = this.players[addr]?.state ?? new PlayerState();
+      const p = roster.players[addr];
+      p.processPending(p.lastEID);
+      yield {
+        state: p.state.toObject(),
+        delta: before.diff(p.state),
+      };
+    }
+  }
+
+  /*
+  dispatchChanges(addresses, roster, dispatcher) {
+    for (const update of this.currentChanges(addresses, roster)) {
+      try {
+        dispatcher(update.state, update.delta);
+      } catch (e) {
+        log.warn(
+          `exception dispatching ${Object.keys(update.delta)} for p ${
+            update.state.address
+          }: ${e}`
+        );
+      }
+    }
+  }*/
 
   /**
    * Return the snapshot state for the player or return a blank state.
@@ -58,194 +109,54 @@ export class RosterSnapshot {
   current(addr) {
     return this.players[addr]?.state ?? new PlayerState();
   }
-
-  set(addr, state) {
-    this.players[addr] = state;
-  }
 }
 /**
  * This class manages a roster of player states for the game.
+ *
+ * The roster is initially populated by processing all events for a game toked (gid).
+ * Subsequently, the roster is updated as each event arrives for that gid.
+ * There is no consideration for batched arrival processing once the roster is loaded.
  */
 export class StateRoster {
   constructor(gid, options = {}) {
-    const { txmemo, model } = options;
-    let { hashAlpha } = options;
-    if (hashAlpha) {
-      // allow for 'shaxxx:' prefixes
-      hashAlpha = hashAlpha.split(":", 2);
-      hashAlpha = hashAlpha[hashAlpha.length - 1];
-    }
-
     /**@readonly */
     this.gid = gid;
-    this._players = {};
-    this._txmemo = txmemo ?? new TxMemo();
-
-    // These are only available when managing state from the perspective of the map owner
-    this.model = model;
-    this.hashAlpha = hashAlpha;
-  }
-
-  get players() {
-    return this._players;
+    /**@readonly */
+    this.players = {};
   }
 
   get playerCount() {
-    return Object.keys(this._players).length;
+    return Object.keys(this.players).length;
   }
 
   // --- application of single events
-  applyParsedEvent(event) {
-    // check the event is for the correct game
-    if (this._checkEventGid(event) === null) return;
+  applyEvent(event) {
+    let addr;
+    if (typeof event.subject !== "undefined")
+      addr = ethers.utils.getAddress(event.subject); // normalize to checksum addr
 
-    log.debug(fmtev(event));
-    switch (event.event) {
-      case ABIName.PlayerJoined:
-        return this._playerJoined(event);
-
-      // The caller should detect these if they need an equivelent of gameStates
-      // as returned by load()
-      case ABIName.GameCreated:
-      case ABIName.GameStarted:
-      case ABIName.GameCompleted:
-        break;
+    switch (event.name) {
+      case ABIName2.ParticipantRegistered:
+        return this._registerPlayer(addr, e);
+      // The caller should detect these
+      case ABIName2.GameCreated:
+      case ABIName2.GameStarted:
+      case ABIName2.GameCompleted:
+        return;
       default: {
-        const p = this._checkEventPlayer(event);
-        if (p === null) return;
-
-        try {
-          p.applyEvent(event, { model: this.model, hashAlpha: this.hashAlpha });
-        } catch (e) {
-          log.warn(`player applyEvent for ${event.event} raised error`, e);
-        }
-        return p;
+        this.players[addr].applyEvent(e);
       }
     }
   }
 
   // --- batched state updates, used to reduce state thrashing
-  snapshot(addresses) {
-    const snap = new RosterSnapshot();
 
-    if (typeof addresses === "undefined")
-      addresses = Object.keys(this._players);
-
+  *currentStates(addresses) {
+    if (typeof addresses === "undefined") addresses = Object.keys(this.players);
     for (const addr of addresses) {
-      const s = this.snapshotOne(addr);
-      if (!s) continue;
-      snap.set(addr, s);
+      if (!(addr in this.players)) continue;
+      yield this.players[addr].state.clone();
     }
-
-    return snap;
-  }
-
-  dispatchChanges(snap, dispatcher, addresses) {
-    if (typeof addresses === "undefined")
-      addresses = Object.keys(this._players);
-
-    for (const addr of addresses) {
-      const before = snap.current(addr);
-      this.dispatchOne(before, dispatcher, addr);
-    }
-  }
-
-  getChanges(snap, addresses) {
-    if (typeof addresses === "undefined")
-      addresses = Object.keys(this._players);
-
-    const changes = [];
-    for (const addr of addresses) {
-      const before = snap?.players?.[addr]?.state ?? new PlayerState();
-      const [_, delta] = this.processOne(before, addr, {
-        model: this.model,
-        hashAlpha: this.hashAlpha,
-      });
-      if (!delta) continue;
-      changes.push(delta);
-    }
-    return changes;
-  }
-
-  snapshotOne(addr) {
-    const p = this._players[addr];
-    if (!p) {
-      log.debug(`player address ${addr} for snapshot not found`);
-      return;
-    }
-    return p.stateSnapshot();
-  }
-
-  dispatchOne(before, dispatcher, addr) {
-    const [p, delta] = this.processOne(before, addr);
-    if (!delta) return;
-
-    this._dispatchChanges(dispatcher, p, delta);
-  }
-
-  processOne(before, addr) {
-    const p = this._players[addr];
-    if (!p) {
-      log.debug(`player address ${addr} for dispatch not found`);
-      return;
-    }
-
-    p.processPending(p.lastEID, {
-      model: this.model,
-      hashAlpha: this.hashAlpha,
-    });
-    if (typeof before === "undefined") return [p, undefined];
-
-    const delta = before.diff(p.state);
-    return [p, delta];
-  }
-
-  // --- state catchup
-  load(events) {
-    let addr;
-
-    const gameStates = {};
-
-    // Begin the batch for any we have already.
-
-    for (const e of events) {
-      // const e = parseEventLog(this.arenaInterface, ethlog);
-
-      if (typeof e.args.player !== "undefined") {
-        addr = ethers.utils.getAddress(e.args.player); // normalize to checksum addr
-      }
-
-      if (this._eventMemo(e)) {
-        log.debug(`event known, ignoring ${e.transactionHash}`);
-        continue;
-      }
-      log.debug(fmtev(e));
-
-      switch (e.event) {
-        case ABIName.PlayerJoined:
-          this._registerPlayer(addr, e);
-          break;
-
-        case ABIName.GameCreated:
-          gameStates[ABIName.GameCreated] = true;
-          break;
-        case ABIName.GameStarted:
-          gameStates[ABIName.GameStarted] = true;
-          break;
-        case ABIName.GameCompleted:
-          gameStates[ABIName.GameCompleted] = true;
-          break;
-
-        default:
-          log.debug(fmtev(e));
-          this._players[addr].applyEvent(e, {
-            model: this.model,
-            hashAlpha: this.hashAlpha,
-          });
-          break;
-      }
-    }
-    return gameStates;
   }
 
   // --- getters and query methods for managed state
@@ -254,51 +165,40 @@ export class StateRoster {
     return this._playerState(player);
   }
 
-  playerRegistered(player) {
-    player = ethers.utils.getAddress(player); // normalize to checksum addr
-    return this._playerRegistered(player);
-  }
-
   getPlayer(addr) {
     return this._getPlayer(ethers.utils.getAddress(addr));
   }
 
   // --- private event handling helpers
   _registerPlayer(addr, event) {
-    if (this._players[addr]?.registered) {
-      return [undefined, undefined];
+    if (this.players[addr]?.registered) {
+      return undefined;
     }
 
-    if (this._players[addr] === undefined) {
+    if (this.players[addr] === undefined) {
       log.debug(`_registerPlayer ${addr} ****`);
       const p = new Player();
       p.setState({
         registered: true,
         address: addr,
-        profile: event.args.profile,
+        profile: event.data,
       });
-      this._players[addr] = p;
+      this.players[addr] = p;
     }
 
-    return this._players[addr];
+    return this.players[addr];
   }
 
-  _playerJoined(event) {
-    const addr = ethers.utils.getAddress(event.args.player);
-    const p = this._registerPlayer(addr, event);
-    return p;
-  }
-
-  _checkEventPlayer(event) {
-    let addr = event?.args?.player;
+  _checkEventSubject(event) {
+    let addr = event?.subject;
     if (addr === null) {
-      log.debug(`event ${event.event} doesn't include player address`);
+      log.debug(`event ${event.event} doesn't include a subject address`);
       return null;
     }
 
     addr = ethers.utils.getAddress(addr);
 
-    const p = this._players[addr];
+    const p = this.players[addr];
 
     if (typeof p === "undefined") {
       log.debug(
@@ -310,8 +210,13 @@ export class StateRoster {
     return p;
   }
 
+  /**
+   *
+   * @param {import("./arenaevents/arenaevent.js").ArenaEvent} event
+   * @returns
+   */
   _checkEventGid(event) {
-    let gid = event.args.gid;
+    let gid = event.gid;
     if (!ethers.BigNumber.isBigNumber(gid)) {
       gid = ethers.BigNumber.from(gid);
     }
@@ -327,23 +232,12 @@ export class StateRoster {
   }
 
   // --- misc private helpers
-  _dispatchChanges(dispatcher, player, delta) {
-    try {
-      dispatcher(player, delta);
-    } catch (e) {
-      log.warn(
-        `exception dispatching ${Object.keys(delta)} for p ${
-          player.address
-        }: ${e}`
-      );
-    }
-  }
 
   _playerState(player) {
-    if (!this._players[player]?.registered) {
+    if (!this.players[player]?.registered) {
       return undefined;
     }
-    return this._players[player];
+    return this.players[player];
   }
 
   _playerRegistered(player) {
@@ -355,24 +249,11 @@ export class StateRoster {
   }
 
   _getPlayer(addr) {
-    const p = this._players[addr];
+    const p = this.players[addr];
     if (!p) {
       log.debug(`no player state for player address ${addr}`);
       return;
     }
     return p;
-  }
-
-  /**
-   * @param {ArenaEvent} e
-   * @returns
-   */
-  _eventMemo(e) {
-    try {
-      return this._txmemo.eventTxMemo(e);
-    } catch (err) {
-      log.debug(err, this._txmemo._recentTx);
-      return false;
-    }
   }
 }

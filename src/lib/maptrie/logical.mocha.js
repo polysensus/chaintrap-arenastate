@@ -4,9 +4,6 @@ import { expect } from "chai";
 import { ethers } from "ethers";
 
 import { LogicalTopology } from "./logical.js";
-import { LinkLeaf } from "./leaves.js";
-import { Link } from "./link.js";
-import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 //
 import maps from "../../../data/maps/map02.json" assert { type: "json" };
 const { map02 } = maps;

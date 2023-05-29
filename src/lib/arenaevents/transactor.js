@@ -1,5 +1,5 @@
 /**
- * 
+ *
  * @typedef {import("./arenaevent.js").ArenaEvent} ArenaEvent
  */
 import { customError } from "../chaintrapabi.js";
@@ -10,8 +10,8 @@ import { customError } from "../chaintrapabi.js";
 export class TransactResult {
   /**
    * @constructor
-   * @param {import("ethers").utils.TransactionReceipt} receipt 
-   * @param {{string:ArenaEvent}} events 
+   * @param {import("ethers").utils.TransactionReceipt} receipt
+   * @param {{string:ArenaEvent}} events
    */
   constructor(receipt, events) {
     this.r = receipt;
@@ -24,20 +24,21 @@ export class TransactResult {
  * Each call to {@link Transactor.method} adds appends a new transaction.
  */
 export class Transactor {
-
   /**
-   * @constructor 
+   * @constructor
    * @param {LogParser} logParser - an instance that implements a receiptLogs parser
    */
-  constructor (logParser) {
+  constructor(logParser) {
     /**@readonly */
     this.logParser = logParser;
 
     /**@readonly */
-    this.sequence = []
+    this.sequence = [];
   }
 
-  _head() {return this.sequence[this.sequence.length - 1];}
+  _head() {
+    return this.sequence[this.sequence.length - 1];
+  }
 
   /**
    * @param {*} method - awaitable method which returns a transaction
@@ -49,10 +50,9 @@ export class Transactor {
     return this;
   }
 
-
   /**
    * A variable number of log signatures to anticipate.
-   * @param  {string} signatures 
+   * @param  {string} signatures
    */
   acceptLogs(...signatures) {
     this._head().acceptLogs(...signatures);
@@ -61,7 +61,7 @@ export class Transactor {
 
   /**
    * A variable number of log signatures to require.
-   * @param  {string} signatures 
+   * @param  {string} signatures
    */
   requireLogs(...signatures) {
     this._head().requireLogs(...signatures);
@@ -70,8 +70,8 @@ export class Transactor {
 
   /**
    * A variable number of log names to require.
-   * @param  {...any} names 
-   * @returns 
+   * @param  {...any} names
+   * @returns
    */
   requireLogNames(...names) {
     this._head().requireLogNames(...names);
@@ -81,7 +81,7 @@ export class Transactor {
   /**
    * A variable number of log signatures to exclude. If any are present, the
    * result will have a suitable err on it.
-   * @param  {string} signatures 
+   * @param  {string} signatures
    */
   excludeLogs(...signatures) {
     this._head().excludeLogs(...signatures);
@@ -102,16 +102,15 @@ export class Transactor {
 /**
  * TransactRequest is a convenience for invoking arena transactions and
  * processing the result.
- * 
+ *
  * @template {{receiptLogs():Event[]}} LogParser
  */
 export class TransactRequest {
-
   /**
-   * @constructor 
+   * @constructor
    * @param {LogParser} logParser - an instance that implements a receiptLogs parser
    */
-  constructor (logParser) {
+  constructor(logParser) {
     /**@readonly */
     this.logParser = logParser;
     /**@readonly */
@@ -121,7 +120,12 @@ export class TransactRequest {
     /**
      * @type {undefined|{anticipated:string[], required:string[], excluded:string[]}}
      */
-    this.logs = {anticipated:[], required:[], requiredNames:[], excluded:[]}
+    this.logs = {
+      anticipated: [],
+      required: [],
+      requiredNames: [],
+      excluded: [],
+    };
   }
 
   /**
@@ -136,7 +140,7 @@ export class TransactRequest {
 
   /**
    * A variable number of log signatures to anticipate.
-   * @param  {string} signatures 
+   * @param  {string} signatures
    */
   acceptLogs(...signatures) {
     this.logs.anticipated.push(...signatures);
@@ -146,7 +150,7 @@ export class TransactRequest {
   /**
    * A variable number of log signatures to require. If any are missing, the
    * result will have a suitable err on it.
-   * @param  {string} signatures 
+   * @param  {string} signatures
    */
   requireLogs(...signatures) {
     this.logs.required.push(...signatures);
@@ -155,18 +159,17 @@ export class TransactRequest {
 
   /**
    * @param  {...any} names a variable number of event *names* to require
-   * @returns 
+   * @returns
    */
   requireLogNames(...names) {
     this.logs.requiredNames.push(...names);
     return this; // chainable
   }
 
-
   /**
    * A variable number of log signatures to exclude. If any are present, the
    * result will have a suitable err on it.
-   * @param  {string} signatures 
+   * @param  {string} signatures
    */
   excludeLogs(...signatures) {
     this.logs.excluded.push(...signatures);
@@ -178,20 +181,25 @@ export class TransactRequest {
    * @returns {TransactResult}
    */
   async transact() {
-
-    const requiredNames = Object.fromEntries(this.logs.requiredNames.map(k => [k, true]));
-    const required = Object.fromEntries(this.logs.required.map(k => [k, true]));
-    const anticipated = Object.fromEntries(this.logs.anticipated.map(v => [v,true]));
-    for (const k of this.logs.required)
-      anticipated[k] = true;
-    const excluded = Object.fromEntries(this.logs.excluded.map(k => [k, true]));
+    const requiredNames = Object.fromEntries(
+      this.logs.requiredNames.map((k) => [k, true])
+    );
+    const required = Object.fromEntries(
+      this.logs.required.map((k) => [k, true])
+    );
+    const anticipated = Object.fromEntries(
+      this.logs.anticipated.map((v) => [v, true])
+    );
+    for (const k of this.logs.required) anticipated[k] = true;
+    const excluded = Object.fromEntries(
+      this.logs.excluded.map((k) => [k, true])
+    );
 
     let tx, r;
 
     try {
       tx = await this._method(...this.args);
       r = await tx.wait();
-
     } catch (err) {
       // This will match the custom solidity errors on the contracts which are
       // obscured by the diamond proxy and re-throw as human readable
@@ -199,7 +207,7 @@ export class TransactRequest {
       throw customError(err);
     }
 
-    const collected = {}
+    const collected = {};
 
     for (const gev of this.logParser.receiptLogs(r)) {
       // collate anticipated, required and throw on excluded
@@ -207,31 +215,32 @@ export class TransactRequest {
       const sig = gev.log.signature;
       const name = gev.log.name;
 
-      if (!(sig in anticipated || name in requiredNames))
+      // Note: we check collected so we can collect > 1 requiredName
+      if (!(sig in anticipated || name in requiredNames || name in collected))
         throw new Error(`unexpected log signature ${sig}`);
-      if (sig in excluded)
-        throw new Error(`excluded log signature ${sig}`);
+      if (sig in excluded) throw new Error(`excluded log signature ${sig}`);
       delete required[sig];
-      collected[sig] = gev;
+      collected[sig] = [...(collected[sig] ?? []), gev];
 
       if (name in requiredNames) {
-        collected[name] = gev;
+        collected[name] = [...(collected[name] ?? []), gev];
         delete requiredNames[name];
       }
     }
 
     if (Object.keys(required).length !== 0)
-      throw new Error(`required signatures missing: ${Object.keys(required).join(', ')}`);
+      throw new Error(
+        `required signatures missing: ${Object.keys(required).join(", ")}`
+      );
 
     return new TransactResult(r, collected);
   }
 }
 
 /**
- * 
+ *
  * @param {{required:string[], accepted:string[]}} logs - required and expected logs to collect from the receipt
  * @param {*} arenaMethod - a method on the arena proxy which returns a transaction
- * @param  {...any} args 
+ * @param  {...any} args
  */
-export async function transact(logs, arenaMethod, ...args) {
-}
+export async function transact(logs, arenaMethod, ...args) {}

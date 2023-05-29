@@ -5,23 +5,54 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {getGameCreated, getSetMerkleRoot} from "./support/minter.js";
-//
+import { Trial } from "../src/lib/trial.js";
 import { EventParser } from "../src/lib/arenaevents/eventparser.js";
 import { Transactor } from "../src/lib/arenaevents/transactor.js";
-import { StateRoster } from "../src/lib/stateroster.js";
 
-import { Trial } from "../src/lib/trial.js";
-
-import { ABIName2 } from "../src/lib/abiconst.js"
-
-describe("StateRoster# load", async function () {
+describe("Trial# startGame", async function () {
   before(async function () {
     if (!this.gameOptions || !this.mintFixture) {
       this.skip();
     }
   });
+  it("Should startGame for two trialists", async function () {
+    const trial = Trial.fromCollectionJSON(this.minterFixture.collection);
+    const { choices, data } = trial.createStartGameArgs([0, 1]);
+    expect(choices.length).to.equal(2);
+    expect(data.length).to.equal(2);
 
-  it("Should start single player game and prove first move", async function () {
+    let r = await loadFixture(this.mintFixture);
+    const arenaEvents = new EventParser(this.arena);
+    const gid = getGameCreated(r, arenaEvents).gid;
+
+    let transactor = new Transactor(arenaEvents);
+    transactor
+      .method(
+        this.user1Arena.registerParticipant,
+        gid,
+        msgpack.encode({ nickname: "alice" })
+      )
+      .requireLogs("ParticipantRegistered(uint256,address,bytes)")
+      .method(
+        this.user2Arena.registerParticipant,
+        gid,
+        msgpack.encode({ nickname: "bob" })
+      )
+      .requireLogs("ParticipantRegistered(uint256,address,bytes)")
+      .method(this.guardianArena.startGame2, gid, { choices, data })
+      .requireLogs(
+        "GameStarted(uint256)",
+        "RevealedChoices(uint256,address,uint256,bytes32[],bytes)",
+        "RevealedChoices(uint256,address,uint256,bytes32[],bytes)"
+      );
+
+    for await (const r of transactor.transact()) {
+      console.log(Object.keys(r.events).map(name=>`${name}[${r.events[name].length}]`));
+    }
+  });
+
+  it("Should prove move for single trialist", async function () {
+
     const user1Address = await this.user1Arena.signer.getAddress();
 
     const trial = Trial.fromCollectionJSON(this.minterFixture.collection);
@@ -66,21 +97,9 @@ describe("StateRoster# load", async function () {
       )
       ;
 
-    const roster = new StateRoster(gid, {});
-    // const changes = new RosterStateChange();
-    // const txmemo = new TxMemo();
-
-    for await (const event of arenaEvents.queryGameEvents(gid)) {
-      switch (event.name) {
-        case ABIName2.GameCreated:
-        case ABIName2.GameStarted:
-        case ABIName2.GameCompleted:
-          break;
-        default:
-          roster.applyEvent(event);
-          break;
-      }
+    for await (const r of transactor.transact()) {
+      console.log(Object.keys(r.events).map(name=>`${name}[${r.events[name].length}]`));
     }
-    // for await (const event of )
   });
+
 });

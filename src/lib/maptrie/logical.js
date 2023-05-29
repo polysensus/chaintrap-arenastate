@@ -1,8 +1,11 @@
+import { ethers } from "ethers";
+
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
+import { getMap } from "../map/collection.js";
 import { Join } from "./join.js";
 import { Access } from "./access.js";
 import { Link } from "./link.js";
-import { ObjectType, ObjectCodec, LeafObject } from "./objects.js";
+import { ObjectType, ObjectCodec, LeafObject, leafHash } from "./objects.js";
 import { Location } from "./location.js";
 
 /**
@@ -11,19 +14,14 @@ import { Location } from "./location.js";
  *
  * proof that "an entry exists in joins which laves location i via side m, exit
  * n, and enters location j, via side r, exit s"
+ *
+ * @template {{location:number, side: number, exit: number}} AccessLike
  */
 export class LogicalTopology {
   /**
    * @constructor
-   * @template {{map,name}} Source
-   * @param {Source} name
    */
-  constructor(source) {
-    /**
-     * The the json map source and name of the map, if there is one. typically
-     * the name is the attribute in a map collection file that holds the specific map
-     */
-    this.source = source;
+  constructor() {
     /**
      * Each this.joins[i].joins is a pair of indices into this.locations
      * @type {Join[]}
@@ -45,16 +43,8 @@ export class LogicalTopology {
    * @param {string|undefined} entryName
    */
   static fromCollectionJSON(mapCollection, entryName = undefined) {
-    if (!entryName) {
-      const names = Object.keys(mapCollection);
-      if (names.length === 0) throw new Error("empty map collection");
-
-      entryName = names.sort()[0];
-    }
-    const map = mapCollection[entryName];
-    if (!map) throw new Error(`${entryName} not found in map collection`);
-
-    const topo = new LogicalTopology({ map, name: entryName });
+    const { map, name } = getMap(mapCollection, entryName);
+    const topo = new LogicalTopology();
     topo.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
     topo.extendLocations(map.model.rooms);
     return topo;
@@ -69,10 +59,11 @@ export class LogicalTopology {
   }
 
   *leaves() {
-    for (const link of this.links())
+    for (const link of this.links()) {
       yield ObjectCodec.prepare(
         new LeafObject({ type: ObjectType.Link, leaf: link })
       );
+    }
   }
 
   /**
@@ -92,6 +83,49 @@ export class LogicalTopology {
   }
 
   /**
+   * Return the merkle encode choice nodes available at location
+   * @param {number} location
+   */
+  locationChoices(location) {
+    const choices = [];
+    for (let side = 0; side < 4; side++) {
+      for (const prepared of this.locationSideChoices(location, side)) {
+        choices.push(leafHash(prepared));
+      }
+    }
+    return choices;
+  }
+
+  /**
+   * Enumerate the choices available at the location, on the specific side. The yields are encoded as LeafObjects
+   * @param {number} location
+   * @param {number} side
+   * @param {any} options
+   */
+  *locationSideChoices(location, side, options) {
+    for (const link of this.locationSideLinks(location, side, options)) {
+      yield ObjectCodec.prepare(
+        new LeafObject({ type: ObjectType.Link, leaf: link })
+      );
+    }
+  }
+
+  /**
+   * Enumerate the location links available at the location for the specific side
+   * @param {number} location
+   * @param {number} side
+   * @param {any} options
+   */
+  *locationSideLinks(location, side, options) {
+    const loc = this.locations[location];
+    for (let exit = 0; exit < loc.sides[side].length; exit++) {
+      const egress = new Access({ location, side, exit });
+      const ingress = this.accessJoin(egress);
+      yield new Link(egress, ingress);
+    }
+  }
+
+  /**
    * Return the link representation of the identified join
    * @param {number} join
    * @returns {Link}
@@ -102,7 +136,6 @@ export class LogicalTopology {
 
   /**
    * Return the link representation of the egress & corresponding ingress accesses
-   * @template {{location:number, side: number, exit: number}} AccessLike
    * @param {AccessLike} egress an access like object with location, side and exit properties
    * @returns {Link} a link where link.a is the egress and link.b the ingress at the other side.
    */
@@ -112,7 +145,6 @@ export class LogicalTopology {
 
   /**
    * Return the access on the other side of the join identified by the egress access
-   * @template {{location:number, side: number, exit: number}} AccessLike
    * @param {AccessLike} egress an access like object with location, side and exit properties
    * @returns {Access}
    */
@@ -202,7 +234,11 @@ export class LogicalTopology {
 
   /**
    * a list of objects describing the geometry of joins between pairs of locations
-   * @template {{joins: [number, number], join_sides:[number, number]}|{joins: [number, number], sides:[number, number]}} JoinLike
+   * @template {{
+   *  joins: [number, number],
+   *  join_sides:[number, number]}|{joins: [number, number],
+   *  sides:[number, number]}
+   * } JoinLike
    * @param {JoinLike[]} joins - aka corridor
    */
   extendJoins(joins) {

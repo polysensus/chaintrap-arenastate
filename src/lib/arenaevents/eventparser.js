@@ -3,7 +3,6 @@ import { ethers } from "ethers";
 import { getLogger } from "../log.js";
 
 import { ArenaEvent } from "./arenaevent.js";
-import { matchCustomError } from "../chaintrapabi.js";
 
 const log = getLogger("gameevents");
 
@@ -23,13 +22,13 @@ export class EventParser {
     this.arena = arena;
   }
 
-  async *queryArenaEvents(gid, fromBlock) {
+  async *queryGameEvents(gid, fromBlock) {
     for (const log of await findGameEvents(this.arena, gid, fromBlock)) {
       const iface = this.arena.getEventInterface(log);
       if (!iface) continue;
-      const gev = ArenaEvent.fromParsedEvent(iface.parseLog(log));
-      if (!gev) continue;
-      yield gev;
+      const event = ArenaEvent.fromParsedEvent(iface.parseLog(log));
+      if (!event) continue;
+      yield event;
     }
   }
 
@@ -58,12 +57,16 @@ export class EventParser {
     const gameEvents = [];
     if (receipt.status !== 1) throw new Error("bad receipt status");
     for (const log of receipt.logs) {
-      const iface = this.arena.getEventInterface(log);
-      if (!iface) continue;
-      const gev = ArenaEvent.fromParsedEvent(iface.parseLog(log));
-      if (!gev) continue;
-      // yield gev;
-      gameEvents.push(gev);
+      try {
+        const iface = this.arena.getEventInterface(log);
+        if (!iface) continue;
+        const event = ArenaEvent.fromParsedEvent(iface.parseLog(log));
+        if (!event) continue;
+        // yield gev;
+        gameEvents.push(event);
+      } catch (err) {
+        console.log(err);
+      }
     }
     return gameEvents;
   }
@@ -174,43 +177,4 @@ export async function findGameEvents(arena, gid, fromBlock) {
     ],
   };
   return arena.queryFilter(filter, fromBlock);
-}
-
-/**
- * parseEventLog returns a normalized and (abi) parsed representation of an ethereum event log
- * @template {{topics:[]string, data:string}} LogLike
- * @param {any} iface contract interface (ethers.utils.Interface eg arenaInterface() result)
- * @param {LogLike} ethlog
- * @returns {ethers.utils.LogDescription}
- */
-export function parseEventLog(iface, ethlog) {
-  // See https://github.com/ethers-io/ethers.js/blob/master/packages/contracts/src.ts/index.ts addContractWait ~#342
-  let parsed = null;
-
-  try {
-    parsed = iface.parseLog(ethlog);
-  } catch (e) {
-    log.debug(e);
-  }
-
-  if (!parsed) {
-    return ethlog;
-  }
-
-  const event = ethlog;
-  event.name = parsed.name;
-  event.event = parsed.event;
-  if (typeof event.event === "undefined") {
-    event.event = event.name;
-  }
-  event.args = parsed.args;
-
-  return event;
-}
-
-export function playerFromParsedEvent(event) {
-  if (typeof event.args.player !== "undefined") {
-    return ethers.utils.getAddress(event.args.player); // normalize to checksum addr
-  }
-  return undefined;
 }

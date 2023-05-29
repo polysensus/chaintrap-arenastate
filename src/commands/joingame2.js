@@ -4,11 +4,13 @@ import * as msgpack from "@msgpack/msgpack";
 
 import { programConnectArena } from "./connect.js";
 
+const out = console.log;
+
 export function addJoingame2(program) {
   program
     .command("joingame2")
-    .option("--id", "the game token id")
-    .option("--nickname", "name to put in the profile string")
+    .option("--id <id>", "the game token id")
+    .option("--nickname <name>", "name to put in the profile string")
     .action((options) => joingame2(program, options));
 }
 

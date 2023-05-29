@@ -68,6 +68,45 @@ Things can be placed on maps. Interacting with those things as an ACTION/OUTCOME
 
     CONSEQUENCE: [ACTION, OUTCOME]
 
+# action, outcome for location transitions
+
+(Note: we deal with variations which blind the location, or encrypt it, in subsequent sections )
+
+Player will know
+
+        [LOCATION-A, EGRESS-SIDE, EGRESS-EXIT]
+
+Guardian can find corresponding
+
+        [LOCATION-B, INGRESS-SIDE, INGRESS-EXIT]
+
+Let Player ActionCommit.nodeAction be
+
+        H([LOCATION-A, EGRESS-SIDE, EGRESS-EXIT])
+
+Let Guardian OutcomeArgument.nodeConsequence be
+
+        H([LOCATION-B, INGRESS-SIDE, INGRESS-EXIT])
+
+Then, Merkle NODE must be
+
+        H(H(nodeAction|nodeConsequence))
+
+In the resolution, Guardian will provide
+
+        INCLUSION-PROOF(NODE)
+        nodeConsequence = H([LOCATION-B, INGRESS-SIDE, INGRESS-EXIT])
+
+The contract will verify that NODE
+
+        NODE == H(H(nodeAction | nodeConsequence))
+
+Before considering the inclusion proof
+
+# blinding, with player specific session seeds
+
+requires duplicating tree context for each player
+
 EXIT: room-side, exit-index
 JOINS: [[side-0]]
 ROOM: []

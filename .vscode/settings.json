@@ -26,6 +26,7 @@
     "gasoracleabi",
     "glog",
     "hhkeys",
+    "itrialist",
     "Joingame",
     "keccak",
     "lastgame",
@@ -46,6 +47,7 @@
     "tokenuri",
     "topo",
     "transcriptevents",
+    "trialists",
     "txmemo",
     "vout",
     "watcharena"

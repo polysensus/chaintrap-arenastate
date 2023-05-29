@@ -96,6 +96,8 @@ program.addOption(
 addMaptrie(program);
 addMaptrieProof(program);
 addCreategame2(program);
+addJoingame2(program);
+addStartgame2(program);
 // ---
 
 // ---

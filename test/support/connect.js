@@ -5,13 +5,13 @@ import { urlConnect } from "../../src/commands/connect.js";
 import { arenaConnect } from "../../src/lib/chaintrapabi.js";
 export { arenaConnect };
 
-export function envConnect(options) {
-  const key = options?.key ?? process.env.ARENASTATE_USER1_KEY;
+export function envConnect(arenaAddress, options) {
+  const key = options?.key;
   const url = options?.url ?? process.env.ARENASTATE_PROVIDER_URL;
   let polling = options?.polling;
   if (typeof polling === "undefined") polling = true;
 
-  const arenaAddress = options?.arena ?? process.env.ARENASTATE_ARENA;
+  arenaAddress = arenaAddress ?? process.env.ARENASTATE_ARENA;
 
   const signer = urlConnect(url, { key, polling });
   return arenaConnect(arenaAddress, signer);

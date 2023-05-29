@@ -7,27 +7,11 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "joingame2",
+      "name": "maptrieproof",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
-      "envFile": "${workspaceFolder}/.env.gamehost",
-      "args": [
-        "joingame2",
-        "--id",
-        "0x040000000000000000000000000000000c",
-        "--nickname",
-        "player1"
-      ]
-    },
-
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "startgame2",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/cli.js",
-      "envFile": "${workspaceFolder}/.env.gamehost",
-      "args": ["joingame2", "--id", "0x040000000000000000000000000000000c"]
+      "envFile": "${workspaceFolder}/.env.test.integ",
+      "args": ["maptrieproof", "${workspaceFolder}/data/maps/map02.json", "0"]
     },
 
     {
@@ -36,7 +20,7 @@
       "name": "creategame2",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
-      "envFile": "${workspaceFolder}/.env.gamehost",
+      "envFile": "${workspaceFolder}/.env.test.integ",
       "args": [
         "--map",
         "${workspaceFolder}/data/maps/map02.json",
@@ -52,6 +36,41 @@
       ]
     },
 
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "joingame2",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "envFile": "${workspaceFolder}/.env.test.integ",
+      "args": [
+        "joingame2",
+        "--id",
+        "0x0400000000000000000000000000000001",
+        "--nickname",
+        "player1"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "startgame2",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "envFile": "${workspaceFolder}/.env.test.integ",
+      "args": [
+        "--map",
+        "${workspaceFolder}/data/maps/map02.json",
+        "startgame2",
+        "--id",
+        "0x0400000000000000000000000000000001",
+        "--starts",
+        "0",
+        "1",
+        "2"
+      ]
+    },
     {
       "type": "node",
       "request": "launch",

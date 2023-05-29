@@ -229,8 +229,9 @@ export class GameMint {
       );
     if (!options.topology) throw new Error("a map topology is required");
     if (!options.mapRootLabel) throw new Error("a map root label is required");
+    if (!options.map) throw new Error("a map is required");
 
-    const vrf_inputs = options.topology.source?.map?.vrf_inputs;
+    const vrf_inputs = options.map?.vrf_inputs;
     if (!vrf_inputs)
       throw Error("GameMint# invalid topology, missing vrf_inputs");
     if (!vrf_inputs.proof)

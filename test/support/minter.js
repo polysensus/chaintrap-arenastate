@@ -1,8 +1,30 @@
+import ethers from "ethers";
 import fetch from "node-fetch";
 import { readBinaryData, readJsonData } from "./data.js";
 
+import { getMap } from "../../src/lib/map/collection.js";
 import { LogicalTopology } from "../../src/lib/maptrie/logical.js";
 import { GameMint } from "../../src/lib/mint/gamemint.js";
+
+/**
+ * 
+ * @param {import("../../src/lib/arenaevents/eventparser.js").EventParser} eventParser 
+ * @returns {ethers.BigNumber}
+ */
+export function getGameCreated(receipt, eventParser) {
+
+  return eventParser.receiptLog(
+    receipt,
+    "GameCreated(uint256,address,uint256)"
+  );
+}
+
+export function getSetMerkleRoot(receipt, eventParser) {
+  return eventParser.receiptLog(
+    receipt,
+    "SetMerkleRoot(uint256,bytes32,bytes32)"
+  );
+}
 
 /**
  * This class provides a mint method which is compatible with hardhat /
@@ -23,6 +45,7 @@ export class MinterFixture {
       this.options.mapRootLabel = "chaintrap-dungeon:static";
 
     this.collection = readJsonData("maps/map02.json");
+    this.map = getMap(this.collection).map;
     this.topology = LogicalTopology.fromCollectionJSON(this.collection);
     this.trie = this.topology.encodeTrie();
     this.minter = new GameMint();
@@ -33,6 +56,7 @@ export class MinterFixture {
     this.minter.configureMapOptions({
       ...this.options,
       topology: this.topology,
+      map: this.map,
       trie: this.trie,
     });
   }

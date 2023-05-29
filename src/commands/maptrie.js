@@ -66,22 +66,13 @@ function maptrie(program, options, mapfile) {
 
 function maptrieproof(program, options, mapfile, which) {
   const maps = readJson(mapfile);
-  if (Object.keys(maps).length !== 1) {
-    out(`only single entry mapfiles are supported`);
+  if (Object.keys(maps).length == 0) {
+    out(`mapfile needs at least one entry`);
     process.exit(1);
   }
+  const topo = LogicalTopology.fromCollectionJSON(maps);
 
-  const model = Object.values(maps)[0]?.model;
-  if (!model) {
-    out(`model not found in map file`);
-    process.exit(1);
-  }
-
-  const topo = new LogicalTopology();
-  topo.extendJoins(model.corridors); // rooms 0,1 sides EAST, WEST
-  topo.extendLocations(model.rooms);
-
-  const trie = StandardMerkleTree.of([...topo.links()], Link.ABI);
+  const trie = topo.encodeTrie();
 
   for (const [i, v] of trie.entries()) {
     if (i !== Number(which)) continue;

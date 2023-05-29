@@ -1,4 +1,7 @@
 import { ethers } from "ethers";
+const arrayify = ethers.utils.arrayify;
+const keccak256 = ethers.utils.keccak256;
+
 import * as msgpack from "@msgpack/msgpack";
 
 import { Access } from "./access.js";
@@ -11,15 +14,31 @@ export class ObjectType {
 }
 
 /**
+ * Compute the merkle node value for the prepared {@link LeafObject}
+ * standardLeafHash from https://github.com/OpenZeppelin/merkle-tree/blob/master/src/standard.ts#L9
+ * @param {[number, ethers.utils.BytesLike]} prepared
+ */
+export function leafHash(prepared) {
+  return keccak256(
+    keccak256(
+      arrayify(ethers.utils.defaultAbiCoder.encode(LeafObject.ABI, prepared))
+    )
+  );
+}
+
+/**
  * All merkle leaves take this form. The type code ensures the leaf object
  * encodings are unique for all types. This means we can put any leaf object in
  * any trie without fear of ambiguity.
+ *
+ *
  */
 export class LeafObject {
   static ABI = ["uint16 type", "bytes leaf"];
 
   /**
-   * @template {type: {ObjectType.Access}, leaf: {Access|object}} LeafObjectLike
+   * @constructor
+   * @template {{type: ObjectType.Access, leaf: Access|object}} LeafObjectLike
    * @param {LeafObjectLike} object
    */
   constructor(o) {
@@ -46,7 +65,7 @@ export class LeafObject {
 
   /**
    * @template {{location: number, side: number, exit: number}} AccessLike
-   * @template {{a: AccessLike, b: AccessLike}} LinkLike
+   * @template {{a:AccessLike, b:AccessLike}} LinkLike
    * @param {LinkLike} link
    */
   static linkLeaf(link) {
@@ -64,7 +83,7 @@ export class LeafObject {
 
 export class ObjectCodec {
   static typePrepare = Object.fromEntries([
-    [ObjectType.Access, (leaf) => leaf],
+    [ObjectType.Access, (access) => access],
     [ObjectType.Link, (link) => link],
   ]);
   static typeHydrate = Object.fromEntries([

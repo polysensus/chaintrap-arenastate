@@ -51,7 +51,7 @@ export class EventData {
    */
   static commitExitUse(side, egressIndex) {
     return {
-      event: NameCodes.UseExit,
+      type: NameCodes.UseExit,
       args: {
         side,
         egressIndex,
@@ -69,7 +69,7 @@ export class EventData {
    */
   static allowExitUse(token, scene, side, ingressIndex, halt) {
     return {
-      event: NameCodes.ExitUsed,
+      type: NameCodes.ExitUsed,
       args: {
         location: ethers.utils.arrayify(token),
         sceneblob: ethers.utils.arrayify(scene),

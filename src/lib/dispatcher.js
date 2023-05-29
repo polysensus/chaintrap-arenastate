@@ -1,5 +1,5 @@
 import { TxMemo } from "./txmemo.js";
-import { parseEthersEvent } from "./gameevents.js";
+import { parseEthersEvent } from "./arenaevents/eventparser.js";
 import { getLogger } from "./log.js";
 
 const log = getLogger("dispatcher");

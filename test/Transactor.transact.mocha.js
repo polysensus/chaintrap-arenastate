@@ -13,8 +13,6 @@ import { customError } from "../src/lib/chaintrapabi.js";
 
 import { Transactor } from "../src/lib/arenaevents/transactor.js";
 
-
-
 describe("Transactor# transact", async function () {
   before(async function () {
     if (!this.gameOptions || !this.mintFixture) {
@@ -49,11 +47,13 @@ describe("Transactor# transact", async function () {
 
     transactor
       .method(
-        this.user1Arena.registerParticipant, gid, msgpack.encode({ nickname: "bob" }))
+        this.user1Arena.registerParticipant,
+        gid,
+        msgpack.encode({ nickname: "bob" })
+      )
       .requireLogs("ParticipantRegistered(uint256,address,bytes)")
       .method(this.guardianArena.startGame2, gid)
-      .requireLogs("GameStarted(uint256)")
-      ;
+      .requireLogs("GameStarted(uint256)");
 
     // We don't deal with start positions here. We just pick a random place to
     // start, and generate a proof of traversing the join.
@@ -65,8 +65,12 @@ describe("Transactor# transact", async function () {
     const node = trie.leafHash(prepared);
 
     transactor
-        .method(this.user1Arena.commitAction, gid, { rootLabel, node, data: "0x" })
-        .requireLogs("ActionCommitted(uint256,uint256,address,bytes32,bytes)")
+      .method(this.user1Arena.commitAction, gid, {
+        rootLabel,
+        node,
+        data: "0x",
+      })
+      .requireLogs("ActionCommitted(uint256,uint256,address,bytes32,bytes)");
 
     let iLeaf = trie.leafLookup(prepared);
     let proof = trie.getProof(iLeaf);
@@ -82,13 +86,12 @@ describe("Transactor# transact", async function () {
         proof,
         node,
       })
-      .requireLogNames("ArgumentProven", "OutcomeResolved")
-    
+      .requireLogNames("ArgumentProven", "OutcomeResolved");
+
     for await (const r of transactor.transact()) {
-      console.log(Object.keys(r.events))
+      console.log(Object.keys(r.events));
     }
   });
-
 
   it("Should start single player game and prove first move, using arena methods", async function () {
     let r = await loadFixture(this.mintFixture);
