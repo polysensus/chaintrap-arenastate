@@ -1,4 +1,3 @@
-
 /**
  * This class provides simple property delta tracking. Intended to be used for
  * event update de-duplication
@@ -13,8 +12,8 @@ export class PropDelta {
    * provide these unless special handling is particularly needed.
    */
   constructor(props, conditioners) {
-    this.props = Object.fromEntries(props.map(k => [k, true]))
-    this.conditioners = {...conditioners};
+    this.props = Object.fromEntries(props.map((k) => [k, true]));
+    this.conditioners = { ...conditioners };
   }
 
   conditionValue(name, value) {
@@ -26,9 +25,9 @@ export class PropDelta {
   /**
    * Return the delta from source to other, such that
    *  source + delta == source + other
-   * 
+   *
    * But only the changed values are present in delta
-   * 
+   *
    * @param {object} source
    * @param {object} other
    */
@@ -36,16 +35,14 @@ export class PropDelta {
     const delta = {};
 
     for (let [prop, value] of Object.entries(other)) {
-      if (!(prop in this.props))
-        continue;
+      if (!(prop in this.props)) continue;
       value = this.conditionValue(prop, value);
       if (typeof value === "undefined") {
         if (prop in source && typeof source[prop] !== "undefined")
           delta[prop] = value;
         continue;
       }
-      if (source[prop] !== value)
-        delta[prop] = value;
+      if (source[prop] !== value) delta[prop] = value;
     }
     return delta;
   }
@@ -63,5 +60,4 @@ export class PropDelta {
     }
     return target;
   }
-
 }

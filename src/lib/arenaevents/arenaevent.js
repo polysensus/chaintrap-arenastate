@@ -53,7 +53,7 @@ export class ArenaEvent {
       subject: undefined,
       // update is populated if there is a subject, and if the event carries an
       // update for that subject
-      update: {}
+      update: {},
     };
     switch (parsedLog.name) {
       case ABIName2.GameCreated:
@@ -68,16 +68,16 @@ export class ArenaEvent {
         arenaEvent.update = {
           address: parsedLog.args.participant,
           registered: true,
-          profile: msgpack.decode(arrayify(parsedLog.args.profile))
-        }
+          profile: msgpack.decode(arrayify(parsedLog.args.profile)),
+        };
         break;
       case ABIName2.RevealedChoices:
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.update = {
           choices: parsedLog.args.choices,
-          scene: msgpack.decode(arrayify(parsedLog.args.data))
-        }
+          scene: msgpack.decode(arrayify(parsedLog.args.data)),
+        };
         break;
 
       case ABIName2.ActionCommitted:
@@ -88,14 +88,14 @@ export class ArenaEvent {
           rootLabel: parsedLog.args.rootLabel,
           outcome: parsedLog.args.outcome,
           node: parsedLog.args.node,
-          data: parsedLog.args.data
-        }
+          data: parsedLog.args.data,
+        };
         break;
       case ABIName2.ArgumentProven:
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.advocate = parsedLog.args.advocate;
-        arenaEvent.update = {}
+        arenaEvent.update = {};
         break;
       case ABIName2.OutcomeResolved:
         arenaEvent.eid = parsedLog.args.eid;
@@ -104,11 +104,11 @@ export class ArenaEvent {
         arenaEvent.update = {
           rootLabel: parsedLog.args.rootLabel,
           outcome: parsedLog.args.outcome,
-          node: parsedLog.args.node
+          node: parsedLog.args.node,
           // The scene is left to RevealedChoices
           // data: ev.args.data,
           // scene: msgpack.decode(arrayify(ev.args.data))
-        }
+        };
         break;
       /*
       default:

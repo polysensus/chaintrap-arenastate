@@ -22,19 +22,19 @@ export class EventParser {
     /** readonly */
     this.contract = contract;
     /** readonly */
-    this.eventFactory = eventFactory ?? (parsed => parsed);
+    this.eventFactory = eventFactory ?? ((parsed) => parsed);
   }
 
   /**
    * Parse an ethereum log event using the matching interface on arena. Return
-   * undefined if no interface matches the log. 
-   * @param {ethers.Log} log 
+   * undefined if no interface matches the log.
+   * @param {ethers.Log} log
    * @returns {ArenaEvent|undefined}
    */
   parse(log) {
-      const iface = this.contract.getEventInterface(log);
-      if (!iface) return;
-      return this.eventFactory(iface.parseLog(log), log);
+    const iface = this.contract.getEventInterface(log);
+    if (!iface) return;
+    return this.eventFactory(iface.parseLog(log), log);
   }
 
   /**

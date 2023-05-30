@@ -232,8 +232,7 @@ export class GameMint {
     if (!options.map) throw new Error("a map is required");
 
     const vrf_inputs = options.map?.vrf_inputs;
-    if (!vrf_inputs)
-      throw Error("GameMint# invalid map, missing vrf_inputs");
+    if (!vrf_inputs) throw Error("GameMint# invalid map, missing vrf_inputs");
     if (!vrf_inputs.proof)
       throw Error("GameMint# invalid topology, missing vrf_inputs.proof");
     if (!vrf_inputs.proof.beta)

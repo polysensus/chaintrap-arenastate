@@ -45,7 +45,7 @@ describe("GameMint.mint tests", async function () {
       description: "test# should mint a game description",
     };
     const mapRootLabel = "chaintrap-dungeon:static";
-    const {map} = getMap(collection);
+    const { map } = getMap(collection);
     minter.configureMetadataOptions(mdOptions);
     minter.configureNFTStorageOptions(mdOptions);
     minter.configureGameIconOptions(mdOptions);

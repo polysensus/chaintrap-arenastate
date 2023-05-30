@@ -131,16 +131,14 @@ export class StateRoster {
 
   // --- application of single events
   applyEvent(event) {
-    if (typeof event.subject === "undefined")
-      return;
+    if (typeof event.subject === "undefined") return;
 
     switch (event.name) {
       case ABIName2.ParticipantRegistered:
         this.players[event.subject] = new Player();
         break;
     }
-    if (!Player.handlesEvent(event.name))
-      return;
+    if (!Player.handlesEvent(event.name)) return;
     this.players[event.subject].applyEvent(event);
   }
 

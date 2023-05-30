@@ -4,16 +4,19 @@ import * as msgpack from "@msgpack/msgpack";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import {getGameCreated, getSetMerkleRoot} from "./support/minter.js";
+import { getGameCreated, getSetMerkleRoot } from "./support/minter.js";
 //
 import { EventParser } from "../src/lib/arenaevents/eventparser.js";
-import { ArenaEvent, findGameEvents } from "../src/lib/arenaevents/arenaevent.js";
+import {
+  ArenaEvent,
+  findGameEvents,
+} from "../src/lib/arenaevents/arenaevent.js";
 import { Transactor } from "../src/lib/arenaevents/transactor.js";
 import { StateRoster } from "../src/lib/stateroster.js";
 
 import { Trial } from "../src/lib/trial.js";
 
-import { ABIName2 } from "../src/lib/abiconst.js"
+import { ABIName2 } from "../src/lib/abiconst.js";
 
 describe("StateRoster# load", async function () {
   before(async function () {
@@ -50,21 +53,28 @@ describe("StateRoster# load", async function () {
         "GameStarted(uint256)",
         "RevealedChoices(uint256,address,uint256,bytes32[],bytes)"
       )
-      .method(this.user1Arena.commitAction, gid, {rootLabel, node: userChoice, data:"0x"})
+      .method(this.user1Arena.commitAction, gid, {
+        rootLabel,
+        node: userChoice,
+        data: "0x",
+      })
       .requireLogs(
         "ActionCommitted(uint256,uint256,address,bytes32,bytes32,bytes)"
       )
-      .method(this.guardianArena.resolveOutcome, gid, 
+      .method(
+        this.guardianArena.resolveOutcome,
+        gid,
         trial.createResolveOutcomeArgs(user1Address, userChoice)
       )
       .requireLogs(
         "RevealedChoices(uint256,address,uint256,bytes32[],bytes)",
         "ArgumentProven(uint256,uint256,address)",
         "OutcomeResolved(uint256,uint256,address,address,bytes32,uint8,bytes32,bytes)"
-      )
-      ;
+      );
     for await (const r of transactor.transact()) {
-      console.log(Object.keys(r.events).map(name=>`${name}[${r.events[name].length}]`));
+      console.log(
+        Object.keys(r.events).map((name) => `${name}[${r.events[name].length}]`)
+      );
     }
 
     const roster = new StateRoster(gid, {});
@@ -75,7 +85,7 @@ describe("StateRoster# load", async function () {
       const event = arenaEvents.parse(log);
       let msg = event.name;
       if (event.gid) {
-        msg = `${msg}: ${event.gid.toHexString()}`
+        msg = `${msg}: ${event.gid.toHexString()}`;
       }
       console.log(msg);
 

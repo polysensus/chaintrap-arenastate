@@ -3,7 +3,12 @@ import * as msgpack from "@msgpack/msgpack";
 import { getMap } from "./map/collection.js";
 import { SceneCatalog } from "./map/scenecatalog.js";
 import { LogicalTopology } from "./maptrie/logical.js";
-import { LeafObject, ObjectType, ObjectCodec, leafHash } from "./maptrie/objects.js";
+import {
+  LeafObject,
+  ObjectType,
+  ObjectCodec,
+  leafHash,
+} from "./maptrie/objects.js";
 /**
  * A realm holds all of the physical artifacts associated with the game and the
  * merkle tries used to prove action outcomes and so on.
@@ -35,16 +40,23 @@ export class Trial {
     this.arena = undefined;
     this.gid = undefined;
 
-    this.choiceAccess = {}
+    this.choiceAccess = {};
 
-    for (let location=0; location<this.topology.locations.length; location++) {
+    for (
+      let location = 0;
+      location < this.topology.locations.length;
+      location++
+    ) {
       const scene = this.scenes.scene(location);
       scene.exitChoices = [[], [], [], []];
       for (let side = 0; side < scene.exitChoices.length; side++) {
-
         for (const link of this.topology.locationSideLinks(location, side)) {
-          const choice = leafHash(ObjectCodec.prepare(new LeafObject({type:ObjectType.Link, leaf: link})));
-          scene.exitChoices[side].push(choice)
+          const choice = leafHash(
+            ObjectCodec.prepare(
+              new LeafObject({ type: ObjectType.Link, leaf: link })
+            )
+          );
+          scene.exitChoices[side].push(choice);
           this.choiceAccess[choice] = link.b;
         }
 
@@ -52,13 +64,12 @@ export class Trial {
           throw new Error(
             `number of location choices inconsistent with the scene side corridors`
           );
-        
       }
     }
   }
 
   /**
-   * @param {number} location 
+   * @param {number} location
    * @returns {{data, choices}}
    */
   scene(location) {
@@ -71,7 +82,7 @@ export class Trial {
       ...scene.exitChoices[3],
     ];
 
-    return {data, choices}
+    return { data, choices };
   }
 
   /**
@@ -84,7 +95,7 @@ export class Trial {
     const data = [];
 
     for (let itrialist = 0; itrialist < starts.length; itrialist++) {
-      const scene = this.scene(starts[itrialist])
+      const scene = this.scene(starts[itrialist]);
       data.push(scene.data);
       choices.push(scene.choices);
     }
@@ -93,10 +104,10 @@ export class Trial {
   }
 
   /**
-   * 
-   * @param {ethers.AddressLike} trialist 
-   * @param {ethers.DataHexString} choice 
-   * @returns 
+   *
+   * @param {ethers.AddressLike} trialist
+   * @param {ethers.DataHexString} choice
+   * @returns
    */
   createResolveOutcomeArgs(trialist, choice) {
     const iProof = this.staticTrie.hashLookup[choice];
@@ -106,13 +117,13 @@ export class Trial {
     // Note: If the choice doesn't match the choice recorded by the player the
     // proof will be invalid. And the player can't set a choice that hasn't been
     // made available by the guardian. So '3':Accepted is always appropriate and safe here
-    const {choices, data} = this.scene(this.choiceAccess[choice].location);
+    const { choices, data } = this.scene(this.choiceAccess[choice].location);
     return {
-      participant:trialist,
+      participant: trialist,
       outcome: 3,
       data,
       proof: this.staticTrie.getProof(iProof),
-      choices
-    }
+      choices,
+    };
   }
 }

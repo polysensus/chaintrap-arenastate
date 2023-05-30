@@ -7,12 +7,11 @@ import { LogicalTopology } from "../../src/lib/maptrie/logical.js";
 import { GameMint } from "../../src/lib/mint/gamemint.js";
 
 /**
- * 
- * @param {import("../../src/lib/arenaevents/eventparser.js").EventParser} eventParser 
+ *
+ * @param {import("../../src/lib/arenaevents/eventparser.js").EventParser} eventParser
  * @returns {ethers.BigNumber}
  */
 export function getGameCreated(receipt, eventParser) {
-
   return eventParser.receiptLog(
     receipt,
     "GameCreated(uint256,address,uint256)"

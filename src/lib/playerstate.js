@@ -16,13 +16,21 @@ import { PropDelta } from "./propdelta.js";
  * }} PlayerStateLike
  */
 export class PlayerState {
-
   static propDelta = new PropDelta(
-    [ "registered", "address", "profile", "rootLabel", "node", "scene", "data", "lastEID" ],
+    [
+      "registered",
+      "address",
+      "profile",
+      "rootLabel",
+      "node",
+      "scene",
+      "data",
+      "lastEID",
+    ],
     {
       profile: (profile) => undefinedIfZeroBytesLike(profile),
       node: (node) => undefinedIfZeroBytesLike(node),
-      data: (data) => undefinedIfZeroBytesLike(data)
+      data: (data) => undefinedIfZeroBytesLike(data),
     }
   );
 
@@ -46,6 +54,6 @@ export class PlayerState {
    * @returns
    */
   static update(target, update) {
-    return PlayerState.propDelta(target,update);
+    return PlayerState.propDelta(target, update);
   }
 }

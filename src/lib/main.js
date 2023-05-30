@@ -8,7 +8,6 @@ export * from "./map/scene.js";
 export * from "./map/rooms.js";
 export * from "./map/utils.js";
 export * from "./arenaevents/arenaevent.js";
-export * from "./arenaevents/codec.js";
 export * from "./arenaevents/eventparser.js";
 export * from "./arenaevents/namecodes.js";
 export * from "./arenaevents/transactor.js";

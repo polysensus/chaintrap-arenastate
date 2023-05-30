@@ -12,14 +12,8 @@ export const diamondLoupeFacetABI = diamondLoupeFacetSol.abi;
 import ownershipFacetSol from "@polysensus/chaintrap-contracts/abi/OwnershipFacet.json" assert { type: "json" };
 export const ownershipFacetABI = ownershipFacetSol.abi;
 
-import arenaCallsFacetSol from "@polysensus/chaintrap-contracts/abi/ArenaCallsFacet.json" assert { type: "json" };
-export const arenaCallsFacetABI = arenaCallsFacetSol.abi;
-
 import arenaFacetSol from "@polysensus/chaintrap-contracts/abi/ArenaFacet.json" assert { type: "json" };
 export const arenaFacetABI = arenaFacetSol.abi;
-
-import arenaTranscriptsFacetSol from "@polysensus/chaintrap-contracts/abi/ArenaTranscriptsFacet.json" assert { type: "json" };
-export const arenaTranscriptsFacetABI = arenaTranscriptsFacetSol.abi;
 
 import erc1155ArenaFacetSol from "@polysensus/chaintrap-contracts/abi/ERC1155ArenaFacet.json" assert { type: "json" };
 export const erc1155ArenaFacetABI = erc1155ArenaFacetSol.abi;
@@ -79,7 +73,6 @@ export function errorABISelectors() {
     diamondLoupeFacetABI,
     ownershipFacetABI,
     arenaFacetABI,
-    arenaTranscriptsFacetABI,
     erc1155ArenaFacetABI,
   ]) {
     abi.reduce((errors, current) => {
@@ -105,9 +98,7 @@ export function arenaConnect(diamondAddress, providerOrSigner) {
       DiamondCutFacet: diamondCutFacetABI,
       DiamondLoupeFacet: diamondLoupeFacetABI,
       OwnershipFacet: ownershipFacetABI,
-      ArenaCallsFacet: arenaCallsFacetABI,
       ArenaFacet: arenaFacetABI,
-      ArenaTranscriptsFacet: arenaTranscriptsFacetABI,
       ERC1155ArenaFacet: erc1155ArenaFacetABI,
     },
     providerOrSigner

@@ -1,5 +1,8 @@
 import { TxMemo } from "./txmemo.js";
-import { EventParser, logFromEthersCallbackArgs } from "./arenaevents/eventparser.js";
+import {
+  EventParser,
+  logFromEthersCallbackArgs,
+} from "./arenaevents/eventparser.js";
 import { getLogger } from "./log.js";
 
 const log = getLogger("dispatcher");
@@ -48,13 +51,12 @@ export class Dispatcher {
 
   wrapHandler(handler) {
     const wrapped = async (...args) => {
-
       const log = logFromEthersCallbackArgs(args);
       if (!log) return;
 
       const ev = this.parser.parse(log);
       if (!ev) return;
-      log.debug({ name: ev.name, args: Object.keys(ev.args).join(', ') });
+      log.debug({ name: ev.name, args: Object.keys(ev.args).join(", ") });
       return handler(ev);
     };
     return wrapped;

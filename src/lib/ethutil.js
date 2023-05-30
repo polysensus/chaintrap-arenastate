@@ -1,4 +1,4 @@
-import ethers from "ethers";
+import { ethers } from "ethers";
 
 export function undefinedIfZeroBytesLike(maybeBytes) {
   if (ethers.utils.isBytesLike(maybeBytes)) {
