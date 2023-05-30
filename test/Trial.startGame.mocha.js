@@ -66,7 +66,7 @@ describe("Trial# startGame", async function () {
     let r = await loadFixture(this.mintFixture);
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
-    const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedlog.args.label;
+    const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedLog.args.label;
 
     let transactor = new Transactor(arenaEvents);
     transactor
