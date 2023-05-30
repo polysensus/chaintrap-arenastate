@@ -1,5 +1,5 @@
 import { TxMemo } from "./txmemo.js";
-import { parseEthersEvent } from "./arenaevents/eventparser.js";
+import { EventParser, logFromEthersCallbackArgs } from "./arenaevents/eventparser.js";
 import { getLogger } from "./log.js";
 
 const log = getLogger("dispatcher");
@@ -9,6 +9,7 @@ const defaultMemoBlockHorizon = 30;
 export class Dispatcher {
   constructor(contract, opts) {
     this.contract = contract;
+    this.parser = opts?.parser ?? new EventParser(contract);
 
     this.txmemo = opts?.txmemo ?? new TxMemo(defaultMemoBlockHorizon);
     this.listeners = [];
@@ -47,23 +48,13 @@ export class Dispatcher {
 
   wrapHandler(handler) {
     const wrapped = async (...args) => {
-      if (args.length === 0) {
-        log.info("bad callback from ethers, args empty");
-        return;
-      }
 
-      let ev = args[args.length - 1];
-      let iface;
-      // ask the proxy for the appropriate decoding interface
-      try {
-        iface = this.contract.getEventInterface(ev); // throws
-      } catch (err) {
-        log.info(`event ${ev?.topics?.[0]} not found: ${err}`);
-        return;
-      }
-      ev = parseEthersEvent(iface, this.txmemo, ev);
+      const log = logFromEthersCallbackArgs(args);
+      if (!log) return;
+
+      const ev = this.parser.parse(log);
       if (!ev) return;
-      log.debug({ name: ev.name, args: JSON.stringify(ev.args) });
+      log.debug({ name: ev.name, args: Object.keys(ev.args).join(', ') });
       return handler(ev);
     };
     return wrapped;
@@ -87,7 +78,7 @@ export class Dispatcher {
         if (l !== al) continue;
         this.contract.off(f, al);
         this.active.splice(j, 1);
-        log.debug(`stoped handler for ${s}`);
+        log.debug(`stopped handler for ${s}`);
         break;
       }
       break;

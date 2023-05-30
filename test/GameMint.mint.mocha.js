@@ -4,6 +4,7 @@ import { expect } from "chai";
 import fetch from "node-fetch";
 
 import { readBinaryData } from "./support/data.js";
+import { getMap } from "../src/lib/map/collection.js";
 
 import { LogicalTopology } from "../src/lib/maptrie/logical.js";
 import { GameMint } from "../src/lib/mint/gamemint.js";
@@ -44,12 +45,13 @@ describe("GameMint.mint tests", async function () {
       description: "test# should mint a game description",
     };
     const mapRootLabel = "chaintrap-dungeon:static";
+    const {map} = getMap(collection);
     minter.configureMetadataOptions(mdOptions);
     minter.configureNFTStorageOptions(mdOptions);
     minter.configureGameIconOptions(mdOptions);
     minter.configureMaptoolOptions(mdOptions);
     minter.configureMapOptions({
-      ...mdOptions,
+      map,
       mapRootLabel,
       topology: topo,
       trie,

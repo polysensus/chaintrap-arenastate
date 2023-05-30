@@ -54,6 +54,7 @@
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@vitest/coverage-c8": "^0.25.3",
     "cli-spinners": "^2.7.0",
+    "deep-equal": "^2.2.1",
     "dotenv": "^16.0.3",
     "eslint": "^8.29.0",
     "eslint-plugin-import": "^2.26.0",

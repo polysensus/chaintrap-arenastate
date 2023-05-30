@@ -6,8 +6,8 @@ import { arenaConnect } from "../lib/chaintrapabi.js";
 import {
   findGameEvents,
   getGameCreatedBlock,
-  parseEthersEvent,
-} from "../lib/arenaevents/eventparser.js";
+} from "../lib/arenaevents/arenaevent.js";
+
 import { SceneCatalog } from "../lib/map/scenecatalog.js";
 
 import { jfmt } from "./util.js";

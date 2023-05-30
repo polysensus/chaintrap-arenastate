@@ -2,9 +2,7 @@ import { ethers } from "ethers";
 
 import { getLogger } from "../log.js";
 
-import { ArenaEvent } from "./arenaevent.js";
-
-const log = getLogger("gameevents");
+const log = getLogger("eventparser");
 
 /**
  * A helper class for finding and processing events emitted from the chaintrap
@@ -15,21 +13,28 @@ export class EventParser {
    * @constructor
    * @param {ethers.Contract |
    *  import("@polysensus/chaintrap-contracts").ERC2535DiamondFacetProxyHandler
-   * } arena - the contract instance or diamond proxy
+   * } contract - the contract instance or diamond proxy
+   * @param {eventFactory} - a method which accepts a parsed ethers log instance
+   * and creates the event representation expected by the client. defaults to
+   * pass through.
    */
-  constructor(arena) {
+  constructor(contract, eventFactory) {
     /** readonly */
-    this.arena = arena;
+    this.contract = contract;
+    /** readonly */
+    this.eventFactory = eventFactory ?? (parsed => parsed);
   }
 
-  async *queryGameEvents(gid, fromBlock) {
-    for (const log of await findGameEvents(this.arena, gid, fromBlock)) {
-      const iface = this.arena.getEventInterface(log);
-      if (!iface) continue;
-      const event = ArenaEvent.fromParsedEvent(iface.parseLog(log));
-      if (!event) continue;
-      yield event;
-    }
+  /**
+   * Parse an ethereum log event using the matching interface on arena. Return
+   * undefined if no interface matches the log. 
+   * @param {ethers.Log} log 
+   * @returns {ArenaEvent|undefined}
+   */
+  parse(log) {
+      const iface = this.contract.getEventInterface(log);
+      if (!iface) return;
+      return this.eventFactory(iface.parseLog(log), log);
   }
 
   /**
@@ -41,7 +46,7 @@ export class EventParser {
     for (const gev of this.receiptLogs(receipt)) {
       if (
         gev?.name === eventNameOrSignature ||
-        gev.log.signature === eventNameOrSignature
+        gev.parsedLog.signature === eventNameOrSignature
       )
         return gev;
     }
@@ -54,127 +59,26 @@ export class EventParser {
    * @returns {ArenaEvent[]}
    */
   receiptLogs(receipt) {
-    const gameEvents = [];
+    const events = [];
     if (receipt.status !== 1) throw new Error("bad receipt status");
     for (const log of receipt.logs) {
       try {
-        const iface = this.arena.getEventInterface(log);
-        if (!iface) continue;
-        const event = ArenaEvent.fromParsedEvent(iface.parseLog(log));
+        const event = this.parse(log);
         if (!event) continue;
         // yield gev;
-        gameEvents.push(event);
+        events.push(event);
       } catch (err) {
         console.log(err);
       }
     }
-    return gameEvents;
+    return events;
   }
 }
 
-export function eventFromCallbackArgs(args) {
+export function logFromEthersCallbackArgs(args) {
   if (args.length === 0) {
     log.info("bad callback from ethers, args empty");
     return;
   }
   return args[args.length - 1];
-}
-
-export function parseEthersEvent(iface, txmemo, ev) {
-  if (txmemo && txmemo.haveEvent(ev)) {
-    log.debug(
-      `discarding redundant event. have seen ${ev.transactionHash} before`
-    );
-    return;
-  }
-
-  let parsed;
-  try {
-    parsed = iface.parseLog(ev);
-  } catch (err) {
-    log.info("error parsing event from ethers", err);
-    return;
-  }
-
-  ev.name = parsed.name;
-  ev.event = parsed.name;
-  ev.signature = parsed.signature;
-  ev.args = parsed.args;
-  ev.topic = parsed.topic;
-  return ev;
-}
-
-/**
- * arenaEventFilter is used to monitor any events regardless of gid, typically
- * GameCreated, GameStarted and so on, and specifically _not_ events that are
- * specific to a game
- * @param {string} name
- * @param  {...any} args
- * @returns
- */
-export function arenaEventFilter(arena, nameOrSignature, ...args) {
-  try {
-    return arena.getFilter(nameOrSignature, ...args);
-  } catch (e) {
-    log.debug(`${e}`);
-    throw e;
-  }
-}
-
-/**
- * gameEventFilter is used when the gid is available
- * @returns
- */
-export function gameEventFilter(arena, gid) {
-  return {
-    address: arena.address,
-    topics: [
-      null, // any event signature
-      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the gid as the first topic
-    ],
-  };
-}
-
-export async function findGameCreated(arena, gid) {
-  const facet = arena.getFacet("ArenaFacet");
-  const filter = facet.filters["GameCreated(uint256,address,uint256)"](gid);
-  const found = await arena.queryFilter(filter);
-
-  if (found.length == 0) {
-    log.warn("error: game not found");
-    return undefined;
-  }
-  if (found.length > 1) {
-    throw Error(`duplicate GameCreated events for gid: ${gid}`);
-  }
-
-  return found[0];
-}
-
-export async function findGames(arena) {
-  const facet = arena.getFacet("ArenaFacet");
-  const filter = facet.filters["GameCreated(uint256,address,uint256)"]();
-  return arena.queryFilter(filter);
-}
-
-export async function getGameCreatedBlock(arena, gid) {
-  return (await findGameCreated(arena, gid)).blockNumber;
-}
-
-/**
- * findGameEvents finds all events for the game. Returning them in the order
- * they were recorded on chain.
- *
- * To limit the events considered, provide fromBlock as the first positional
- * parameter.
- */
-export async function findGameEvents(arena, gid, fromBlock) {
-  const filter = {
-    address: arena.address,
-    topics: [
-      null, // any event on the contract
-      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the game id as the first indexed parameter
-    ],
-  };
-  return arena.queryFilter(filter, fromBlock);
 }

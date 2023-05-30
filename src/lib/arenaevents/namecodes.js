@@ -1,4 +1,4 @@
-// v1 chaintrap contract events as v2 data blobs on generalised commitments
+// v1 chaintrap contract events as v2 data blobs on generalized commitments
 
 /**
  * Name symbols for each of the defined types of data emitted by the contract

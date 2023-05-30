@@ -92,5 +92,27 @@ export class Trial {
     return { choices, data };
   }
 
-  async resolveOutcome() {}
+  /**
+   * 
+   * @param {ethers.AddressLike} trialist 
+   * @param {ethers.DataHexString} choice 
+   * @returns 
+   */
+  createResolveOutcomeArgs(trialist, choice) {
+    const iProof = this.staticTrie.hashLookup[choice];
+    if (!iProof) {
+      throw new Error(`choice ${choice} not found in trie`);
+    }
+    // Note: If the choice doesn't match the choice recorded by the player the
+    // proof will be invalid. And the player can't set a choice that hasn't been
+    // made available by the guardian. So '3':Accepted is always appropriate and safe here
+    const {choices, data} = this.scene(this.choiceAccess[choice].location);
+    return {
+      participant:trialist,
+      outcome: 3,
+      data,
+      proof: this.staticTrie.getProof(iProof),
+      choices
+    }
+  }
 }

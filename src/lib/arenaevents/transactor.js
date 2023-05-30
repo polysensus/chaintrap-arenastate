@@ -212,8 +212,8 @@ export class TransactRequest {
     for (const gev of this.logParser.receiptLogs(r)) {
       // collate anticipated, required and throw on excluded
       // gev.format
-      const sig = gev.log.signature;
-      const name = gev.log.name;
+      const sig = gev.parsedLog.signature;
+      const name = gev.parsedLog.name;
 
       // Note: we check collected so we can collect > 1 requiredName
       if (!(sig in anticipated || name in requiredNames || name in collected))

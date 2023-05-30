@@ -12,7 +12,7 @@ import { PlayerState } from "./playerstate.js";
 import {
   findGameEvents,
   getGameCreatedBlock,
-} from "./arenaevents/eventparser.js";
+} from "./arenaevents/arenaevent.js";
 
 export const log = getLogger("StateRoster");
 
@@ -131,22 +131,17 @@ export class StateRoster {
 
   // --- application of single events
   applyEvent(event) {
-    let addr;
-    if (typeof event.subject !== "undefined")
-      addr = ethers.utils.getAddress(event.subject); // normalize to checksum addr
+    if (typeof event.subject === "undefined")
+      return;
 
     switch (event.name) {
       case ABIName2.ParticipantRegistered:
-        return this._registerPlayer(addr, e);
-      // The caller should detect these
-      case ABIName2.GameCreated:
-      case ABIName2.GameStarted:
-      case ABIName2.GameCompleted:
-        return;
-      default: {
-        this.players[addr].applyEvent(e);
-      }
+        this.players[event.subject] = new Player();
+        break;
     }
+    if (!Player.handlesEvent(event.name))
+      return;
+    this.players[event.subject].applyEvent(event);
   }
 
   // --- batched state updates, used to reduce state thrashing
@@ -160,100 +155,14 @@ export class StateRoster {
   }
 
   // --- getters and query methods for managed state
-  playerState(player) {
-    player = ethers.utils.getAddress(player); // normalize to checksum addr
-    return this._playerState(player);
-  }
-
   getPlayer(addr) {
-    return this._getPlayer(ethers.utils.getAddress(addr));
+    return this.players[ethers.utils.getAddress(addr)];
   }
 
-  // --- private event handling helpers
-  _registerPlayer(addr, event) {
-    if (this.players[addr]?.registered) {
-      return undefined;
-    }
-
-    if (this.players[addr] === undefined) {
-      log.debug(`_registerPlayer ${addr} ****`);
-      const p = new Player();
-      p.setState({
-        registered: true,
-        address: addr,
-        profile: event.data,
-      });
-      this.players[addr] = p;
-    }
-
-    return this.players[addr];
-  }
-
-  _checkEventSubject(event) {
-    let addr = event?.subject;
-    if (addr === null) {
-      log.debug(`event ${event.event} doesn't include a subject address`);
-      return null;
-    }
-
-    addr = ethers.utils.getAddress(addr);
-
-    const p = this.players[addr];
-
-    if (typeof p === "undefined") {
-      log.debug(
-        `event ${event.event} address ${addr} is not a registered player`
-      );
-      return null;
-    }
-
-    return p;
-  }
-
-  /**
-   *
-   * @param {import("./arenaevents/arenaevent.js").ArenaEvent} event
-   * @returns
-   */
-  _checkEventGid(event) {
-    let gid = event.gid;
-    if (!ethers.BigNumber.isBigNumber(gid)) {
-      gid = ethers.BigNumber.from(gid);
-    }
-    if (!gid.eq(this.gid)) {
-      log.debug(
-        `event ${
-          event.event
-        } for other game ${gid.toHexString()}, this.gid: ${this.gid.toHexString()}`
-      );
-      return null;
-    }
-    return gid;
-  }
-
-  // --- misc private helpers
-
-  _playerState(player) {
-    if (!this.players[player]?.registered) {
+  playerState(player) {
+    if (!this.players[ethers.utils.getAddress(player)]?.registered) {
       return undefined;
     }
     return this.players[player];
-  }
-
-  _playerRegistered(player) {
-    const p = this._playerState(player);
-    if (typeof p === "undefined") {
-      return false;
-    }
-    return true;
-  }
-
-  _getPlayer(addr) {
-    const p = this.players[addr];
-    if (!p) {
-      log.debug(`no player state for player address ${addr}`);
-      return;
-    }
-    return p;
   }
 }

@@ -1,90 +1,51 @@
 import { ethers } from "ethers";
+import { undefinedIfZeroBytesLike } from "./ethutil.js";
+
+import { PropDelta } from "./propdelta.js";
 
 /**
  * @template {{
  *  registered:boolean,
  *  address:string,
  *  profile:object,
- *  location,
- *  locationIngress,
- *  startLocation,
- *  sceneblob,
- *  halted:boolean,
- *  rootLabel:string,
- *  pendingOutcomeType:number,
- *  lastEID
+ *  node:ethers.BytesLike,
+ *  scene:object,
+ *  data:ethers.BytesLike,
+ *  rootLabel:ethers.BytesLike,
+ *  lastEID:ethers.BigNumber
  * }} PlayerStateLike
  */
 export class PlayerState {
-  static Variables = [
-    "registered",
-    "address",
-    "profile",
-    "location",
-    "locationIngress",
-    "startLocation",
-    "sceneblob",
-    "halted",
-    "pendingOutcomeType",
-    "lastEID",
-  ];
 
-  static VariableConditioning = {
-    profile: (profile) => conditionBytesLikeAllZerosIsUndefined(profile),
-    startLocation: (startLocation) =>
-      conditionBytesLikeAllZerosIsUndefined(startLocation),
-  };
-
-  // constructor () { }
-
-  toObject() {
-    const o = {};
-    for (const variable of PlayerState.Variables) {
-      if (typeof this[variable] !== "undefined") o[variable] = this[variable];
+  static propDelta = new PropDelta(
+    [ "registered", "address", "profile", "node", "scene", "data", "lastEID" ],
+    {
+      profile: (profile) => undefinedIfZeroBytesLike(profile),
+      node: (node) => undefinedIfZeroBytesLike(node),
+      data: (data) => undefinedIfZeroBytesLike(data)
     }
-    return o;
-  }
+  );
 
-  clone() {
-    const c = new PlayerState();
-    for (const variable of PlayerState.Variables) {
-      c[variable] = this[variable];
-    }
-    return c;
+  static conditionValue(name, value) {
+    return PlayerState.propDelta.conditionValue(name, value);
   }
 
   /**
+   * See {@link PropDelta.delta}
+   * @param {PlayerStateLike} source
    * @param {PlayerStateLike} other
    */
-  diff(other) {
-    const delta = {};
-
-    for (const variable of PlayerState.Variables) {
-      if (typeof this[variable] !== other[variable])
-        delta[variable] = other[variable];
-    }
+  static delta(source, other) {
+    return PlayerState.propDelta.delta(source, other);
   }
 
   /**
-   *
-   * @param {PlayerStateLike} param0
+   * See {@link PropDelta.update}
+   * @param {PlayerStateLike} target
+   * @param {PlayerStateLike} update
    * @returns
    */
-  update(update) {
-    for (const variable of PlayerState.Variables) {
-      const conditioning =
-        PlayerState.VariableConditioning[variable] ?? ((value) => value);
-      const value = conditioning(update[variable]);
-      if (typeof value !== "undefined") this[variable] = value;
-    }
-    return this;
+  static update(target, update) {
+    return PlayerState.propDelta(target,update);
   }
-}
-
-function conditionBytesLikeAllZerosIsUndefined(maybeBytes) {
-  if (ethers.utils.isBytesLike(maybeBytes)) {
-    if (ethers.utils.stripZeros(maybeBytes).length === 0) return undefined;
-    return maybeBytes;
-  }
-  return maybeBytes;
 }

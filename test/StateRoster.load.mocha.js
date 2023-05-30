@@ -7,6 +7,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {getGameCreated, getSetMerkleRoot} from "./support/minter.js";
 //
 import { EventParser } from "../src/lib/arenaevents/eventparser.js";
+import { ArenaEvent, findGameEvents } from "../src/lib/arenaevents/arenaevent.js";
 import { Transactor } from "../src/lib/arenaevents/transactor.js";
 import { StateRoster } from "../src/lib/stateroster.js";
 
@@ -32,9 +33,9 @@ describe("StateRoster# load", async function () {
     const userChoice = choices[0][0];
 
     let r = await loadFixture(this.mintFixture);
-    const arenaEvents = new EventParser(this.arena);
+    const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
-    const rootLabel = getSetMerkleRoot(r, arenaEvents).log.args.label;
+    const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedLog.args.label;
 
     let transactor = new Transactor(arenaEvents);
     transactor
@@ -53,34 +54,33 @@ describe("StateRoster# load", async function () {
       .requireLogs(
         "ActionCommitted(uint256,uint256,address,bytes32,bytes32,bytes)"
       )
-      .method(this.guardianArena.resolveOutcome, gid, {
-        participant:user1Address,
-        outcome:3,
-        proof: trial.staticTrie.getProof(trial.staticTrie.hashLookup[userChoice]),
-        ...trial.scene(trial.choiceAccess[userChoice].location) // {choices, data}
-      })
+      .method(this.guardianArena.resolveOutcome, gid, 
+        trial.createResolveOutcomeArgs(user1Address, userChoice)
+      )
       .requireLogs(
         "RevealedChoices(uint256,address,uint256,bytes32[],bytes)",
         "ArgumentProven(uint256,uint256,address)",
         "OutcomeResolved(uint256,uint256,address,address,bytes32,uint8,bytes32,bytes)"
       )
       ;
+    for await (const r of transactor.transact()) {
+      console.log(Object.keys(r.events).map(name=>`${name}[${r.events[name].length}]`));
+    }
 
     const roster = new StateRoster(gid, {});
     // const changes = new RosterStateChange();
     // const txmemo = new TxMemo();
 
-    for await (const event of arenaEvents.queryGameEvents(gid)) {
-      switch (event.name) {
-        case ABIName2.GameCreated:
-        case ABIName2.GameStarted:
-        case ABIName2.GameCompleted:
-          break;
-        default:
-          roster.applyEvent(event);
-          break;
+    for (const log of await findGameEvents(this.arena, gid)) {
+      const event = arenaEvents.parse(log);
+      let msg = event.name;
+      if (event.gid) {
+        msg = `${msg}: ${event.gid.toHexString()}`
       }
+      console.log(msg);
+
+      expect(event).to.exist;
+      roster.applyEvent(event);
     }
-    // for await (const event of )
   });
 });
