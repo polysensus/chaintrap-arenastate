@@ -82,5 +82,18 @@ describe("StateRoster# load", async function () {
       expect(event).to.exist;
       roster.applyEvent(event);
     }
+
+    const p = roster.players[user1Address];
+    const current = p.current();
+    const delta = p.delta();
+    const outcome = p.outcome();
+
+    for (const state of [current, delta, outcome]) {
+      expect(state.address).to.equal(user1Address);
+      expect(state.registered).to.be.true;
+      expect(state.profile?.nickname).to.equal("alice");
+      expect(state.node).to.equal(userChoice);
+      expect(state.rootLabel).to.equal(rootLabel);
+    }
   });
 });

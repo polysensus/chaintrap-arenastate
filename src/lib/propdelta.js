@@ -13,7 +13,7 @@ export class PropDelta {
    * provide these unless special handling is particularly needed.
    */
   constructor(props, conditioners) {
-    this.props = [...props];
+    this.props = Object.fromEntries(props.map(k => [k, true]))
     this.conditioners = {...conditioners};
   }
 
@@ -35,15 +35,17 @@ export class PropDelta {
   delta(source, other) {
     const delta = {};
 
-    for (const prop of this.props) {
-      const value = this.conditionValue(prop, other[prop]);
+    for (let [prop, value] of Object.entries(other)) {
+      if (!(prop in this.props))
+        continue;
+      value = this.conditionValue(prop, value);
       if (typeof value === "undefined") {
         if (prop in source && typeof source[prop] !== "undefined")
           delta[prop] = value;
         continue;
       }
-      if (typeof source[prop] !== value)
-        delta[prop] = other[prop];
+      if (source[prop] !== value)
+        delta[prop] = value;
     }
     return delta;
   }
@@ -55,8 +57,8 @@ export class PropDelta {
    * @returns
    */
   static update(target, update) {
-    for (const prop of this.props) {
-      const value = this.conditionValue(prop, update[prop]);
+    for (let [prop, value] of Object.entries(update)) {
+      value = this.conditionValue(prop, value);
       if (typeof value !== "undefined") target[prop] = value;
     }
     return target;

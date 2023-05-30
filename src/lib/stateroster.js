@@ -144,16 +144,6 @@ export class StateRoster {
     this.players[event.subject].applyEvent(event);
   }
 
-  // --- batched state updates, used to reduce state thrashing
-
-  *currentStates(addresses) {
-    if (typeof addresses === "undefined") addresses = Object.keys(this.players);
-    for (const addr of addresses) {
-      if (!(addr in this.players)) continue;
-      yield this.players[addr].state.clone();
-    }
-  }
-
   // --- getters and query methods for managed state
   getPlayer(addr) {
     return this.players[ethers.utils.getAddress(addr)];

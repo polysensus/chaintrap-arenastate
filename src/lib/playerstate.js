@@ -18,7 +18,7 @@ import { PropDelta } from "./propdelta.js";
 export class PlayerState {
 
   static propDelta = new PropDelta(
-    [ "registered", "address", "profile", "node", "scene", "data", "lastEID" ],
+    [ "registered", "address", "profile", "rootLabel", "node", "scene", "data", "lastEID" ],
     {
       profile: (profile) => undefinedIfZeroBytesLike(profile),
       node: (node) => undefinedIfZeroBytesLike(node),

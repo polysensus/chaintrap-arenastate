@@ -22,8 +22,8 @@ export class Player {
   constructor() {
 
     this.state = {};
-    this.previous = {};
-    this.delta = {};
+    this._previous = {};
+    this._delta = {};
 
     this.eids = {};
 
@@ -32,14 +32,14 @@ export class Player {
      * The state after applying the update in the commit for the corresponding
      * eid. The start state is always eid 0
      */
-    this.committedStates = {};
+    this.outcomeStates = {};
     /**
      * @readonly
      * The delta from the previously committed state to the most recently
      * committed state. The previously committed state for the first commit is
      * the state when RevealedChoices from startGame is applied.
      */
-    this.commitDelta = {};
+    this.outcomeDelta = {};
 
     /**
      * @readonly
@@ -68,23 +68,25 @@ export class Player {
   // --- update methods
   applyEvent(event, options = {}) {
 
+    const eventID = `${event.name}:${event.log.transactionHash}`;
+
     // eid will be zero in startGame
     const eid = Number(event.eid ?? 0);
-    if (this.eids[eid]?.[event.log.transactionHash])
+    if (this.eids[eid]?.[eventID])
       return;
 
     if (eid in this.eventsByABI[event.name])
       throw new Error(`Duplicate processing attempt for event ${event.name} eid ${eid}`);
 
     // We want to check this before modifying any state. checks -> effects -> interactions
-    if (event.event === ABIName2.OutcomeResolved)
+    if (event.name === ABIName2.OutcomeResolved)
       if (!this.eventsByABI[ABIName2.ActionCommitted][eid])
         throw new Error(`commitment not found for outcome with eid ${event.eid}`);
 
     if (this.eids[eid])
-      this.eids[eid][event.log.transactionHash] = event;
+      this.eids[eid][eventID] = event;
     else
-      this.eids[eid] = Object.fromEntries([[event.log.transactionHash, event]]);
+      this.eids[eid] = Object.fromEntries([[eventID, event]]);
 
 
     if (event.update) {
@@ -92,34 +94,60 @@ export class Player {
       const delta = PlayerState.delta(this.state, event.update);
       Object.assign(this.state, delta);
       // delta accumulates forever until collected. It is the delta since the last collection.
-      Object.assign(this.delta, delta);
-
-      if (event.event === ABIName2.OutcomeResolved) {
-
-        const lastOutcomeEID = this.last({abiName:ABIName2.OutcomeResolved, n:1})
-        const lastOutcomeState = this.committedStates[lastOutcomeEID];
-
-        // Also, automatically provide delta's for each outcome event (Accepted, Rejected or otherwise)
-        this.commitDelta[eid] = PlayerState.delta(lastOutcomeState, this.state);
-        this.committedStates[eid] = {...this.state};
-      }
+      Object.assign(this._delta, delta);
     }
 
-    if (event.event === ABIName2.RevealedChoices && eid === 0) {
-      // Deal with startGame, which emits RevealedChoices to set the starting
-      // scene. This delta will include the player registration and profile
-      this.commitDelta[eid] = {...this.state}
-      this.committedStates[eid] = {...this.state}
+    switch (event.name) {
+
+      case ABIName2.OutcomeResolved: {
+
+        const lastOutcomeEID = this.last({abiName:ABIName2.OutcomeResolved, n:1})
+        const lastOutcomeState = this.outcomeStates[lastOutcomeEID];
+
+        // Also, automatically provide delta's for each outcome event (Accepted, Rejected or otherwise)
+        this.outcomeDelta[eid] = PlayerState.delta(lastOutcomeState, this.state);
+        this.outcomeStates[eid] = {...this.state};
+        break;
+      }
+
+    case ABIName2.RevealedChoices: {
+      if (eid !== 0)
+        break;
+
+        // Deal with startGame, which emits RevealedChoices to set the starting
+        // scene. This delta will include the player registration and profile
+        this.outcomeDelta[eid] = {...this.state}
+        this.outcomeStates[eid] = {...this.state}
+        break;
+      }
     }
 
     this.eventsByABI[event.name][eid] = event;
   }
 
-  collectDelta() {
-    this.previous = {...this.state};
-    const delta = {...this.delta};
-    this.delta = {};
+  delta(options) {
+    const delta = {...this._delta};
+    if (options?.collect) {
+      this._previous = {...this.state};
+      this._delta = {};
+    }
     return delta;
+  }
+
+  current() {
+    return {...this.state}
+  }
+
+  outcome(options) {
+    const which = options?.eid ?? this.last({abiName:ABIName2.OutcomeResolved})
+    if (options?.delta) {
+      if (!(which in this.outcomeDelta))
+        throw new Error(`eid ${which} not in outcomeDelta`);
+      return {...this.outcomeDelta[which]};
+    }
+      if (!(which in this.outcomeStates))
+        throw new Error(`eid ${which} not in outcomeStates`);
+    return {...this.outcomeStates[which]};
   }
 
   // --- update state control
@@ -135,13 +163,14 @@ export class Player {
     if (this.eids[eid]?.log.transactionHash !== event.log.transactionHash) {
       return false;
     }
-    // log.debug(`duplicate transaction hash, ignoring event: ${event.event}, tx: ${event.log.transactionHash}`)
+    // log.debug(`duplicate transaction hash, ignoring event: ${event.name}, tx: ${event.log.transactionHash}`)
     return true;
   }
 
   ordered(options) {
     let map = options?.abiName ? this.eventsByABI[options.abiName] : this.eids;
     return Object.keys(map)
+      .map(v=>Number(v))
       .sort((a, b) => a - b);
   }
 
@@ -152,6 +181,6 @@ export class Player {
 
     const eids = this.ordered(options);
     if (eids.length === 0) return 0; // eid zero is reserved by the contracts
-    return eids[eids.length - options?.n ?? 1];
+    return eids[eids.length - (options?.n ?? 1)];
   }
 }
