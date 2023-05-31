@@ -70,9 +70,6 @@ jobs:
 
         run: |
 
-          echo "" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc
-
           pushd diamond-deploy
           npm install
           popd
@@ -81,6 +78,8 @@ jobs:
           task build
           popd
           pushd chaintrap-arenastate
+          echo "" > .npmrc
+          echo "@polysensus:registry=https://npm.pkg.github.com:_authToken=$GITHUB_TOKEN" >> .npmrc
 
           grep chaintrap-contracts package.json
           grep chaintrap-contracts package-lock.json
@@ -96,11 +95,11 @@ jobs:
           ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
           task build
 
-      - name: unit tests
+      - name: test
         working-directory: chaintrap-arenastate
         run: |
           ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
-          task test:unit:ci
+          task test
 
       - name: publish npm package
         working-directory: chaintrap-arenastate
@@ -108,9 +107,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         run: |
-          git checkout .npmrc
           echo "" > .npmrc
-          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc
+          echo "@polysensus:registry=https://npm.pkg.github.com:_authToken=$GITHUB_TOKEN" >> .npmrc
 
           # github has scale issues when there are a large (> 20 ) npm packages in
           # a repo, so force for fixes seems like the right thing for now.

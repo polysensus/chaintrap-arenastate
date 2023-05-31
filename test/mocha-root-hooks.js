@@ -48,15 +48,14 @@ export const mochaHooks = {
     const dotenvFile = path.join(
       __dirname,
       "..",
-      process.env.DOTENV_FILE ?? ".env.test.integ"
+      process.env.DOTENV_FILE ?? ".env.test"
     );
-    if (!isFile(dotenvFile)) {
-      console.log(
-        `setup-env-hook.js# integration env config not found at ${dotenvFile}`
-      );
-      return;
-    }
-    dotenv.config({ path: dotenvFile });
+    if (isFile(dotenvFile)) {
+      console.log(`mocha-root-hook.js# test env config not found at ${dotenvFile}`);
+      dotenv.config({ path: dotenvFile });
+    } else
+      dotenv.config();
+
     if (haveOpenAI()) this.openaiOptions = getOpenAIOpts();
     if (haveNFTStorage()) this.nftstorageOptions = getNFTStorageOpts();
     if (haveMaptool()) this.maptoolOptions = getMaptoolOpts();
