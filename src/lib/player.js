@@ -6,10 +6,10 @@ import { ABIName2 } from "./abiconst.js";
 import { PlayerState } from "./playerstate.js";
 
 export const PlayerEvents = Object.fromEntries([
-  [ABIName2.ParticipantRegistered, true],
-  [ABIName2.RevealedChoices, true],
-  [ABIName2.ActionCommitted, true],
-  [ABIName2.OutcomeResolved, true],
+  [ABIName2.TranscriptRegistration, true],
+  [ABIName2.TranscriptEntryChoices, true],
+  [ABIName2.TranscriptEntryCommitted, true],
+  [ABIName2.TranscriptEntryOutcome, true],
 ]);
 
 export class Player {
@@ -34,14 +34,14 @@ export class Player {
      * @readonly
      * The delta from the previously committed state to the most recently
      * committed state. The previously committed state for the first commit is
-     * the state when RevealedChoices from startGame is applied.
+     * the state when TranscriptEntryChoices from startTranscript is applied.
      */
     this.outcomeDelta = {};
 
     /**
      * @readonly
      * These events can all share an eid so must be stored separately. Also,
-     * OutcomeResolved is only valid if we already have an ActionCommitted
+     * TranscriptEntryOutcome is only valid if we already have an TranscriptEntryCommitted
      */
     this.eventsByABI = Object.fromEntries(
       Object.keys(PlayerEvents).map((abiName) => [abiName, {}])
@@ -66,7 +66,7 @@ export class Player {
   applyEvent(event, options = {}) {
     const eventID = `${event.name}:${event.log.transactionHash}`;
 
-    // eid will be zero in startGame
+    // eid will be zero in startTranscript
     const eid = Number(event.eid ?? 0);
     if (this.eids[eid]?.[eventID]) return;
 
@@ -76,8 +76,8 @@ export class Player {
       );
 
     // We want to check this before modifying any state. checks -> effects -> interactions
-    if (event.name === ABIName2.OutcomeResolved)
-      if (!this.eventsByABI[ABIName2.ActionCommitted][eid])
+    if (event.name === ABIName2.TranscriptEntryOutcome)
+      if (!this.eventsByABI[ABIName2.TranscriptEntryCommitted][eid])
         throw new Error(
           `commitment not found for outcome with eid ${event.eid}`
         );
@@ -93,9 +93,9 @@ export class Player {
     }
 
     switch (event.name) {
-      case ABIName2.OutcomeResolved: {
+      case ABIName2.TranscriptEntryOutcome: {
         const lastOutcomeEID = this.last({
-          abiName: ABIName2.OutcomeResolved,
+          abiName: ABIName2.TranscriptEntryOutcome,
           n: 1,
         });
         const lastOutcomeState = this.outcomeStates[lastOutcomeEID];
@@ -109,10 +109,10 @@ export class Player {
         break;
       }
 
-      case ABIName2.RevealedChoices: {
+      case ABIName2.TranscriptEntryChoices: {
         if (eid !== 0) break;
 
-        // Deal with startGame, which emits RevealedChoices to set the starting
+        // Deal with startTranscript, which emits TranscriptEntryChoices to set the starting
         // scene. This delta will include the player registration and profile
         this.outcomeDelta[eid] = { ...this.state };
         this.outcomeStates[eid] = { ...this.state };
@@ -138,7 +138,7 @@ export class Player {
 
   outcome(options) {
     const which =
-      options?.eid ?? this.last({ abiName: ABIName2.OutcomeResolved });
+      options?.eid ?? this.last({ abiName: ABIName2.TranscriptEntryOutcome });
     if (options?.delta) {
       if (!(which in this.outcomeDelta))
         throw new Error(`eid ${which} not in outcomeDelta`);

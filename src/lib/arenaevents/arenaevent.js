@@ -56,14 +56,14 @@ export class ArenaEvent {
       update: {},
     };
     switch (parsedLog.name) {
-      case ABIName2.GameCreated:
+      case ABIName2.TranscriptCreated:
         arenaEvent.subject = parsedLog.args.creator;
         break;
-      case ABIName2.GameStarted:
+      case ABIName2.TranscriptStarted:
         break;
-      case ABIName2.GameCompleted:
+      case ABIName2.TranscriptCompleted:
         break;
-      case ABIName2.ParticipantRegistered:
+      case ABIName2.TranscriptRegistration:
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.update = {
           address: parsedLog.args.participant,
@@ -71,7 +71,7 @@ export class ArenaEvent {
           profile: msgpack.decode(arrayify(parsedLog.args.profile)),
         };
         break;
-      case ABIName2.RevealedChoices:
+      case ABIName2.TranscriptEntryChoices:
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.update = {
@@ -80,7 +80,7 @@ export class ArenaEvent {
         };
         break;
 
-      case ABIName2.ActionCommitted:
+      case ABIName2.TranscriptEntryCommitted:
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.update = {
@@ -97,7 +97,7 @@ export class ArenaEvent {
         arenaEvent.advocate = parsedLog.args.advocate;
         arenaEvent.update = {};
         break;
-      case ABIName2.OutcomeResolved:
+      case ABIName2.TranscriptEntryOutcome:
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.advocate = parsedLog.args.advocate;
@@ -105,7 +105,7 @@ export class ArenaEvent {
           rootLabel: parsedLog.args.rootLabel,
           outcome: parsedLog.args.outcome,
           node: parsedLog.args.node,
-          // The scene is left to RevealedChoices
+          // The scene is left to TranscriptEntryChoices
           // data: ev.args.data,
           // scene: msgpack.decode(arrayify(ev.args.data))
         };
@@ -121,7 +121,7 @@ export class ArenaEvent {
 
 /**
  * arenaEventFilter is used to monitor any events regardless of gid, typically
- * GameCreated, GameStarted and so on, and specifically _not_ events that are
+ * TranscriptCreated, TranscriptStarted and so on, and specifically _not_ events that are
  * specific to a game
  * @param {string} name
  * @param  {...any} args
@@ -152,7 +152,7 @@ export function gameEventFilter(arena, gid) {
 
 export async function findGameCreated(arena, gid) {
   const facet = arena.getFacet("ArenaFacet");
-  const filter = facet.filters["GameCreated(uint256,address,uint256)"](gid);
+  const filter = facet.filters["TranscriptCreated(uint256,address,uint256)"](gid);
   const found = await arena.queryFilter(filter);
 
   if (found.length == 0) {
@@ -160,7 +160,7 @@ export async function findGameCreated(arena, gid) {
     return undefined;
   }
   if (found.length > 1) {
-    throw Error(`duplicate GameCreated events for gid: ${gid}`);
+    throw Error(`duplicate TranscriptCreated events for gid: ${gid}`);
   }
 
   return found[0];
@@ -168,7 +168,7 @@ export async function findGameCreated(arena, gid) {
 
 export async function findGames(arena) {
   const facet = arena.getFacet("ArenaFacet");
-  const filter = facet.filters["GameCreated(uint256,address,uint256)"]();
+  const filter = facet.filters["TranscriptCreated(uint256,address,uint256)"]();
   return arena.queryFilter(filter);
 }
 

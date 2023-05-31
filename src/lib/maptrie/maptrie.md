@@ -84,7 +84,7 @@ Let Player ActionCommit.nodeAction be
 
         H([LOCATION-A, EGRESS-SIDE, EGRESS-EXIT])
 
-Let Guardian OutcomeArgument.nodeConsequence be
+Let Guardian TranscriptOutcome.nodeConsequence be
 
         H([LOCATION-B, INGRESS-SIDE, INGRESS-EXIT])
 

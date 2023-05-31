@@ -25,7 +25,7 @@ async function joingame2(program, options) {
   const profile = ethers.utils.arrayify(
     msgpack.encode({ nickname: options.nickname })
   );
-  const tx = await arena.registerParticipant(id, profile);
+  const tx = await arena.register(id, profile);
   const r = await tx.wait();
   for (const log of r.logs) {
     try {

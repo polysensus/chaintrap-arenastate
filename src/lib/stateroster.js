@@ -64,7 +64,7 @@ export class RosterStateChange {
     if (!before) before = new PlayerState();
 
     const p = roster.players[event.subject];
-    if (!p && event.name !== ABIName2.ParticipantRegistered)
+    if (!p && event.name !== ABIName2.TranscriptRegistration)
       throw new Error(`subject ${event.subject} not registered`);
     p.processPending(p.lastEID);
 
@@ -134,7 +134,7 @@ export class StateRoster {
     if (typeof event.subject === "undefined") return;
 
     switch (event.name) {
-      case ABIName2.ParticipantRegistered:
+      case ABIName2.TranscriptRegistration:
         this.players[event.subject] = new Player();
         break;
     }

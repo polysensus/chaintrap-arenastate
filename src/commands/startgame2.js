@@ -44,7 +44,7 @@ async function startgame2(program, options) {
     options.starts.map((v) => parseInt(v))
   );
 
-  const tx = await arena.startGame2(id, startArgs);
+  const tx = await arena.startTranscript(id, startArgs);
   const r = await tx.wait();
   for (const log of r.logs) {
     try {

@@ -14,14 +14,14 @@ import { GameMint } from "../../src/lib/mint/gamemint.js";
 export function getGameCreated(receipt, eventParser) {
   return eventParser.receiptLog(
     receipt,
-    "GameCreated(uint256,address,uint256)"
+    "TranscriptCreated(uint256,address,uint256)"
   );
 }
 
 export function getSetMerkleRoot(receipt, eventParser) {
   return eventParser.receiptLog(
     receipt,
-    "SetMerkleRoot(uint256,bytes32,bytes32)"
+    "TranscriptMerkleRootSet(uint256,bytes32,bytes32)"
   );
 }
 

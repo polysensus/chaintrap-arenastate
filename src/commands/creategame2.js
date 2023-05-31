@@ -158,12 +158,12 @@ async function creategame2(program, options) {
         case "URI":
           o.uri = parsed.args.tokenURI;
           break;
-        case "SetMerkleRoot":
+        case "TranscriptMerkleRootSet":
           o.roots[ethers.utils.parseBytes32String(parsed.args.label)] =
             ethers.utils.hexlify(parsed.args.root);
           break;
-        case "GameCreated":
-          o.maxParticipants = parsed.args.maxParticipants.toNumber();
+        case "TranscriptCreated":
+          o.registrationLimit = parsed.args.registrationLimit.toNumber();
           break;
       }
     } catch (err) {

@@ -10,13 +10,13 @@ import { ArenaEvent } from "../src/lib/arenaevents/arenaevent.js";
 import { EventParser } from "../src/lib/arenaevents/eventparser.js";
 import { Transactor } from "../src/lib/arenaevents/transactor.js";
 
-describe("Trial# startGame", async function () {
+describe("Trial# startTranscript", async function () {
   before(async function () {
     if (!this.gameOptions || !this.mintFixture) {
       this.skip();
     }
   });
-  it("Should startGame for two trialists", async function () {
+  it("Should startTranscript for two trialists", async function () {
     const trial = Trial.fromCollectionJSON(this.minterFixture.collection);
     const { choices, data } = trial.createStartGameArgs([0, 1]);
     expect(choices.length).to.equal(2);
@@ -29,22 +29,22 @@ describe("Trial# startGame", async function () {
     let transactor = new Transactor(arenaEvents);
     transactor
       .method(
-        this.user1Arena.registerParticipant,
+        this.user1Arena.register,
         gid,
         msgpack.encode({ nickname: "alice" })
       )
-      .requireLogs("ParticipantRegistered(uint256,address,bytes)")
+      .requireLogs("TranscriptRegistration(uint256,address,bytes)")
       .method(
-        this.user2Arena.registerParticipant,
+        this.user2Arena.register,
         gid,
         msgpack.encode({ nickname: "bob" })
       )
-      .requireLogs("ParticipantRegistered(uint256,address,bytes)")
-      .method(this.guardianArena.startGame2, gid, { choices, data })
+      .requireLogs("TranscriptRegistration(uint256,address,bytes)")
+      .method(this.guardianArena.startTranscript, gid, { choices, data })
       .requireLogs(
-        "GameStarted(uint256)",
-        "RevealedChoices(uint256,address,uint256,bytes32[],bytes)",
-        "RevealedChoices(uint256,address,uint256,bytes32[],bytes)"
+        "TranscriptStarted(uint256)",
+        "TranscriptEntryChoices(uint256,address,uint256,bytes32[],bytes)",
+        "TranscriptEntryChoices(uint256,address,uint256,bytes32[],bytes)"
       );
 
     for await (const r of transactor.transact()) {
@@ -72,33 +72,32 @@ describe("Trial# startGame", async function () {
     let transactor = new Transactor(arenaEvents);
     transactor
       .method(
-        this.user1Arena.registerParticipant,
+        this.user1Arena.register,
         gid,
         msgpack.encode({ nickname: "alice" })
       )
-      .requireLogs("ParticipantRegistered(uint256,address,bytes)")
-      .method(this.guardianArena.startGame2, gid, { choices, data })
+      .requireLogs("TranscriptRegistration(uint256,address,bytes)")
+      .method(this.guardianArena.startTranscript, gid, { choices, data })
       .requireLogs(
-        "GameStarted(uint256)",
-        "RevealedChoices(uint256,address,uint256,bytes32[],bytes)"
+        "TranscriptStarted(uint256)",
+        "TranscriptEntryChoices(uint256,address,uint256,bytes32[],bytes)"
       )
-      .method(this.user1Arena.commitAction, gid, {
+      .method(this.user1Arena.transcriptEntryCommit, gid, {
         rootLabel,
         node: userChoice,
         data: "0x",
       })
       .requireLogs(
-        "ActionCommitted(uint256,uint256,address,bytes32,bytes32,bytes)"
+        "TranscriptEntryCommitted(uint256,address,uint256,bytes32,bytes32,bytes)"
       )
       .method(
-        this.guardianArena.resolveOutcome,
+        this.guardianArena.transcriptEntryResolve,
         gid,
         trial.createResolveOutcomeArgs(user1Address, userChoice)
       )
       .requireLogs(
-        "RevealedChoices(uint256,address,uint256,bytes32[],bytes)",
-        "ArgumentProven(uint256,uint256,address)",
-        "OutcomeResolved(uint256,uint256,address,address,bytes32,uint8,bytes32,bytes)"
+        "TranscriptEntryChoices(uint256,address,uint256,bytes32[],bytes)",
+        "TranscriptEntryOutcome(uint256,address,uint256,address,bytes32,uint8,bytes32,bytes)"
       );
 
     for await (const r of transactor.transact()) {

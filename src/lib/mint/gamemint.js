@@ -158,9 +158,9 @@ export class GameMint {
       throw new Error(
         "The game metadata must be published to IPFS before minting the game token"
       );
-    const tx = await arena.createGame2(this.initArgs);
+    const tx = await arena.createGame(this.initArgs);
     const r = await tx.wait();
-    if (r?.status !== 1) throw new Error("createGame2 failed");
+    if (r?.status !== 1) throw new Error("createGame failed");
     return r;
   }
 
@@ -249,9 +249,9 @@ export class GameMint {
       params[params.length - 1].split(",").map((params) => params.split("="))
     );
 
-    // this.initArgs.maxParticipants = ethers.BigNumber.from(options.maxParticipants);
-    this.initArgs.maxParticipants =
-      options.maxParticipants ?? defaultMaxParticipants;
+    // this.initArgs.registrationLimit = ethers.BigNumber.from(options.registrationLimit);
+    this.initArgs.registrationLimit =
+      options.registrationLimit ?? defaultMaxParticipants;
     this.initArgs.rootLabels = [
       ethers.utils.formatBytes32String(options.mapRootLabel),
     ];

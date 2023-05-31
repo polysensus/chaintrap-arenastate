@@ -37,6 +37,11 @@ tasks:
         npm run lint
 
   build:
+    cmds:
+      - task: build:js
+      - task: build:diamond-deploy
+
+  build:js:
     desc: format and lint the code, then build the package
     deps: [format]
     cmds:

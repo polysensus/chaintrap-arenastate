@@ -2,24 +2,24 @@ export class ABIName {
   static ArenaFacetName = "ArenaFacet";
   static PlayerJoined = "PlayerJoined";
   static PlayerStartLocation = "PlayerStartLocation";
-  static GameCreated = "GameCreated";
-  static GameStarted = "GameStarted";
-  static GameCompleted = "GameCompleted";
+  static TranscriptCreated = "TranscriptCreated";
+  static TranscriptStarted = "TranscriptStarted";
+  static TranscriptCompleted = "TranscriptCompleted";
   static UseExit = "UseExit";
   static ExitUsed = "ExitUsed";
   static EntryReject = "EntryReject";
 }
 
 export class ABIName2 {
-  static GameCreated = "GameCreated";
-  static GameStarted = "GameStarted";
-  static GameCompleted = "GameCompleted";
-  static ParticipantRegistered = "ParticipantRegistered";
-  static SetMerkleRoot = "SetMerkleRoot";
-  static RevealedChoices = "RevealedChoices";
-  static ActionCommitted = "ActionCommitted";
+  static TranscriptCreated = "TranscriptCreated";
+  static TranscriptStarted = "TranscriptStarted";
+  static TranscriptCompleted = "TranscriptCompleted";
+  static TranscriptRegistration = "TranscriptRegistration";
+  static TranscriptMerkleRootSet = "TranscriptMerkleRootSet";
+  static TranscriptEntryChoices = "TranscriptEntryChoices";
+  static TranscriptEntryCommitted = "TranscriptEntryCommitted";
   static ArgumentProven = "ArgumentProven";
-  static OutcomeResolved = "OutcomeResolved";
+  static TranscriptEntryOutcome = "TranscriptEntryOutcome";
 }
 
 /**

@@ -53,7 +53,7 @@ describe("LibTranscript_createGame2", async function () {
 
     const arena = arenaConnect(proxy, ownerSigner);
 
-    let { r } = await expectReceipt(arena.createGame2, {
+    let { r } = await expectReceipt(arena.createGame, {
       tokenURI: "",
       rootLabels: [ethers.utils.formatBytes32String("a-root-label")],
       roots: [
@@ -75,7 +75,7 @@ describe("LibTranscript_createGame2", async function () {
     const topo = topologyForMap02();
     const trie = topo.encodeTrie();
 
-    let { r } = await expectReceipt(owner.createGame2, {
+    let { r } = await expectReceipt(owner.createGame, {
       tokenURI: "",
       rootLabels: [ethers.utils.formatBytes32String("a-root-label")],
       roots: [trie.root],
@@ -83,12 +83,12 @@ describe("LibTranscript_createGame2", async function () {
     const gid = r.events?.[0]?.args?.id;
 
     await expectReceipt(
-      player.registerParticipant,
+      player.register,
       gid,
       ethers.utils.toUtf8Bytes("player1")
     );
 
-    await expectReceipt(owner.startGame2, gid);
+    await expectReceipt(owner.startTranscript, gid);
 
     // location 2 has sides: [[2], [], [3], [10]]
     const START = 2; // start at 2
@@ -102,7 +102,7 @@ describe("LibTranscript_createGame2", async function () {
     const proof = trie.getProof(i);
 
     r = (
-      await expectReceipt(player.commitAction, gid, {
+      await expectReceipt(player.transcriptEntryCommit, gid, {
         rootLabel: ethers.utils.formatBytes32String("a-root-label"),
         node,
         data: "0xdada",
@@ -111,7 +111,7 @@ describe("LibTranscript_createGame2", async function () {
     expect(r.events.length).to.be.greaterThan(0);
 
     const participant = await playerSigner.getAddress();
-    r = await expectReceipt(owner.resolveOutcome, gid, {
+    r = await expectReceipt(owner.transcriptEntryResolve, gid, {
       participant,
       outcome: 3, // Accepted
       data: "0xdbdb",

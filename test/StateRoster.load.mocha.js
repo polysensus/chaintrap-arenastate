@@ -43,33 +43,32 @@ describe("StateRoster# load", async function () {
     let transactor = new Transactor(arenaEvents);
     transactor
       .method(
-        this.user1Arena.registerParticipant,
+        this.user1Arena.register,
         gid,
         msgpack.encode({ nickname: "alice" })
       )
-      .requireLogs("ParticipantRegistered(uint256,address,bytes)")
-      .method(this.guardianArena.startGame2, gid, { choices, data })
+      .requireLogs("TranscriptRegistration(uint256,address,bytes)")
+      .method(this.guardianArena.startTranscript, gid, { choices, data })
       .requireLogs(
-        "GameStarted(uint256)",
-        "RevealedChoices(uint256,address,uint256,bytes32[],bytes)"
+        "TranscriptStarted(uint256)",
+        "TranscriptEntryChoices(uint256,address,uint256,bytes32[],bytes)"
       )
-      .method(this.user1Arena.commitAction, gid, {
+      .method(this.user1Arena.transcriptEntryCommit, gid, {
         rootLabel,
         node: userChoice,
         data: "0x",
       })
       .requireLogs(
-        "ActionCommitted(uint256,uint256,address,bytes32,bytes32,bytes)"
+        "TranscriptEntryCommitted(uint256,address,uint256,bytes32,bytes32,bytes)"
       )
       .method(
-        this.guardianArena.resolveOutcome,
+        this.guardianArena.transcriptEntryResolve,
         gid,
         trial.createResolveOutcomeArgs(user1Address, userChoice)
       )
       .requireLogs(
-        "RevealedChoices(uint256,address,uint256,bytes32[],bytes)",
-        "ArgumentProven(uint256,uint256,address)",
-        "OutcomeResolved(uint256,uint256,address,address,bytes32,uint8,bytes32,bytes)"
+        "TranscriptEntryChoices(uint256,address,uint256,bytes32[],bytes)",
+        "TranscriptEntryOutcome(uint256,address,uint256,address,bytes32,uint8,bytes32,bytes)"
       );
     for await (const r of transactor.transact()) {
       console.log(

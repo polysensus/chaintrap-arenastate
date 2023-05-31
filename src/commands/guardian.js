@@ -123,9 +123,9 @@ export async function setstart(program, options, player, room) {
   // the player start location. And if it hasn't been created it is obviosly not
   // possible.
   if (
-    !gameStates[ABIName.GameCreated] ||
-    gameStates[ABIName.GameStarted] ||
-    gameStates[ABIName.GameCompleted]
+    !gameStates[ABIName.TranscriptCreated] ||
+    gameStates[ABIName.TranscriptStarted] ||
+    gameStates[ABIName.TranscriptCompleted]
   ) {
     out(`inappropriate gameStates: ${JSON.stringify(gameStates)}`);
     return;

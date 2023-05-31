@@ -76,12 +76,12 @@ describe("GameMint.mint tests", async function () {
           case "URI":
             o.uri = parsed.args.value;
             break;
-          case "SetMerkleRoot":
+          case "TranscriptMerkleRootSet":
             o.roots[ethers.utils.parseBytes32String(parsed.args.label)] =
               ethers.utils.hexlify(parsed.args.root);
             break;
-          case "GameCreated":
-            o.maxParticipants = parsed.args.maxParticipants.toNumber();
+          case "TranscriptCreated":
+            o.registrationLimit = parsed.args.registrationLimit.toNumber();
             break;
         }
       } catch (err) {
@@ -91,7 +91,7 @@ describe("GameMint.mint tests", async function () {
     expect(o.id).to.exist;
     expect(o.creator).to.exist;
     expect(o.uri).to.exist;
-    expect(o.maxParticipants).to.be.greaterThan(0);
+    expect(o.registrationLimit).to.be.greaterThan(0);
     expect(o.roots[mapRootLabel]).to.be.equal(trie.root);
   });
 });

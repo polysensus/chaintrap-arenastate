@@ -46,7 +46,7 @@ export async function watchArena(program, options) {
     event: ${ev.name}
     ${JSON.stringify(ev.args)}
     `);
-  }, ABIName.GameCreated);
+  }, ABIName.TranscriptCreated);
   dispatcher.startListening();
 
   const spinner = ora(`waiting for events`).start();
