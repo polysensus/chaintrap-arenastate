@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
-import { EIP1193ProviderContext } from "./eip1193/provider.js";
-import { getLogger } from "./log.js";
-import { isUndefined, isAsync, etherrmsg } from "./idioms.js";
+import { EIP1193ProviderContext } from "./provider.js";
+import { getLogger } from "../log.js";
+import { isUndefined, etherrmsg } from "../idioms.js";
 import { ProviderType } from "./providertypes.js";
 const log = getLogger("providerdiscovery");
 

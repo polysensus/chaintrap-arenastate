@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 
 import { NFTStorage, File } from "nft.storage";
 
-import { getLogger } from "./log.js";
+import { getLogger } from "../log.js";
 
 const log = getLogger("nftstorage");
 

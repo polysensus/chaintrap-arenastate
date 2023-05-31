@@ -1,8 +1,8 @@
 /**
  *
- * @typedef {import("./arenaevent.js").ArenaEvent} ArenaEvent
+ * @typedef {import("../chainkit.js").ArenaEvent} ArenaEvent
  */
-import { customError } from "../chaintrapabi.js";
+import { customError } from "../arenaabi.js";
 
 /**
  * @typedef {import("ethers").utils.TransactionReceipt} TransactionReceipt

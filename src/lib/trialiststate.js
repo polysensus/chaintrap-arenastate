@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { undefinedIfZeroBytesLike } from "./ethutil.js";
+import { undefinedIfZeroBytesLike } from "./chainkit/ethutil.js";
 
 import { PropDelta } from "./propdelta.js";
 
@@ -13,9 +13,9 @@ import { PropDelta } from "./propdelta.js";
  *  data:ethers.BytesLike,
  *  rootLabel:ethers.BytesLike,
  *  lastEID:ethers.BigNumber
- * }} PlayerStateLike
+ * }} TrialistStateLike
  */
-export class PlayerState {
+export class TrialistState {
   static propDelta = new PropDelta(
     [
       "registered",
@@ -35,25 +35,25 @@ export class PlayerState {
   );
 
   static conditionValue(name, value) {
-    return PlayerState.propDelta.conditionValue(name, value);
+    return TrialistState.propDelta.conditionValue(name, value);
   }
 
   /**
    * See {@link PropDelta.delta}
-   * @param {PlayerStateLike} source
-   * @param {PlayerStateLike} other
+   * @param {TrialistStateLike} source
+   * @param {TrialistStateLike} other
    */
   static delta(source, other) {
-    return PlayerState.propDelta.delta(source, other);
+    return TrialistState.propDelta.delta(source, other);
   }
 
   /**
    * See {@link PropDelta.update}
-   * @param {PlayerStateLike} target
-   * @param {PlayerStateLike} update
+   * @param {TrialistStateLike} target
+   * @param {TrialistStateLike} update
    * @returns
    */
   static update(target, update) {
-    return PlayerState.propDelta(target, update);
+    return TrialistState.propDelta(target, update);
   }
 }

@@ -3,12 +3,10 @@ const arrayify = ethers.utils.arrayify;
 import * as msgpack from "@msgpack/msgpack";
 
 import {
-  isV1GameEvent as isV1ArenaEvent,
-  isV2GameEvent as isV2ArenaEvent,
-  ABIName2,
-} from "../abiconst.js";
+  ABIName,
+} from "./abiconst.js";
 
-import { EventParser } from "./eventparser.js";
+import { EventParser } from "./chainkit/eventparser.js";
 
 export class ArenaEventParser extends EventParser {
   constructor(contract) {
@@ -56,14 +54,14 @@ export class ArenaEvent {
       update: {},
     };
     switch (parsedLog.name) {
-      case ABIName2.TranscriptCreated:
+      case ABIName.TranscriptCreated:
         arenaEvent.subject = parsedLog.args.creator;
         break;
-      case ABIName2.TranscriptStarted:
+      case ABIName.TranscriptStarted:
         break;
-      case ABIName2.TranscriptCompleted:
+      case ABIName.TranscriptCompleted:
         break;
-      case ABIName2.TranscriptRegistration:
+      case ABIName.TranscriptRegistration:
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.update = {
           address: parsedLog.args.participant,
@@ -71,7 +69,7 @@ export class ArenaEvent {
           profile: msgpack.decode(arrayify(parsedLog.args.profile)),
         };
         break;
-      case ABIName2.TranscriptEntryChoices:
+      case ABIName.TranscriptEntryChoices:
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.update = {
@@ -80,7 +78,7 @@ export class ArenaEvent {
         };
         break;
 
-      case ABIName2.TranscriptEntryCommitted:
+      case ABIName.TranscriptEntryCommitted:
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.update = {
@@ -91,13 +89,13 @@ export class ArenaEvent {
           data: parsedLog.args.data,
         };
         break;
-      case ABIName2.ArgumentProven:
+      case ABIName.ArgumentProven:
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.advocate = parsedLog.args.advocate;
         arenaEvent.update = {};
         break;
-      case ABIName2.TranscriptEntryOutcome:
+      case ABIName.TranscriptEntryOutcome:
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.advocate = parsedLog.args.advocate;
@@ -152,7 +150,8 @@ export function gameEventFilter(arena, gid) {
 
 export async function findGameCreated(arena, gid) {
   const facet = arena.getFacet("ArenaFacet");
-  const filter = facet.filters["TranscriptCreated(uint256,address,uint256)"](gid);
+  const filter =
+    facet.filters["TranscriptCreated(uint256,address,uint256)"](gid);
   const found = await arena.queryFilter(filter);
 
   if (found.length == 0) {

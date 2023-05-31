@@ -1,20 +1,16 @@
-import ethers from "ethers";
+import { ABIName } from "./abiconst.js";
+import { TrialistState } from "./trialiststate.js";
 
-import { getLogger } from "./log.js";
-
-import { ABIName2 } from "./abiconst.js";
-import { PlayerState } from "./playerstate.js";
-
-export const PlayerEvents = Object.fromEntries([
-  [ABIName2.TranscriptRegistration, true],
-  [ABIName2.TranscriptEntryChoices, true],
-  [ABIName2.TranscriptEntryCommitted, true],
-  [ABIName2.TranscriptEntryOutcome, true],
+export const TrialistEvents = Object.fromEntries([
+  [ABIName.TranscriptRegistration, true],
+  [ABIName.TranscriptEntryChoices, true],
+  [ABIName.TranscriptEntryCommitted, true],
+  [ABIName.TranscriptEntryOutcome, true],
 ]);
 
-export class Player {
+export class Trialist {
   static handlesEvent(name) {
-    return PlayerEvents[name];
+    return TrialistEvents[name];
   }
 
   constructor() {
@@ -44,7 +40,7 @@ export class Player {
      * TranscriptEntryOutcome is only valid if we already have an TranscriptEntryCommitted
      */
     this.eventsByABI = Object.fromEntries(
-      Object.keys(PlayerEvents).map((abiName) => [abiName, {}])
+      Object.keys(TrialistEvents).map((abiName) => [abiName, {}])
     );
   }
 
@@ -76,8 +72,8 @@ export class Player {
       );
 
     // We want to check this before modifying any state. checks -> effects -> interactions
-    if (event.name === ABIName2.TranscriptEntryOutcome)
-      if (!this.eventsByABI[ABIName2.TranscriptEntryCommitted][eid])
+    if (event.name === ABIName.TranscriptEntryOutcome)
+      if (!this.eventsByABI[ABIName.TranscriptEntryCommitted][eid])
         throw new Error(
           `commitment not found for outcome with eid ${event.eid}`
         );
@@ -86,22 +82,22 @@ export class Player {
     else this.eids[eid] = Object.fromEntries([[eventID, event]]);
 
     if (event.update) {
-      const delta = PlayerState.delta(this.state, event.update);
+      const delta = TrialistState.delta(this.state, event.update);
       Object.assign(this.state, delta);
       // delta accumulates forever until collected. It is the delta since the last collection.
       Object.assign(this._delta, delta);
     }
 
     switch (event.name) {
-      case ABIName2.TranscriptEntryOutcome: {
+      case ABIName.TranscriptEntryOutcome: {
         const lastOutcomeEID = this.last({
-          abiName: ABIName2.TranscriptEntryOutcome,
+          abiName: ABIName.TranscriptEntryOutcome,
           n: 1,
         });
         const lastOutcomeState = this.outcomeStates[lastOutcomeEID];
 
         // Also, automatically provide delta's for each outcome event (Accepted, Rejected or otherwise)
-        this.outcomeDelta[eid] = PlayerState.delta(
+        this.outcomeDelta[eid] = TrialistState.delta(
           lastOutcomeState,
           this.state
         );
@@ -109,7 +105,7 @@ export class Player {
         break;
       }
 
-      case ABIName2.TranscriptEntryChoices: {
+      case ABIName.TranscriptEntryChoices: {
         if (eid !== 0) break;
 
         // Deal with startTranscript, which emits TranscriptEntryChoices to set the starting
@@ -138,7 +134,7 @@ export class Player {
 
   outcome(options) {
     const which =
-      options?.eid ?? this.last({ abiName: ABIName2.TranscriptEntryOutcome });
+      options?.eid ?? this.last({ abiName: ABIName.TranscriptEntryOutcome });
     if (options?.delta) {
       if (!(which in this.outcomeDelta))
         throw new Error(`eid ${which} not in outcomeDelta`);

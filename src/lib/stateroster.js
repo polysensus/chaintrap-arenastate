@@ -6,13 +6,13 @@ import { ethers } from "ethers";
 // app
 import { getLogger } from "./log.js";
 //
-import { ABIName2 } from "./abiconst.js";
-import { Player } from "./player.js";
-import { PlayerState } from "./playerstate.js";
+import { ABIName } from "./abiconst.js";
+import { Trialist } from "./trialist.js";
+import { TrialistState } from "./trialiststate.js";
 import {
   findGameEvents,
   getGameCreatedBlock,
-} from "./arenaevents/arenaevent.js";
+} from "./arenaevent.js";
 
 export const log = getLogger("StateRoster");
 
@@ -44,7 +44,7 @@ export async function loadRoster(arena, gid, options) {
 }
 
 /**
- * @typedef { import("./arenaevents/arenaevent.js").ArenaEvent } ArenaEvent
+ * @typedef { import("./chainkit.js").ArenaEvent } ArenaEvent
  */
 export class RosterStateChange {
   constructor() {
@@ -61,10 +61,10 @@ export class RosterStateChange {
 
   eventStateUpdate(event, roster, options) {
     const before = this.players[event.subject];
-    if (!before) before = new PlayerState();
+    if (!before) before = new TrialistState();
 
     const p = roster.players[event.subject];
-    if (!p && event.name !== ABIName2.TranscriptRegistration)
+    if (!p && event.name !== ABIName.TranscriptRegistration)
       throw new Error(`subject ${event.subject} not registered`);
     p.processPending(p.lastEID);
 
@@ -75,7 +75,7 @@ export class RosterStateChange {
     if (!addresses) addresses = Object.keys(roster.players);
 
     for (const addr of addresses) {
-      const before = this.players[addr]?.state ?? new PlayerState();
+      const before = this.players[addr]?.state ?? new TrialistState();
       const p = roster.players[addr];
       p.processPending(p.lastEID);
       yield {
@@ -107,7 +107,7 @@ export class RosterStateChange {
    * @returns
    */
   current(addr) {
-    return this.players[addr]?.state ?? new PlayerState();
+    return this.players[addr]?.state ?? new TrialistState();
   }
 }
 /**
@@ -134,11 +134,11 @@ export class StateRoster {
     if (typeof event.subject === "undefined") return;
 
     switch (event.name) {
-      case ABIName2.TranscriptRegistration:
-        this.players[event.subject] = new Player();
+      case ABIName.TranscriptRegistration:
+        this.players[event.subject] = new Trialist();
         break;
     }
-    if (!Player.handlesEvent(event.name)) return;
+    if (!Trialist.handlesEvent(event.name)) return;
     this.players[event.subject].applyEvent(event);
   }
 

@@ -8,7 +8,7 @@ import { GameMint } from "../../src/lib/mint/gamemint.js";
 
 /**
  *
- * @param {import("../../src/lib/arenaevents/eventparser.js").EventParser} eventParser
+ * @param {import("../../src/lib/chainkit/eventparser.js").EventParser} eventParser
  * @returns {ethers.BigNumber}
  */
 export function getGameCreated(receipt, eventParser) {

@@ -72,7 +72,7 @@ Things can be placed on maps. Interacting with those things as an ACTION/OUTCOME
 
 (Note: we deal with variations which blind the location, or encrypt it, in subsequent sections )
 
-Player will know
+Trialist will know
 
         [LOCATION-A, EGRESS-SIDE, EGRESS-EXIT]
 
@@ -80,7 +80,7 @@ Guardian can find corresponding
 
         [LOCATION-B, INGRESS-SIDE, INGRESS-EXIT]
 
-Let Player ActionCommit.nodeAction be
+Let Trialist ActionCommit.nodeAction be
 
         H([LOCATION-A, EGRESS-SIDE, EGRESS-EXIT])
 
@@ -176,7 +176,7 @@ The `ROOM-BLOB` is currently
                 x, y, w, l
         }
 
-Player can commit by providing `[COMMIT-SIDE, COMMIT-EGRESS-EXIT]`. The advocate uses their knowlege of the current player location to produce the node
+Trialist can commit by providing `[COMMIT-SIDE, COMMIT-EGRESS-EXIT]`. The advocate uses their knowlege of the current player location to produce the node
 
         [CURRENT-LOCATION, COMMIT-SIDE, COMMIT-EGRESS-EXIT][LOCATION, SIDE, INGRESS-EXIT]
 

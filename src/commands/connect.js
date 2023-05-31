@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { getArenaAddress } from "./arenaaddress.js";
-import { arenaConnect } from "../lib/chaintrapabi.js";
+import { arenaConnect } from "../lib/arenaabi.js";
 import { readKey } from "./readkey.js";
 
 export function programConnect(program, polling = false, key = null) {

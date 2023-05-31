@@ -2,8 +2,8 @@ import { TxMemo } from "./txmemo.js";
 import {
   EventParser,
   logFromEthersCallbackArgs,
-} from "./arenaevents/eventparser.js";
-import { getLogger } from "./log.js";
+} from "./eventparser.js";
+import { getLogger } from "../log.js";
 
 const log = getLogger("dispatcher");
 

@@ -5,9 +5,9 @@
 
 // --- lib deps
 import { ethers } from "ethers";
-import { getLogger } from "./log.js";
+import { getLogger } from "../log.js";
 
-import { awaitable, isFunction } from "./idioms.js";
+import { awaitable, isFunction } from "../idioms.js";
 // @ts-ignore
 import { ProviderSwitch } from "./providercontexts.js";
 

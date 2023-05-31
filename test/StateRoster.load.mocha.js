@@ -6,17 +6,17 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { getGameCreated, getSetMerkleRoot } from "./support/minter.js";
 //
-import { EventParser } from "../src/lib/arenaevents/eventparser.js";
+import { EventParser } from "../src/lib/chainkit/eventparser.js";
 import {
   ArenaEvent,
   findGameEvents,
-} from "../src/lib/arenaevents/arenaevent.js";
-import { Transactor } from "../src/lib/arenaevents/transactor.js";
+} from "../src/lib/arenaevent.js";
+import { Transactor } from "../src/lib/chainkit/transactor.js";
 import { StateRoster } from "../src/lib/stateroster.js";
 
 import { Trial } from "../src/lib/trial.js";
 
-import { ABIName2 } from "../src/lib/abiconst.js";
+import { ABIName } from "../src/lib/abiconst.js";
 
 describe("StateRoster# load", async function () {
   before(async function () {
@@ -43,7 +43,7 @@ describe("StateRoster# load", async function () {
     let transactor = new Transactor(arenaEvents);
     transactor
       .method(
-        this.user1Arena.register,
+        this.user1Arena.registerTrialist,
         gid,
         msgpack.encode({ nickname: "alice" })
       )

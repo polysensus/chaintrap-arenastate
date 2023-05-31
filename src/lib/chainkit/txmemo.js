@@ -2,8 +2,8 @@
  * Provides a way to filter transactions that have recently been encountered.
  * Ethers js can't guarantee not to give duplicates.
  */
-import { isUndefined } from "./idioms.js";
-import { getLogger } from "./log.js";
+import { isUndefined } from "../idioms.js";
+import { getLogger } from "../log.js";
 const log = getLogger("TxMemo");
 const fmt = (msg) => `TxMemo:${msg}`;
 

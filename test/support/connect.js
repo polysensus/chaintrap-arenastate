@@ -2,7 +2,7 @@ import hre from "hardhat";
 
 import { readKey } from "../../src/commands/readkey.js";
 import { urlConnect } from "../../src/commands/connect.js";
-import { arenaConnect } from "../../src/lib/chaintrapabi.js";
+import { arenaConnect } from "../../src/lib/arenaabi.js";
 export { arenaConnect };
 
 export function envConnect(arenaAddress, options) {

@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import {
   generateGameIconBinary,
   nftStorageImageFromBinary,
-} from "../nftmetadata.js";
+} from "./nftmetadata.js";
 
 import { NFTStorage } from "nft.storage";
 

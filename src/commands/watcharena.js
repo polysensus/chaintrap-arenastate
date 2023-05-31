@@ -3,7 +3,7 @@ import ora from "ora";
 
 import { isFile } from "./fsutil.js";
 import { getArenaAddress } from "./arenaaddress.js";
-import { arenaConnect } from "../lib/chaintrapabi.js";
+import { arenaConnect } from "../lib/arenaabi.js";
 import { ABIName } from "../lib/abiconst.js";
 import { Dispatcher } from "../lib/dispatcher.js";
 import { ProviderContext, ProviderSwitch } from "../lib/providercontexts.js";

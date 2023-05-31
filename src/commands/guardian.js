@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { Game } from "@polysensus/chaintrap-contracts";
 import { programConnectArena } from "./connect.js";
-import { isHardhatAlias, hardhatKeyAliasAddress } from "../lib/hhkeys.js";
+import { isHardhatAlias, hardhatKeyAliasAddress } from "../lib/chainkit/hhkeys.js";
 import { Scene, scenetoken } from "../lib/map/scene.js";
 import { PlayerProfile } from "../lib/playerprofile.js";
 

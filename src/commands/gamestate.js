@@ -1,12 +1,12 @@
 import { ethers } from "ethers";
 import { programConnect } from "./connect.js";
 import { getArenaAddress } from "./arenaaddress.js";
-import { arenaConnect } from "../lib/chaintrapabi.js";
+import { arenaConnect } from "../lib/arenaabi.js";
 
 import {
   findGameEvents,
   getGameCreatedBlock,
-} from "../lib/arenaevents/arenaevent.js";
+} from "../lib/chainkit.js";
 
 import { SceneCatalog } from "../lib/map/scenecatalog.js";
 

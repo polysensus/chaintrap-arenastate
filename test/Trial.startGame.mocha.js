@@ -6,9 +6,9 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { getGameCreated, getSetMerkleRoot } from "./support/minter.js";
 import { Trial } from "../src/lib/trial.js";
-import { ArenaEvent } from "../src/lib/arenaevents/arenaevent.js";
-import { EventParser } from "../src/lib/arenaevents/eventparser.js";
-import { Transactor } from "../src/lib/arenaevents/transactor.js";
+import { ArenaEvent } from "../src/lib/arenaevent.js";
+import { EventParser } from "../src/lib/chainkit/eventparser.js";
+import { Transactor } from "../src/lib/chainkit/transactor.js";
 
 describe("Trial# startTranscript", async function () {
   before(async function () {
@@ -29,13 +29,13 @@ describe("Trial# startTranscript", async function () {
     let transactor = new Transactor(arenaEvents);
     transactor
       .method(
-        this.user1Arena.register,
+        this.user1Arena.registerTrialist,
         gid,
         msgpack.encode({ nickname: "alice" })
       )
       .requireLogs("TranscriptRegistration(uint256,address,bytes)")
       .method(
-        this.user2Arena.register,
+        this.user2Arena.registerTrialist,
         gid,
         msgpack.encode({ nickname: "bob" })
       )
@@ -72,7 +72,7 @@ describe("Trial# startTranscript", async function () {
     let transactor = new Transactor(arenaEvents);
     transactor
       .method(
-        this.user1Arena.register,
+        this.user1Arena.registerTrialist,
         gid,
         msgpack.encode({ nickname: "alice" })
       )
