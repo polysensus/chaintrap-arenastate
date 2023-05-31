@@ -2,9 +2,7 @@ import { ethers } from "ethers";
 const arrayify = ethers.utils.arrayify;
 import * as msgpack from "@msgpack/msgpack";
 
-import {
-  ABIName,
-} from "./abiconst.js";
+import { ABIName } from "./abiconst.js";
 
 import { EventParser } from "./chainkit/eventparser.js";
 

@@ -1,6 +1,6 @@
 /**
  *
- * @typedef {import("../chainkit.js").ArenaEvent} ArenaEvent
+ * @typedef {import("../arenaevent.js").ArenaEvent} ArenaEvent
  */
 import { customError } from "../arenaabi.js";
 

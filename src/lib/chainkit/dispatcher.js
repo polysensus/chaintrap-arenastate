@@ -1,8 +1,5 @@
 import { TxMemo } from "./txmemo.js";
-import {
-  EventParser,
-  logFromEthersCallbackArgs,
-} from "./eventparser.js";
+import { EventParser, logFromEthersCallbackArgs } from "./eventparser.js";
 import { getLogger } from "../log.js";
 
 const log = getLogger("dispatcher");

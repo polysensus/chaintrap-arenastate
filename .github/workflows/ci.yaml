@@ -99,6 +99,7 @@ jobs:
         working-directory: chaintrap-arenastate
         run: |
           ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
+          task test:preflight
           task test
 
       - name: publish npm package

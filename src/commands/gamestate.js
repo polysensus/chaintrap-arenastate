@@ -3,14 +3,10 @@ import { programConnect } from "./connect.js";
 import { getArenaAddress } from "./arenaaddress.js";
 import { arenaConnect } from "../lib/arenaabi.js";
 
-import {
-  findGameEvents,
-  getGameCreatedBlock,
-} from "../lib/chainkit.js";
+import { findGameEvents, getGameCreatedBlock } from "../lib/arenaevent.js";
 
 import { SceneCatalog } from "../lib/map/scenecatalog.js";
 
-import { jfmt } from "./util.js";
 import { readJson } from "./fsutil.js";
 
 import { loadRoster } from "../lib/stateroster.js";

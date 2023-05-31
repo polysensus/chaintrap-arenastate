@@ -11,9 +11,7 @@ import { EventParser } from "../src/lib/chainkit/eventparser.js";
 import { Transactor } from "../src/lib/chainkit/transactor.js";
 
 describe("Trial# startTranscript", async function () {
-
   it("Should startTranscript for two trialists", async function () {
-
     if (!this.gameOptions || !this.mintGame) {
       this.skip();
     }
@@ -56,7 +54,6 @@ describe("Trial# startTranscript", async function () {
   });
 
   it("Should prove move for single trialist", async function () {
-
     if (!this.gameOptions || !this.mintGame) {
       this.skip();
     }

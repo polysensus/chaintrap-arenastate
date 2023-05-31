@@ -7,10 +7,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { getGameCreated, getSetMerkleRoot } from "./support/minter.js";
 //
 import { EventParser } from "../src/lib/chainkit/eventparser.js";
-import {
-  ArenaEvent,
-  findGameEvents,
-} from "../src/lib/arenaevent.js";
+import { ArenaEvent, findGameEvents } from "../src/lib/arenaevent.js";
 import { Transactor } from "../src/lib/chainkit/transactor.js";
 import { StateRoster } from "../src/lib/stateroster.js";
 
@@ -19,9 +16,7 @@ import { Trial } from "../src/lib/trial.js";
 import { ABIName } from "../src/lib/abiconst.js";
 
 describe("StateRoster# load", async function () {
-
   it("Should start single player game and prove first move", async function () {
-
     if (!this.gameOptions || !this.mintGame) {
       this.skip();
     }

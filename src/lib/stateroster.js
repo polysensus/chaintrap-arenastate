@@ -9,10 +9,7 @@ import { getLogger } from "./log.js";
 import { ABIName } from "./abiconst.js";
 import { Trialist } from "./trialist.js";
 import { TrialistState } from "./trialiststate.js";
-import {
-  findGameEvents,
-  getGameCreatedBlock,
-} from "./arenaevent.js";
+import { findGameEvents, getGameCreatedBlock } from "./arenaevent.js";
 
 export const log = getLogger("StateRoster");
 
@@ -44,7 +41,7 @@ export async function loadRoster(arena, gid, options) {
 }
 
 /**
- * @typedef { import("./chainkit.js").ArenaEvent } ArenaEvent
+ * @typedef { import("./arenaevent.js").ArenaEvent } ArenaEvent
  */
 export class RosterStateChange {
   constructor() {

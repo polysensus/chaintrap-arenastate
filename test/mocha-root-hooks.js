@@ -51,10 +51,11 @@ export const mochaHooks = {
       process.env.DOTENV_FILE ?? ".env.test"
     );
     if (isFile(dotenvFile)) {
-      console.log(`mocha-root-hook.js# test env config not found at ${dotenvFile}`);
+      console.log(
+        `mocha-root-hook.js# test env config not found at ${dotenvFile}`
+      );
       dotenv.config({ path: dotenvFile });
-    } else
-      dotenv.config();
+    } else dotenv.config();
 
     if (haveOpenAI()) this.openaiOptions = getOpenAIOpts();
     if (haveNFTStorage()) this.nftstorageOptions = getNFTStorageOpts();
@@ -98,10 +99,7 @@ export const mochaHooks = {
       ...this.nftstorageOptions.options,
       ...this.maptoolOptions.options,
     };
-    this.minter = new Minter(
-      this.guardianArena,
-      this.gameOptions
-    );
+    this.minter = new Minter(this.guardianArena, this.gameOptions);
     // note all of this is because fixture functions require a name, they can't be anonymous
     this.mintGame = this.minter.mint.bind(this.minter);
   },
