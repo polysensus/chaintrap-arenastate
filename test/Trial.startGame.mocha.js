@@ -11,18 +11,19 @@ import { EventParser } from "../src/lib/chainkit/eventparser.js";
 import { Transactor } from "../src/lib/chainkit/transactor.js";
 
 describe("Trial# startTranscript", async function () {
-  before(async function () {
-    if (!this.gameOptions || !this.mintFixture) {
+
+  it("Should startTranscript for two trialists", async function () {
+
+    if (!this.gameOptions || !this.mintGame) {
       this.skip();
     }
-  });
-  it("Should startTranscript for two trialists", async function () {
-    const trial = Trial.fromCollectionJSON(this.minterFixture.collection);
+
+    const trial = Trial.fromCollectionJSON(this.minter.collection);
     const { choices, data } = trial.createStartGameArgs([0, 1]);
     expect(choices.length).to.equal(2);
     expect(data.length).to.equal(2);
 
-    let r = await loadFixture(this.mintFixture);
+    let r = await loadFixture(this.mintGame);
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
 
@@ -55,16 +56,21 @@ describe("Trial# startTranscript", async function () {
   });
 
   it("Should prove move for single trialist", async function () {
+
+    if (!this.gameOptions || !this.mintGame) {
+      this.skip();
+    }
+
     const user1Address = await this.user1Arena.signer.getAddress();
 
-    const trial = Trial.fromCollectionJSON(this.minterFixture.collection);
+    const trial = Trial.fromCollectionJSON(this.minter.collection);
     const { choices, data } = trial.createStartGameArgs([0]);
     expect(choices.length).to.equal(1);
     expect(data.length).to.equal(1);
 
     const userChoice = choices[0][0];
 
-    let r = await loadFixture(this.mintFixture);
+    let r = await loadFixture(this.mintGame);
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
     const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedLog.args.label;

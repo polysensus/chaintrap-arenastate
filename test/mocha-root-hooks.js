@@ -26,13 +26,13 @@ import {
   get as getMaptoolOpts,
 } from "../src/lib/envopts/maptool.js";
 
-import { MinterFixture } from "./support/minter.js";
+import { Minter } from "./support/minter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const mochaHooks = {
-  async beforeAll() {
+  beforeAll() {
     /** Global environment configuration for integration tests.
      *
      * .env.example.integ is the example that should be followed to fill in the
@@ -57,7 +57,12 @@ export const mochaHooks = {
       return;
     }
     dotenv.config({ path: dotenvFile });
+    if (haveOpenAI()) this.openaiOptions = getOpenAIOpts();
+    if (haveNFTStorage()) this.nftstorageOptions = getNFTStorageOpts();
+    if (haveMaptool()) this.maptoolOptions = getMaptoolOpts();
+  },
 
+  async beforeEach() {
     if (typeof process.env.ARENASTATE_ARENA === "undefined") {
       this.proxyAddress = (await loadFixture(deployArenaFixture))[0];
       this.ownerArena = hreConnect(proxyAddress, {
@@ -87,9 +92,6 @@ export const mochaHooks = {
       // provider only instance, no signer
       this.arena = envConnect(proxyAddress, {});
     }
-    if (haveOpenAI()) this.openaiOptions = getOpenAIOpts();
-    if (haveNFTStorage()) this.nftstorageOptions = getNFTStorageOpts();
-    if (haveMaptool()) this.maptoolOptions = getMaptoolOpts();
     if (!this.openaiOptions || !this.nftstorageOptions || !this.maptoolOptions)
       return;
     this.gameOptions = {
@@ -97,10 +99,11 @@ export const mochaHooks = {
       ...this.nftstorageOptions.options,
       ...this.maptoolOptions.options,
     };
-    this.minterFixture = new MinterFixture(
+    this.minter = new Minter(
       this.guardianArena,
       this.gameOptions
     );
-    this.mintFixture = this.minterFixture.mint.bind(this.minterFixture);
+    // note all of this is because fixture functions require a name, they can't be anonymous
+    this.mintGame = this.minter.mint.bind(this.minter);
   },
 };

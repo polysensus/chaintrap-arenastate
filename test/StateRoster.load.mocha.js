@@ -19,23 +19,23 @@ import { Trial } from "../src/lib/trial.js";
 import { ABIName } from "../src/lib/abiconst.js";
 
 describe("StateRoster# load", async function () {
-  before(async function () {
-    if (!this.gameOptions || !this.mintFixture) {
-      this.skip();
-    }
-  });
 
   it("Should start single player game and prove first move", async function () {
+
+    if (!this.gameOptions || !this.mintGame) {
+      this.skip();
+    }
+
     const user1Address = await this.user1Arena.signer.getAddress();
 
-    const trial = Trial.fromCollectionJSON(this.minterFixture.collection);
+    const trial = Trial.fromCollectionJSON(this.minter.collection);
     const { choices, data } = trial.createStartGameArgs([0]);
     expect(choices.length).to.equal(1);
     expect(data.length).to.equal(1);
 
     const userChoice = choices[0][0];
 
-    let r = await loadFixture(this.mintFixture);
+    let r = await loadFixture(this.mintGame);
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
     const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedLog.args.label;

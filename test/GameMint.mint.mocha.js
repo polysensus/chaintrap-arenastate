@@ -14,7 +14,9 @@ import collection from "../data/maps/map02.json" assert { type: "json" };
 // Note: see test/hook.js to see how the various this.xxxArena's are configured
 
 describe("GameMint.mint tests", async function () {
-  before(async function () {
+
+  it("Should mint a game", async function () {
+
     if (
       !this.openaiOptions ||
       !this.nftstorageOptions ||
@@ -27,9 +29,7 @@ describe("GameMint.mint tests", async function () {
       ...this.nftstorageOptions.options,
       ...this.maptoolOptions.options,
     };
-  });
 
-  it("Should mint a game", async function () {
     const arena = this.guardianArena;
     const iface = arena.getFacetInterface("ERC1155ArenaFacet");
 
