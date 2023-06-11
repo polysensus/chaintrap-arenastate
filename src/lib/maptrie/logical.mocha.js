@@ -13,6 +13,7 @@ describe("LogicalTopology tests", function () {
     const topo = new LogicalTopology();
     topo.extendJoins(map02.model.corridors); // rooms 0,1 sides EAST, WEST
     topo.extendLocations(map02.model.rooms);
+    topo.commit();
 
     const trie = topo.encodeTrie();
 

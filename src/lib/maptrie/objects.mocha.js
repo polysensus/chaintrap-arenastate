@@ -5,7 +5,8 @@ import { expect } from "chai";
 import { Access } from "./access.js";
 import { Link } from "./link.js";
 
-import { ObjectType, ObjectCodec, LeafObject } from "./objects.js";
+import { ObjectCodec, LeafObject } from "./objects.js";
+import { ObjectType } from "./objecttypes.js";
 
 describe("Object trie Access tests", function () {
   it("Should encode and decode an access type", function () {

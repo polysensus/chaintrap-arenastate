@@ -5,15 +5,17 @@ import { getMap } from "../map/collection.js";
 import { Join } from "./join.js";
 import { Access } from "./access.js";
 import { Link } from "./link.js";
-import { ObjectType, ObjectCodec, LeafObject, leafHash } from "./objects.js";
+import { ExitMenu } from "./sceneexitchoice.js";
+import { LocationMenu } from "./locationscene.js";
+import { ObjectCodec, LeafObject, leafHash } from "./objects.js";
+import { ObjectType } from "./objecttypes.js";
+import { LogicalRef, LogicalRefType } from "./logicalref.js";
 import { Location } from "./location.js";
 
 /**
- * LogicalTopology encodes maps as a set of linked locations. A->B, B->A and a
- * set of placed objects.
- *
- * proof that "an entry exists in joins which laves location i via side m, exit
- * n, and enters location j, via side r, exit s"
+ * LogicalTopology encodes a map as a merkle trie. Providing for contract
+ * assertable existence proofs for locations and the logical connections between
+ * them.
  *
  * @template {{location:number, side: number, exit: number}} AccessLike
  */
@@ -35,6 +37,23 @@ export class LogicalTopology {
      * @readonly
      */
     this.locations = [];
+
+    /**
+     * Each this.exitMenus[] encodes the choice of exits at each location. It is
+     * 1:1 associative with locations, but note entries, and their leaf
+     * encodings.  are not necessarily unique.
+     *
+     * For each item, we get a leaf encoding: [SCENE, [[side, exit], ..., ]]
+     */
+    this.exitMenus = [];
+    this.exitMenuKeys = {};
+
+    /**
+     * For each item, we get a leaf encoding [LOCATION, [[l], [REF(#S)]]]
+     * REF(#S) -> the key (hash) encoding of this.exitMenus[l]
+     */
+    this.locationMenus = [];
+    this.locationMenuKeys = {};
   }
 
   /**
@@ -47,7 +66,91 @@ export class LogicalTopology {
     const topo = new LogicalTopology();
     topo.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
     topo.extendLocations(map.model.rooms);
+    topo.commit();
     return topo;
+  }
+
+  /**
+   * a list of objects describing the geometry of joins between pairs of locations
+   * @template {{
+   *  joins: [number, number],
+   *  join_sides:[number, number]}|{joins: [number, number],
+   *  sides:[number, number]}
+   * } JoinLike
+   * @param {JoinLike[]} joins - aka corridor
+   */
+  extendJoins(joins) {
+    for (const join of joins) {
+      const sides = join.sides ?? join.join_sides;
+      if (!sides)
+        throw new Error(
+          "badly structured join object, has neither sides nor join_sides"
+        );
+      this.joins.push(new Join([...join.joins], [...sides]));
+    }
+  }
+
+  /**
+   * A list of objects describing the geometry of locations
+   * @template {{joins:[number[], number[], number[], number[]], flags:Object.<string, boolean>}} LocationLike
+   * @template {{corridors:[number[], number[], number[], number[]], inter:boolean, main:boolean}} RoomLike
+   * @param {LocationLike[]|RoomLike[]} locations
+   */
+  extendLocations(locations) {
+    for (const loc of locations) {
+      if (loc.corridors) {
+        this.locations.push(
+          new Location(structuredClone(loc.corridors), {
+            inter: loc.inter,
+            main: loc.main,
+          })
+        );
+        continue;
+      }
+      if (!loc.sides) throw new Error("badly structured location object");
+      this.locations.push(
+        new Location(structuredClone(loc.sides), { ...loc.flags })
+      );
+    }
+  }
+
+  /**
+   * Encode the relations between the locations given the available exits and
+   * joins (corridors) at each.
+   */
+  commit() {
+
+    this.exitMenus = [];
+    for (let i=0; i < this.locations.length; i++) {
+
+      let exitMenu = this.locationExitMenu(i);
+      let leaf = new LeafObject({type: ObjectType.ExitMenu, leaf: exitMenu});
+
+      // exit menus are quite likely to collide by co-incidence when de-coupled
+      // from the locations that host them. we need to guarantee uniqueness for
+      // the trie to work as expected.
+      const exitMenuKey = leafHash(this.prepareLeaf(leaf));
+      let exitMenuIndex = this.exitMenuKeys[exitMenuKey];
+      if (exitMenuKey in this.exitMenuKeys)
+        exitMenu = this.exitMenus[exitMenuIndex];
+      else {
+        exitMenuIndex = this.exitMenus.length;
+        this.exitMenus.push(leaf);
+        this.exitMenuKeys[exitMenuKey] = exitMenuIndex;
+      }
+
+      // the location/menu association is unique
+      
+      const locationMenu = new LocationMenu(i, new LogicalRef(LogicalRefType.Proof, ObjectType.ExitMenu, exitMenuIndex));
+      leaf = new LeafObject({type:LocationMenu.ObjectType, leaf:locationMenu});
+
+      const locationMenuKey = leafHash(this.prepareLeaf(leaf));
+      if (locationMenuKey in this.locationMenuKeys)
+        throw new Error(`implementation assumption failed, location menu's are expected to be naturally unique`);
+
+      this.locationMenus.push(leaf);
+      this.locationMenuKeys[locationMenuKey] = this.locationMenus.length - 1;
+    }
   }
 
   /**
@@ -59,10 +162,80 @@ export class LogicalTopology {
   }
 
   *leaves() {
-    for (const link of this.links()) {
-      yield ObjectCodec.prepare(
-        new LeafObject({ type: ObjectType.Link, leaf: link })
-      );
+
+    // exitMenus are the unique encodings of all available exit menus accross all locations.
+    // exitMenus only exist if commit() has been called
+    for (const leaf of this.exitMenus)
+      yield this.prepareLeaf(leaf);
+
+    // locationMenus encode a relation between the location and its exit menu.
+    // locationMenus only exist if commit() has been called
+    for (const leaf of this.locationMenus)
+      yield this.prepareLeaf(leaf);
+
+    for (const link of this.links())
+      yield this.prepareObject({type:ObjectType.Link, leaf:link});
+  }
+
+  /**
+   * 
+   * @param {{type, leaf}} o 
+   */
+  prepareObject(o) {
+    return this.prepareLeaf(new LeafObject(o));
+  }
+
+  /**
+   * 
+   * @param {LeafObject} lo
+   */
+  prepareLeaf(lo) {
+    return ObjectCodec.prepare( lo, {resolveValue: this.resolveValueRef.bind(this)});
+  }
+
+  hydratePrepared(prepared) {
+    return ObjectCodec.hydrate(prepared, {recoverReference: this.recoverValueRef.bind(this)})
+  }
+
+  /**
+   * 
+   * @param {LogicalRef} ref
+   * @returns a value suitable for the 'value' entry in a proof input
+   */
+  resolveValueRef(ref) {
+
+    let target;
+    switch (ref.targetType) {
+      case ObjectType.ExitMenu:
+        target = this.exitMenus[ref.index];
+        break;
+    }
+    if (!target) throw new Error(`unknown reference targetType ${ref.targetType}`);
+
+    switch (ref.type) {
+      case LogicalRefType.Proof:
+        // referencing the encoded, provable, leaf value
+        return leafHash(this.prepareLeaf(target));
+      case LogicalRefType.ProofInput:
+        // prepared is [type, inputs]. inputs is always a 2 dimensional array
+        const inputs = this.prepareLeaf(target)[1];
+        // each input entry is an array, the indexed value always refers to the
+        // *last* element of that array.
+        return inputs[ref.index][inputs[ref.index].length - 1];
+      default:
+        throw new Error(`unsupported reference type ${ref.type}`);
+    }
+  }
+
+  recoverValueRef(type, targetType, value) {
+    switch (ref.targetType) {
+      case ObjectType.ExitMenu: {
+        // value is the leaf encoding of an exit
+        const index = this.exitMenuKeys[value];
+        return new LogicalRef(type, targetType, index);
+      }
+      default:
+        throw new Error(`targetType not known or tbd`);
     }
   }
 
@@ -123,6 +296,16 @@ export class LogicalTopology {
       const ingress = this.accessJoin(egress);
       yield new Link(egress, ingress);
     }
+  }
+
+  locationExitMenu(location) {
+    const choices = [[], [], [], []];
+    const loc = this.locations[location];
+    // We just need the count of exits on each side. the exit identifiers are
+    // local to the scene and are just the enumeration of that count.
+    for (let side = 0; side < choices.length; side++)
+      choices[side] = loc.sides[side].length;
+    return new ExitMenu(choices);
   }
 
   /**
@@ -230,49 +413,5 @@ export class LogicalTopology {
       );
 
     return new Access({ location, side, exit });
-  }
-
-  /**
-   * a list of objects describing the geometry of joins between pairs of locations
-   * @template {{
-   *  joins: [number, number],
-   *  join_sides:[number, number]}|{joins: [number, number],
-   *  sides:[number, number]}
-   * } JoinLike
-   * @param {JoinLike[]} joins - aka corridor
-   */
-  extendJoins(joins) {
-    for (const join of joins) {
-      const sides = join.sides ?? join.join_sides;
-      if (!sides)
-        throw new Error(
-          "badly structured join object, has neither sides nor join_sides"
-        );
-      this.joins.push(new Join([...join.joins], [...sides]));
-    }
-  }
-
-  /**
-   * A list of objects describing the geometry of locations
-   * @template {{joins:[number[], number[], number[], number[]], flags:Object.<string, boolean>}} LocationLike
-   * @template {{corridors:[number[], number[], number[], number[]], inter:boolean, main:boolean}} RoomLike
-   * @param {LocationLike[]|RoomLike[]} locations
-   */
-  extendLocations(locations) {
-    for (const loc of locations) {
-      if (loc.corridors) {
-        this.locations.push(
-          new Location(structuredClone(loc.corridors), {
-            inter: loc.inter,
-            main: loc.main,
-          })
-        );
-        continue;
-      }
-      if (!loc.sides) throw new Error("badly structured location object");
-      this.locations.push(
-        new Location(structuredClone(loc.sides), { ...loc.flags })
-      );
-    }
   }
 }

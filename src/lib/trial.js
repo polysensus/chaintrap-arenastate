@@ -5,10 +5,13 @@ import { SceneCatalog } from "./map/scenecatalog.js";
 import { LogicalTopology } from "./maptrie/logical.js";
 import {
   LeafObject,
-  ObjectType,
   ObjectCodec,
   leafHash,
 } from "./maptrie/objects.js";
+
+import {
+  ObjectType
+} from "./maptrie/objecttypes.js";
 /**
  * A realm holds all of the physical artifacts associated with the game and the
  * merkle tries used to prove action outcomes and so on.

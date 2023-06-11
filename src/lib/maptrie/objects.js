@@ -6,12 +6,9 @@ import * as msgpack from "@msgpack/msgpack";
 
 import { Access } from "./access.js";
 import { Link } from "./link.js";
-
-export class ObjectType {
-  static Invalid = 0;
-  static Access = 1;
-  static Link = 2;
-}
+import { ExitMenu } from "./sceneexitchoice.js";
+import { ObjectType } from "./objecttypes.js";
+import { LocationMenu } from "./locationscene.js";
 
 /**
  * Compute the merkle node value for the prepared {@link LeafObject}
@@ -83,12 +80,16 @@ export class LeafObject {
 
 export class ObjectCodec {
   static typePrepare = Object.fromEntries([
-    [ObjectType.Access, (access) => access],
-    [ObjectType.Link, (link) => link],
+    [ObjectType.Access, (leaf) => leaf],
+    [ObjectType.Link, (leaf) => leaf],
+    [ObjectType.ExitMenu, (leaf) => leaf.prepare()],
+    [ObjectType.LocationSceneRef, (leaf, options) => leaf.prepare(options)],
   ]);
   static typeHydrate = Object.fromEntries([
     [ObjectType.Access, (prepared) => new Access(prepared)],
     [ObjectType.Link, (prepared) => new Link(prepared.a, prepared.b)],
+    [ObjectType.ExitMenu, (prepared) => ExitMenu.hydrate(prepared)],
+    [ObjectType.LocationSceneRef, (prepared, options) => LocationMenu.hydrate(prepared, options)],
   ]);
 
   /**
@@ -101,11 +102,11 @@ export class ObjectCodec {
    * @template {[number, ethers.utils.BytesLike]} PreparedLeafLike
    * @return {PreparedLeafLike}
    */
-  static prepare(o) {
+  static prepare(o, options) {
     const preper = ObjectCodec.typePrepare[o.type];
     if (!preper) throw new Error(`type ${o.type} not configured`);
 
-    const encoded = msgpack.encode(preper(o.leaf));
+    const encoded = msgpack.encode(preper(o.leaf, options));
     return [o.type, ethers.utils.hexlify(encoded)];
   }
 
