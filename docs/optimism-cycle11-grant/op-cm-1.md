@@ -59,9 +59,8 @@ https://github.com/polysensus/chaintrap-contracts/tree/v0.2.13/tests/forge/tests
 
 ### chaintrap-arenastate integration tests
 
-Integration tests for the game support library can be found at
-
-The game support library integegration tests can be found in the following files
+Integration tests for the game support library can be found in the following
+files.
 
 * https://github.com/polysensus/chaintrap-arenastate/blob/v0.0.23/src/lib/map/scenecatalog.spec.js
 * https://github.com/polysensus/chaintrap-arenastate/blob/v0.0.23/src/lib/stateroster.spec.js
