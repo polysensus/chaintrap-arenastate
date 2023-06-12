@@ -183,6 +183,9 @@ export class LogicalTopology {
       // We need a node for each of the locations exits. We most easily derive this from the exitMenu
       let inputs = exitMenu.inputs();
       for (let j=0; j < inputs.length; j++) {
+        // Note: we don't need to use referenceProofInput to create the
+        // sceneInputRef's here because we are making references for all of the
+        // inputs
         const sceneInputRef = new LogicalRef(LogicalRefType.ProofInput, ObjectType.ExitMenu, exitMenuIndex, j);
         const locationRef = new LogicalRef(LogicalRefType.Proof, ObjectType.Location2, locationId);
         const locationExit = new LocationExit(sceneInputRef, locationRef);
@@ -271,6 +274,7 @@ export class LogicalTopology {
   /**
    * 
    * @param {LeafObject} lo
+   * @returns {[number, BytesLike]}
    */
   prepareLeaf(lo) {
     return ObjectCodec.prepare( lo, {resolveValue: this.resolveValueRef.bind(this)});
@@ -278,6 +282,19 @@ export class LogicalTopology {
 
   hydratePrepared(prepared) {
     return ObjectCodec.hydrate(prepared, {recoverTarget: this.recoverTarget.bind(this)})
+  }
+
+  referenceProofInput(targetType, id, options) {
+    let input;
+    switch (targetType) {
+      case ObjectType.ExitMenu:
+        input = this.exitMenus[id].leaf.matchInput(options);
+        break;
+    }
+    if (typeof input === 'undefined')
+      throw new Error(`input not matched for targetType ${targetType}`);
+
+    return new LogicalRef(LogicalRefType.ProofInput, targetType, id, input)
   }
 
   /**

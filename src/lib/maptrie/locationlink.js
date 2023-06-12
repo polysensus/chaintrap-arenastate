@@ -6,11 +6,11 @@ import { ObjectType } from "./objecttypes.js";
 import { LogicalRefType } from "./logicalref.js";
 
 /**
- * Prepares [LOCATION, [[location], [#S]]]
+ * Prepares [LINK, [[REF(#E)], [#S]]]
  * #S is the scene menu key
  */
 export class LocationLink {
-  static ObjectType = ObjectType.Location2;
+  static ObjectType = ObjectType.Link2;
   /**
    * 
    * @param {number|string} location location number or token

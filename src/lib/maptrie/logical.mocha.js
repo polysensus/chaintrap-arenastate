@@ -136,46 +136,34 @@ describe("LogicalTopology tests", function () {
     topo.commit();
     const trie = topo.encodeTrie();
 
-    let refa = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, 0); // location 0, east, 0
-    let refb = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, 1); // location 1, west, 0
+    let id;
 
+    let key = leafHash(topo.prepareLeaf(new LeafObject({type: ObjectType.ExitMenu, leaf: topo.locationExitMenu(0)})));
+    id = topo.exitMenuKeys[key];
 
-    // Show that we can get proofs linking the two locations via the described exits
+    let refExitMenu0InputS3E0 = topo.referenceProofInput(ObjectType.ExitMenu, id, {side:3, exit:0});
+    const refL0 = new LogicalRef(LogicalRefType.Proof, ObjectType.Location2, 0);
 
-    // Show the exit menus referenced by each location are in the trie
-    let lo = new LeafObject({type:ObjectType.ExitMenu, leaf: new ExitMenu([[0], [0], [0], [1]])});
-    // let [typeId, inputs] = ObjectCodec.typePrepare[lo.type](lo.leaf);
-    // let preimage = directPreimage(inputs);
+    key = leafHash(topo.prepareLeaf(new LeafObject({type: ObjectType.ExitMenu, leaf: topo.locationExitMenu(1)})));
+    id = topo.exitMenuKeys[key];
+    let refExitMenu1InputS1E0 = topo.referenceProofInput(ObjectType.ExitMenu, id, {side:1, exit:0});
+    const refL1 = new LogicalRef(LogicalRefType.Proof, ObjectType.Location2, 1);
 
-    // using the machinery in LogicalTopology
+    let egressExitL0 = new LeafObject({type:LocationExit.ObjectType, leaf: new LocationExit(refExitMenu0InputS3E0, refL0)});
+
+    id = topo.exitKeys[leafHash(topo.prepareLeaf(egressExitL0))];
+    let refL0S3E0 = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, id);
+
+    let ingressExitL1 = new LeafObject({type:LocationExit.ObjectType, leaf: new LocationExit(refExitMenu1InputS1E0, refL1)});
+    id = topo.exitKeys[leafHash(topo.prepareLeaf(ingressExitL1))];
+    let refL1S1E0 = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, id);
+
+    const lo = new LeafObject({type:LocationLink.ObjectType, leaf: new LocationLink(refL0S3E0, refL1S1E0)});
+
     let prepared = topo.prepareLeaf(lo);
     let proof = trie.getProof(prepared);
     expect(proof.length).to.be.greaterThan(0);
 
-    // And also from first principals
-    prepared = [ObjectType.ExitMenu, directPreimage([[3, 0]])]; // side 3 (east), exit 0
-    proof = trie.getProof(prepared);
-    expect(proof.length).to.be.greaterThan(0);
-
-    const locationMenu = new LocationMenu(0, new LogicalRef(LogicalRefType.Proof, ObjectType.ExitMenu, 0, undefined));
-    lo = new LeafObject({type:ObjectType.Location2, leaf: locationMenu});
-    prepared = topo.prepareLeaf(lo);
-    proof = trie.getProof(prepared);
-    expect(proof.length).to.be.greaterThan(0);
-
-    // And also from first principals, to be sure the encodings are what we intended
-    let exitMenuKey = leafHash([ObjectType.ExitMenu, directPreimage([[3, 0]])]);
-
-    prepared = [ObjectType.Location2, directPreimage([[0], [exitMenuKey]])];
-    proof = trie.getProof(prepared);
-    expect(proof.length).to.be.greaterThan(0);
-
-    // Now do the other location
-    exitMenuKey = leafHash([ObjectType.ExitMenu, directPreimage([[1, 0]])]);
-
-    prepared = [ObjectType.Location2, directPreimage([[1], [exitMenuKey]])];
-    proof = trie.getProof(prepared);
-    expect(proof.length).to.be.greaterThan(0);
   });
 
   it("Should throw because join and location access disagree", function () {

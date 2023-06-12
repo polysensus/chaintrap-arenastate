@@ -11,6 +11,21 @@ export class ExitMenu {
     this.sideExits = sideExits ?? [];
   }
 
+  /**
+   * @param {{side, exit}} choice comprises side and exit index
+   * @returns {number} matching input index or undefined
+   */
+  matchInput(choice) {
+
+    const {side, exit} = choice;
+    if (!(side && (exit || exit === 0))) throw new Error(`MenuExit choice match requires a side and exit selection`);
+
+    const inputs = this.inputs();
+    for (let i=0; i < inputs.length; i++)
+      if (inputs[i][0]===side && inputs[i][1]===exit)
+        return i;
+  }
+
   inputs() {
     // depth first linearisation, but we know the structure so its obvious
     const inputs = [];
