@@ -3,6 +3,10 @@ import { ObjectType } from "./objecttypes.js";
 export class ExitMenu {
   static ObjectType = ObjectType.ExitMenu;
 
+  /**
+   * 
+   * @param {number[][]} sideExits 
+   */
   constructor(sideExits = undefined) {
     this.sideExits = sideExits ?? [];
   }

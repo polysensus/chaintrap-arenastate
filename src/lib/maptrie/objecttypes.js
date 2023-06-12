@@ -5,7 +5,7 @@ export class ObjectType {
   static Access = 3;
   static Link = 4;
   static ExitMenu = 5;
-  static LocationSceneRef = 6;
-  static SceneExitRef = 7;
-  static LocationExitLink = 8;
+  static Location2 = 6;
+  static Exit = 7;
+  static Link2 = 8;
 }

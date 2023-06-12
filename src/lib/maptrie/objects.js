@@ -6,7 +6,9 @@ import * as msgpack from "@msgpack/msgpack";
 
 import { Access } from "./access.js";
 import { Link } from "./link.js";
-import { ExitMenu } from "./sceneexitchoice.js";
+import { ExitMenu } from "./exitmenu.js";
+import { LocationExit } from "./locationexit.js";
+import { LocationLink } from "./locationlink.js";
 import { ObjectType } from "./objecttypes.js";
 import { LocationMenu } from "./locationscene.js";
 
@@ -24,6 +26,29 @@ export function leafHash(prepared) {
 }
 
 /**
+ * Replicates the contracts side handling for the ProofLeaf
+ * input pre-image accumulation. libproofstack.sol directPreimage
+ * Note: resolve any LogicalRef's to their target values prior to calling this
+ * @param {[][number|string]} inputs
+ */
+export function directPreimage(inputs) {
+  const leafPreimage = [];
+  for (const input of inputs) {
+    let value;
+    if (input.length === 2) {
+      const input32 = input.map(i => ethers.utils.zeroPad(ethers.utils.hexlify(i), 32));
+      value = ethers.utils.defaultAbiCoder.encode(["bytes32", "bytes32"], input32);
+      value = ethers.utils.keccak256(value)
+    } else {
+      value = ethers.utils.zeroPad(ethers.utils.hexlify(input[0]), 32);
+    }
+    leafPreimage.push(value);
+  }
+
+  return ethers.utils.concat(leafPreimage);
+}
+
+/**
  * All merkle leaves take this form. The type code ensures the leaf object
  * encodings are unique for all types. This means we can put any leaf object in
  * any trie without fear of ambiguity.
@@ -31,7 +56,9 @@ export function leafHash(prepared) {
  *
  */
 export class LeafObject {
-  static ABI = ["uint16 type", "bytes leaf"];
+  // static ABI = ["uint16 type", "bytes leaf"];
+  // static ABI = ["uint256 typeId", "bytes32[][] inputs"];
+  static ABI = ["uint256 typeId", "bytes inputs"];
 
   /**
    * @constructor
@@ -83,13 +110,17 @@ export class ObjectCodec {
     [ObjectType.Access, (leaf) => leaf],
     [ObjectType.Link, (leaf) => leaf],
     [ObjectType.ExitMenu, (leaf) => leaf.prepare()],
-    [ObjectType.LocationSceneRef, (leaf, options) => leaf.prepare(options)],
+    [ObjectType.Exit, (leaf, options) => leaf.prepare(options)],
+    [ObjectType.Location2, (leaf, options) => leaf.prepare(options)],
+    [ObjectType.Link2, (leaf, options) => leaf.prepare(options)],
   ]);
   static typeHydrate = Object.fromEntries([
     [ObjectType.Access, (prepared) => new Access(prepared)],
     [ObjectType.Link, (prepared) => new Link(prepared.a, prepared.b)],
     [ObjectType.ExitMenu, (prepared) => ExitMenu.hydrate(prepared)],
-    [ObjectType.LocationSceneRef, (prepared, options) => LocationMenu.hydrate(prepared, options)],
+    [ObjectType.Exit, (prepared, options) => LocationExit.hydrate(prepared, options)],
+    [ObjectType.Location2, (prepared, options) => LocationMenu.hydrate(prepared, options)],
+    [ObjectType.Link2, (prepared, options) => LocationLink.hydrate(prepared, options)],
   ]);
 
   /**
@@ -99,15 +130,14 @@ export class ObjectCodec {
    *  const decoded = ethers.utils.defaultAbiCoder.decode(LeafObject.ABI, encoded)
    *
    * @param {LeafObject} o
-   * @template {[number, ethers.utils.BytesLike]} PreparedLeafLike
-   * @return {PreparedLeafLike}
    */
   static prepare(o, options) {
     const preper = ObjectCodec.typePrepare[o.type];
     if (!preper) throw new Error(`type ${o.type} not configured`);
 
-    const encoded = msgpack.encode(preper(o.leaf, options));
-    return [o.type, ethers.utils.hexlify(encoded)];
+    const [typeId, inputs] = preper(o.leaf, options);
+
+    return [typeId, directPreimage(inputs)];
   }
 
   /**

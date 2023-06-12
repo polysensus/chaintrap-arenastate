@@ -12,14 +12,18 @@ export class LogicalRef {
    * @constructor
    * @param {LogicalRefType} type
    * @param {ObjectType} targetType
-   * @param {number} index
+   * @param {number} id identifies the targeted object, typically just an array index.
+   * @param {number|undefined} index identifies the input contribution to the targeted object.
    */
-  constructor(type, targetType, index) {
+  constructor(type, targetType, id, index=undefined) {
     /**
      * The type of the reference.
      */
     this.type = type;
     this.targetType = targetType;
+    // target item id, used for both Proof & ProofInput references
+    this.id = id;
+    // only used for ProofInput type
     this.index = index;
   }
 }

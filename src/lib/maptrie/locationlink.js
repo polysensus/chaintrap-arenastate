@@ -9,25 +9,26 @@ import { LogicalRefType } from "./logicalref.js";
  * Prepares [LOCATION, [[location], [#S]]]
  * #S is the scene menu key
  */
-export class LocationMenu {
+export class LocationLink {
   static ObjectType = ObjectType.Location2;
   /**
    * 
    * @param {number|string} location location number or token
    * @param {*} sceneMenuKey trie key for the scene menu choice data associated with this location.
    */
-  constructor(location, sceneMenuRef) {
-    this.location = location;
-    this.sceneMenuRef = sceneMenuRef;
+  constructor(exitRefA, exitRefB) {
+    this.exitRefA = exitRefA;
+    this.exitRefB = exitRefB;
   }
 
   inputs(options) {
     const resolveValue = options?.resolveValue;
     if (!resolveValue)
-      throw new Error(`a reference resolver is required to prepare LocationMenu instances`);
+      throw new Error(`a reference resolver is required to prepare LocationLink instances`);
 
-    const sceneKey = resolveValue(this.sceneMenuRef);
-    return [[this.location], [sceneKey]];
+    const a = resolveValue(this.exitRefA);
+    const b = resolveValue(this.exitRefB);
+    return [[a], [b]];
   }
 
   /**
@@ -35,18 +36,17 @@ export class LocationMenu {
    * @returns 
    */
   prepare(options) {
-    return [LocationMenu.ObjectType, this.inputs(options)];
+    return [LocationLink.ObjectType, this.inputs(options)];
   }
 
   static hydrate(prepared, options) {
-    if (prepared[0] !== LocationMenu.ObjectType)
-      throw new Error(`bad type ${prepared[0]} for LocationMenu`);
+    if (prepared[0] !== LocationLink.ObjectType)
+      throw new Error(`bad type ${prepared[0]} for LocationLink`);
 
     const recoverTarget = options?.recoverTarget;
     if (!recoverTarget) throw new Error(`a reference recovery call back is required`);
-    const location = prepared[1][0][0];
-    const sceneMenuRef = recoverTarget(
-      LogicalRefType.Proof, ObjectType.ExitMenu, prepared[1][1][0]);
-    return new LocationMenu(location, sceneMenuRef);
+    const a = recoverTarget(prepared[1][0][0]);
+    const b = recoverTarget(prepared[1][1][0]);
+    return new LocationLink(a, b);
   }
 }

@@ -1,6 +1,6 @@
 // @ts-check
 import { expect } from "chai";
-import { ExitMenu } from "./sceneexitchoice.js";
+import { ExitMenu } from "./exitmenu.js";
 
 describe("SceneExitChoice tests", function () {
   it("Should encode inputs", function () {
