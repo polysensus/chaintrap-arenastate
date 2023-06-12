@@ -7,7 +7,6 @@ Baseline reference for the accepted milestones can be found [here](https://gov.o
 
 ## A.  Contracts repository available publicly under open source license
 
-For critical milestone 1 our delivery comprises the following
 
 https://github.com/polysensus/chaintrap-contracts/blob/main/LICENSE
 
