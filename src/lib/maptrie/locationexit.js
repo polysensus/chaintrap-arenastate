@@ -3,6 +3,8 @@
  * basis of the location links.
  */
 
+import { conditionInput } from "./objects.js";
+
 import { ObjectType } from "./objecttypes.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
 
@@ -20,36 +22,55 @@ export class LocationExit {
   inputs(options) {
     const resolveValue = options?.resolveValue;
     if (!resolveValue)
-      throw new Error(`a reference resolver is required to prepare LocationExit instances`);
+      throw new Error(
+        `a reference resolver is required to prepare LocationExit instances`
+      );
 
-    const sceneInputRefValue = resolveValue(this.sceneInputRef);
-    const locationRefValue = resolveValue(this.locationRef);
-    return [[sceneInputRefValue], [locationRefValue]];
+    const scene = resolveValue(this.sceneInputRef);
+    const location = resolveValue(this.locationRef);
+    if (!options.unconditioned)
+      return [[conditionInput(scene)], [conditionInput(location)]];
+    return [[scene], [location]];
   }
 
   /**
-   * @param {{resolveValue(ref:LogicalRef):string|number}} options 
-   * @returns 
+   * @param {{resolveValue(ref:LogicalRef):string|number}} options
+   * @returns
    */
   prepare(options) {
     return [LocationExit.ObjectType, this.inputs(options)];
   }
 
   static hydrate(prepared, options) {
-
     throw new Error(`needs more thought`);
     if (prepared[0] !== LocationExit.ObjectType)
       throw new Error(`bad type ${prepared[0]} for LocationExit`);
 
     const recoverTarget = options?.recoverTarget;
-    if (!recoverTarget) throw new Error(`a reference recovery call back is required`);
-    const {exitId, exitMenu} = recoverTarget(ObjectType.ExitMenu, prepared[1][0][0]);
-    const sceneInputRef = new LogicalRef(LogicalRefType.ProofInput, ObjectType.ExitMenu, exitId, undefined);
+    if (!recoverTarget)
+      throw new Error(`a reference recovery call back is required`);
+    const { exitId, exitMenu } = recoverTarget(
+      ObjectType.ExitMenu,
+      prepared[1][0][0]
+    );
+    const sceneInputRef = new LogicalRef(
+      LogicalRefType.ProofInput,
+      ObjectType.ExitMenu,
+      exitId,
+      undefined
+    );
 
-    const {location2Id, locationMenu} = recoverTarget(LogicalRefType.Proof, ObjectType.Location2, prepared[1][0][1]);
-    const locationRef = new LogicalRef(LogicalRefType.Proof, ObjectType.Location2, location2Id);
+    const { location2Id, locationMenu } = recoverTarget(
+      LogicalRefType.Proof,
+      ObjectType.Location2,
+      prepared[1][0][1]
+    );
+    const locationRef = new LogicalRef(
+      LogicalRefType.Proof,
+      ObjectType.Location2,
+      location2Id
+    );
 
     return new LocationExit(sceneInputRef, locationRef);
   }
-
 }

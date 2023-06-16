@@ -3,15 +3,9 @@ import * as msgpack from "@msgpack/msgpack";
 import { getMap } from "./map/collection.js";
 import { SceneCatalog } from "./map/scenecatalog.js";
 import { LogicalTopology } from "./maptrie/logical.js";
-import {
-  LeafObject,
-  ObjectCodec,
-  leafHash,
-} from "./maptrie/objects.js";
+import { LeafObject, ObjectCodec, leafHash } from "./maptrie/objects.js";
 
-import {
-  ObjectType
-} from "./maptrie/objecttypes.js";
+import { ObjectType } from "./maptrie/objecttypes.js";
 /**
  * A realm holds all of the physical artifacts associated with the game and the
  * merkle tries used to prove action outcomes and so on.

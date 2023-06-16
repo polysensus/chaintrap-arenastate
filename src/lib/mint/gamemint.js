@@ -229,25 +229,36 @@ export class GameMint {
       );
     if (!options.topology) throw new Error("a map topology is required");
     if (!options.mapRootLabel) throw new Error("a map root label is required");
-    if (!options.map) throw new Error("a map is required");
+    // if (!options.map) throw new Error("a map is required");
 
-    const vrf_inputs = options.map?.vrf_inputs;
-    if (!vrf_inputs) throw Error("GameMint# invalid map, missing vrf_inputs");
-    if (!vrf_inputs.proof)
-      throw Error("GameMint# invalid topology, missing vrf_inputs.proof");
-    if (!vrf_inputs.proof.beta)
-      throw Error("GameMint# invalid topology, missing vrf_inputs.proof.beta");
-    if (!vrf_inputs.proof.public_key)
-      throw Error(
-        "GameMint# invalid topology, missing vrf_inputs.proof.public_key"
+    // Note: allowing for an undefined map is a concession to testability
+    const vrf_inputs = options?.map?.vrf_inputs;
+    if (vrf_inputs) {
+      if (!vrf_inputs.proof)
+        throw Error("GameMint# invalid topology, missing vrf_inputs.proof");
+      if (!vrf_inputs.proof.beta)
+        throw Error(
+          "GameMint# invalid topology, missing vrf_inputs.proof.beta"
+        );
+      if (!vrf_inputs.proof.public_key)
+        throw Error(
+          "GameMint# invalid topology, missing vrf_inputs.proof.public_key"
+        );
+
+      // The map generation params contribute to the alpha but do not compromise
+      // it if revealed. And they are a good indication of map characteristics.
+      let params = vrf_inputs.alpha.split(":");
+      params = Object.fromEntries(
+        params[params.length - 1].split(",").map((params) => params.split("="))
       );
-
-    // The map generation params contribute to the alpha but do not compromise
-    // it if revealed. And they are a good indication of map characteristics.
-    let params = vrf_inputs.alpha.split(":");
-    params = Object.fromEntries(
-      params[params.length - 1].split(",").map((params) => params.split("="))
-    );
+      const proofs = {
+        beta: vrf_inputs.proof.beta,
+        public_key: vrf_inputs.proof.public_key,
+        map_root_label: options.mapRootLabel,
+        map_root: options.trie.root,
+      };
+      this.properties = { ...this.properties, ...params, proofs };
+    }
 
     // this.initArgs.registrationLimit = ethers.BigNumber.from(options.registrationLimit);
     this.initArgs.registrationLimit =
@@ -257,17 +268,6 @@ export class GameMint {
     ];
     this.initArgs.roots = [options.trie.root];
 
-    const proofs = {
-      beta: vrf_inputs.proof.beta,
-      public_key: vrf_inputs.proof.public_key,
-      map_root_label: options.mapRootLabel,
-      map_root: options.trie.root,
-    };
-    this.properties = {
-      ...this.properties,
-      ...params,
-      proofs,
-    };
     delete this._pendingOptions["map"];
   }
 }

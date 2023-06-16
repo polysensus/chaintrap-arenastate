@@ -15,7 +15,7 @@ export class LogicalRef {
    * @param {number} id identifies the targeted object, typically just an array index.
    * @param {number|undefined} index identifies the input contribution to the targeted object.
    */
-  constructor(type, targetType, id, index=undefined) {
+  constructor(type, targetType, id, index = undefined) {
     /**
      * The type of the reference.
      */

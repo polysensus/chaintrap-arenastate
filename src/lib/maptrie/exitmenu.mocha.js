@@ -25,7 +25,6 @@ describe("SceneExitChoice tests", function () {
   });
 
   it("Should round trip inputs", function () {
-
     const sceneMenu = new ExitMenu([0, 2, 3, 0]);
     const prepared = sceneMenu.prepare();
     const hydrated = ExitMenu.hydrate(prepared);

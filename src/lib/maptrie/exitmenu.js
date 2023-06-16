@@ -1,11 +1,12 @@
 import { ObjectType } from "./objecttypes.js";
+import { conditionInput } from "./objects.js";
 
 export class ExitMenu {
   static ObjectType = ObjectType.ExitMenu;
 
   /**
-   * 
-   * @param {number[][]} sideExits 
+   *
+   * @param {number[][]} sideExits
    */
   constructor(sideExits = undefined) {
     this.sideExits = sideExits ?? [];
@@ -16,24 +17,26 @@ export class ExitMenu {
    * @returns {number} matching input index or undefined
    */
   matchInput(choice) {
+    let { side, exit } = choice;
+    if (!(side && (exit || exit === 0)))
+      throw new Error(
+        `MenuExit choice match requires a side and exit selection`
+      );
 
-    const {side, exit} = choice;
-    if (!(side && (exit || exit === 0))) throw new Error(`MenuExit choice match requires a side and exit selection`);
-
-    const inputs = this.inputs();
-    for (let i=0; i < inputs.length; i++)
-      if (inputs[i][0]===side && inputs[i][1]===exit)
-        return i;
+    const inputs = this.inputs({ unconditioned: true });
+    for (let i = 0; i < inputs.length; i++)
+      if (inputs[i][0] === side && inputs[i][1] === exit) return i;
   }
 
-  inputs() {
+  inputs(options) {
     // depth first linearisation, but we know the structure so its obvious
     const inputs = [];
     for (let side = 0; side < this.sideExits.length; side++)
       for (let exit = 0; exit < this.sideExits[side]; exit++) {
         // The choice menu format is [path, value]. For the scene menu the value
         // is the exit index on the specific side of the scene
-        inputs.push([side, exit]);
+        if (options?.unconditioned) inputs.push([side, exit]);
+        else inputs.push([conditionInput(side), conditionInput(exit)]);
       }
     return inputs;
   }
@@ -51,8 +54,11 @@ export class ExitMenu {
         throw Error(`bad exit encoding, exit indices should be sequential`);
     }
     const sideExits = [[], [], [], []];
-    for (let side = 0; side < sideExits.length; side++)
+    for (let side = 0; side < sideExits.length; side++) {
+      side = conditionInput(side);
       sideExits[side] = choices[side] ?? 0;
+    }
+
     return new ExitMenu(sideExits);
   }
 }

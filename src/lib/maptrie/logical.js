@@ -10,6 +10,7 @@ import { LocationMenu } from "./locationscene.js";
 import { LocationExit } from "./locationexit.js";
 import { LocationLink } from "./locationlink.js";
 import { ObjectCodec, LeafObject, leafHash } from "./objects.js";
+import { deconditionInput } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
 import { Location } from "./location.js";
@@ -65,10 +66,10 @@ export class LogicalTopology {
     this.exitKeys = {};
     // To encode location links we need to be able to reference by (location, side, exit) -> exit
     // `${location}:${side}:${exit}` -> exit
-    this.locationExits = {}
+    this.locationExits = {};
 
     /**
-     * 
+     *
      * For each item, we get a leaf encoding [LINK, [[REF(#E)], [REF(#E')]]]
      * Represents directional connection between a pair of locations
      * REF(#E) -> exit E egress at location
@@ -76,6 +77,24 @@ export class LogicalTopology {
      */
     this.locationExitLinks = [];
     this.locationExitLinkKeys = {};
+
+    /**
+     * @readonly
+     */
+    this._committed = false;
+  }
+
+  _resetCommit() {
+    this.exitMenus = [];
+    this.exitMenuKeys = {};
+    this.locationMenus = [];
+    this.locationMenuKeys = {};
+    this.exits = [];
+    this.exitKeys = {};
+    this.locationExits = {};
+    this.locationExitLinks = [];
+    this.locationExitLinkKeys = {};
+    this._committed = false;
   }
 
   /**
@@ -88,7 +107,6 @@ export class LogicalTopology {
     const topo = new LogicalTopology();
     topo.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
     topo.extendLocations(map.model.rooms);
-    topo.commit();
     return topo;
   }
 
@@ -141,19 +159,11 @@ export class LogicalTopology {
    * joins (corridors) at each.
    */
   commit() {
+    this._resetCommit();
 
-    this.exitMenus = [];
-    this.exitMenuKeys = {};
-    this.locationMenus = [];
-    this.locationMenuKeys = {};
-    this.exits = [];
-    this.exitKeys = {};
-    this.locationExits = {};
-
-    for (let locationId=0; locationId < this.locations.length; locationId++) {
-
+    for (let locationId = 0; locationId < this.locations.length; locationId++) {
       let exitMenu = this.locationExitMenu(locationId);
-      let leaf = new LeafObject({type: ObjectType.ExitMenu, leaf: exitMenu});
+      let leaf = new LeafObject({ type: ObjectType.ExitMenu, leaf: exitMenu });
 
       // exit menus are quite likely to collide by co-incidence when de-coupled
       // from the locations that host them. we need to guarantee uniqueness for
@@ -169,51 +179,74 @@ export class LogicalTopology {
       }
 
       // the location/menu association is unique
-      
-      const locationMenu = new LocationMenu(locationId, new LogicalRef(LogicalRefType.Proof, ObjectType.ExitMenu, exitMenuIndex));
-      leaf = new LeafObject({type:LocationMenu.ObjectType, leaf:locationMenu});
+
+      const locationMenu = new LocationMenu(
+        locationId,
+        new LogicalRef(LogicalRefType.Proof, ObjectType.ExitMenu, exitMenuIndex)
+      );
+      leaf = new LeafObject({
+        type: LocationMenu.ObjectType,
+        leaf: locationMenu,
+      });
 
       const locationMenuKey = leafHash(this.prepareLeaf(leaf));
       if (locationMenuKey in this.locationMenuKeys)
-        throw new Error(`implementation assumption failed, location menu's are expected to be naturally unique`);
+        throw new Error(
+          `implementation assumption failed, location menu's are expected to be naturally unique`
+        );
 
       this.locationMenus.push(leaf);
       this.locationMenuKeys[locationMenuKey] = this.locationMenus.length - 1;
 
       // We need a node for each of the locations exits. We most easily derive this from the exitMenu
       let inputs = exitMenu.inputs();
-      for (let j=0; j < inputs.length; j++) {
+      for (let j = 0; j < inputs.length; j++) {
         // Note: we don't need to use referenceProofInput to create the
         // sceneInputRef's here because we are making references for all of the
         // inputs
-        const sceneInputRef = new LogicalRef(LogicalRefType.ProofInput, ObjectType.ExitMenu, exitMenuIndex, j);
-        const locationRef = new LogicalRef(LogicalRefType.Proof, ObjectType.Location2, locationId);
+        const sceneInputRef = new LogicalRef(
+          LogicalRefType.ProofInput,
+          ObjectType.ExitMenu,
+          exitMenuIndex,
+          j
+        );
+        const locationRef = new LogicalRef(
+          LogicalRefType.Proof,
+          ObjectType.Location2,
+          locationId
+        );
         const locationExit = new LocationExit(sceneInputRef, locationRef);
 
-        leaf = new LeafObject({type:LocationExit.ObjectType, leaf:locationExit});
+        leaf = new LeafObject({
+          type: LocationExit.ObjectType,
+          leaf: locationExit,
+        });
         const key = leafHash(this.prepareLeaf(leaf));
 
         const locationExitIndex = this.exits.length;
         this.exitKeys[key] = locationExitIndex;
         this.locationExits[
-          `${locationId}:${inputs[j][0]}:${inputs[j][1]}`
+          `${locationId}:${deconditionInput(inputs[j][0])}:${deconditionInput(
+            inputs[j][1]
+          )}`
         ] = locationExitIndex;
         this.exits.push(leaf);
       }
     }
 
     for (const link of this.links()) {
-      const ida = this.locationExits[
-        `${link.a.location}:${link.a.side}:${link.a.exit}`
-      ];
-      const idb = this.locationExits[
-        `${link.b.location}:${link.b.side}:${link.b.exit}`
-      ];
+      const ida =
+        this.locationExits[`${link.a.location}:${link.a.side}:${link.a.exit}`];
+      const idb =
+        this.locationExits[`${link.b.location}:${link.b.side}:${link.b.exit}`];
       const refa = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, ida);
       const refb = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, idb);
 
       const locationExitLinkAB = new LocationLink(refa, refb);
-      let leaf = new LeafObject({type:ObjectType.Link2, leaf:locationExitLinkAB});
+      let leaf = new LeafObject({
+        type: ObjectType.Link2,
+        leaf: locationExitLinkAB,
+      });
       let key = leafHash(this.prepareLeaf(leaf));
       let locationExitLinkIndex = this.locationExitLinks.length;
       this.locationExitLinkKeys[key] = locationExitLinkIndex;
@@ -231,7 +264,7 @@ export class LogicalTopology {
       */
     }
 
-    // now do the corridor links between the respective exits on the linked locations
+    this._committed = true;
   }
 
   /**
@@ -239,49 +272,49 @@ export class LogicalTopology {
    * @returns {StandardMerkleTree}
    */
   encodeTrie() {
+    if (!this._committed) this.commit();
     return StandardMerkleTree.of([...this.leaves()], LeafObject.ABI);
   }
 
   *leaves() {
-
     // exitMenus are the unique encodings of all available exit menus accross all locations.
     // exitMenus only exist if commit() has been called
-    for (const leaf of this.exitMenus)
-      yield this.prepareLeaf(leaf);
+    for (const leaf of this.exitMenus) yield this.prepareLeaf(leaf);
 
     // locationMenus encode a relation between the location and its exit menu.
     // locationMenus only exist if commit() has been called
-    for (const leaf of this.locationMenus)
-      yield this.prepareLeaf(leaf);
+    for (const leaf of this.locationMenus) yield this.prepareLeaf(leaf);
 
-    for (const leaf of this.exits)
-      yield this.prepareLeaf(leaf);
+    for (const leaf of this.exits) yield this.prepareLeaf(leaf);
 
-    for (const leaf of this.locationExitLinks)
-      yield this.prepareLeaf(leaf);
+    for (const leaf of this.locationExitLinks) yield this.prepareLeaf(leaf);
     // for (const link of this.links())
     //   yield this.prepareObject({type:ObjectType.Link, leaf:link});
   }
 
   /**
-   * 
-   * @param {{type, leaf}} o 
+   *
+   * @param {{type, leaf}} o
    */
   prepareObject(o) {
     return this.prepareLeaf(new LeafObject(o));
   }
 
   /**
-   * 
+   *
    * @param {LeafObject} lo
    * @returns {[number, BytesLike]}
    */
   prepareLeaf(lo) {
-    return ObjectCodec.prepare( lo, {resolveValue: this.resolveValueRef.bind(this)});
+    return ObjectCodec.prepare(lo, {
+      resolveValue: this.resolveValueRef.bind(this),
+    });
   }
 
   hydratePrepared(prepared) {
-    return ObjectCodec.hydrate(prepared, {recoverTarget: this.recoverTarget.bind(this)})
+    return ObjectCodec.hydrate(prepared, {
+      recoverTarget: this.recoverTarget.bind(this),
+    });
   }
 
   referenceProofInput(targetType, id, options) {
@@ -291,19 +324,18 @@ export class LogicalTopology {
         input = this.exitMenus[id].leaf.matchInput(options);
         break;
     }
-    if (typeof input === 'undefined')
+    if (typeof input === "undefined")
       throw new Error(`input not matched for targetType ${targetType}`);
 
-    return new LogicalRef(LogicalRefType.ProofInput, targetType, id, input)
+    return new LogicalRef(LogicalRefType.ProofInput, targetType, id, input);
   }
 
   /**
-   * 
+   *
    * @param {LogicalRef} ref
    * @returns a value suitable for the 'value' entry in a proof input
    */
   resolveValueRef(ref) {
-
     let target;
     switch (ref.targetType) {
       case ObjectType.ExitMenu:
@@ -319,7 +351,8 @@ export class LogicalTopology {
         target = this.locationExitLinks[ref.id];
         break;
     }
-    if (!target) throw new Error(`unknown reference targetType ${ref.targetType}`);
+    if (!target)
+      throw new Error(`unknown reference targetType ${ref.targetType}`);
 
     switch (ref.type) {
       case LogicalRefType.Proof:
@@ -328,7 +361,9 @@ export class LogicalTopology {
       case LogicalRefType.ProofInput:
         // prepared is [type, inputs]. inputs is always a 2 dimensional array
 
-        const inputs = target.leaf.inputs({resolveValue: this.resolveValueRef.bind(this)});
+        const inputs = target.leaf.inputs({
+          resolveValue: this.resolveValueRef.bind(this),
+        });
         // each input entry is an array, the indexed value always refers to the
         // *last* element of that array.
         return inputs[ref.index][inputs[ref.index].length - 1];
@@ -340,9 +375,9 @@ export class LogicalTopology {
   /**
    * Notice: this does not recover the index if the type is ProofInput. The
    * caller is expected to have that context
-   * @param {*} targetType 
-   * @param {*} value 
-   * @returns 
+   * @param {*} targetType
+   * @param {*} value
+   * @returns
    */
   recoverTarget(targetType, value) {
     let id, target;
@@ -367,9 +402,8 @@ export class LogicalTopology {
         target = this.locationExitLinks[id];
         break;
     }
-    if(!target)
-      throw new Error(`targetType not known or tbd`);
-    return new LogicalRef(type, targetType, id)
+    if (!target) throw new Error(`targetType not known or tbd`);
+    return new LogicalRef(type, targetType, id);
   }
 
   /**

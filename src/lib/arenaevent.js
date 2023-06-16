@@ -6,6 +6,25 @@ import { ABIName } from "./abiconst.js";
 
 import { EventParser } from "./chainkit/eventparser.js";
 
+/**
+ *
+ * @param {EventParser} eventParser
+ * @returns {ethers.BigNumber}
+ */
+export function getGameCreated(receipt, eventParser) {
+  return eventParser.receiptLog(
+    receipt,
+    "TranscriptCreated(uint256,address,uint256)"
+  );
+}
+
+export function getSetMerkleRoot(receipt, eventParser) {
+  return eventParser.receiptLog(
+    receipt,
+    "TranscriptMerkleRootSet(uint256,bytes32,bytes32)"
+  );
+}
+
 export class ArenaEventParser extends EventParser {
   constructor(contract) {
     super(contract, ArenaEvent.fromParsedEvent);

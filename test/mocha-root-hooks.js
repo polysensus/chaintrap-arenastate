@@ -92,7 +92,6 @@ export const mochaHooks = {
       // provider only instance, no signer
       this.arena = envConnect(proxyAddress, {});
     }
-    return;
     if (!this.openaiOptions || !this.nftstorageOptions || !this.maptoolOptions)
       return;
     this.gameOptions = {

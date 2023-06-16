@@ -1,6 +1,9 @@
 import { ethers } from "ethers";
 const arrayify = ethers.utils.arrayify;
 const keccak256 = ethers.utils.keccak256;
+const zeroPad = ethers.utils.zeroPad;
+const hexlify = ethers.utils.hexlify;
+const abiCoder = ethers.utils.defaultAbiCoder;
 
 import * as msgpack from "@msgpack/msgpack";
 
@@ -11,6 +14,34 @@ import { LocationExit } from "./locationexit.js";
 import { LocationLink } from "./locationlink.js";
 import { ObjectType } from "./objecttypes.js";
 import { LocationMenu } from "./locationscene.js";
+
+/**
+ * Convert an input value to an ethers compatible representation of a solidity
+ * bytes32
+ * @param {number|string} value
+ */
+export function conditionInput(value) {
+  return hexlify(zeroPad(hexlify(value), 32));
+}
+
+/**
+ * apply conditionInput to all inputs
+ * @param {*} inputs
+ * @returns
+ */
+export function conditionInputs(inputs) {
+  const inputs32 = [];
+  for (let input of inputs) inputs32.push(input.map((i) => conditionInput(i)));
+  return inputs32;
+}
+
+export function deconditionInput(value) {
+  if (typeof value === "string") return parseInt(value, 16);
+  if (value?.constructor?.name === "Uint8Array")
+    return ethers.BigNumber.from(value).toNumber();
+  // if (typeof value === )
+  return value;
+}
 
 /**
  * Compute the merkle node value for the prepared {@link LeafObject}
@@ -36,11 +67,10 @@ export function directPreimage(inputs) {
   for (const input of inputs) {
     let value;
     if (input.length === 2) {
-      const input32 = input.map(i => ethers.utils.zeroPad(ethers.utils.hexlify(i), 32));
-      value = ethers.utils.defaultAbiCoder.encode(["bytes32", "bytes32"], input32);
-      value = ethers.utils.keccak256(value)
+      value = abiCoder.encode(["bytes32", "bytes32"], input);
+      value = keccak256(value);
     } else {
-      value = ethers.utils.zeroPad(ethers.utils.hexlify(input[0]), 32);
+      value = input[0];
     }
     leafPreimage.push(value);
   }
@@ -118,9 +148,18 @@ export class ObjectCodec {
     [ObjectType.Access, (prepared) => new Access(prepared)],
     [ObjectType.Link, (prepared) => new Link(prepared.a, prepared.b)],
     [ObjectType.ExitMenu, (prepared) => ExitMenu.hydrate(prepared)],
-    [ObjectType.Exit, (prepared, options) => LocationExit.hydrate(prepared, options)],
-    [ObjectType.Location2, (prepared, options) => LocationMenu.hydrate(prepared, options)],
-    [ObjectType.Link2, (prepared, options) => LocationLink.hydrate(prepared, options)],
+    [
+      ObjectType.Exit,
+      (prepared, options) => LocationExit.hydrate(prepared, options),
+    ],
+    [
+      ObjectType.Location2,
+      (prepared, options) => LocationMenu.hydrate(prepared, options),
+    ],
+    [
+      ObjectType.Link2,
+      (prepared, options) => LocationLink.hydrate(prepared, options),
+    ],
   ]);
 
   /**

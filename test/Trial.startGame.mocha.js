@@ -4,7 +4,8 @@ import * as msgpack from "@msgpack/msgpack";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { getGameCreated, getSetMerkleRoot } from "./support/minter.js";
+import { getGameCreated, getSetMerkleRoot } from "../src/lib/arenaevent.js";
+
 import { Trial } from "../src/lib/trial.js";
 import { ArenaEvent } from "../src/lib/arenaevent.js";
 import { EventParser } from "../src/lib/chainkit/eventparser.js";
@@ -21,6 +22,7 @@ describe("Trial# startTranscript", async function () {
     expect(choices.length).to.equal(2);
     expect(data.length).to.equal(2);
 
+    this.minter.loadMap();
     let r = await loadFixture(this.mintGame);
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
@@ -67,6 +69,7 @@ describe("Trial# startTranscript", async function () {
 
     const userChoice = choices[0][0];
 
+    this.minter.loadMap();
     let r = await loadFixture(this.mintGame);
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;

@@ -7,25 +7,6 @@ import { LogicalTopology } from "../../src/lib/maptrie/logical.js";
 import { GameMint } from "../../src/lib/mint/gamemint.js";
 
 /**
- *
- * @param {import("../../src/lib/chainkit/eventparser.js").EventParser} eventParser
- * @returns {ethers.BigNumber}
- */
-export function getGameCreated(receipt, eventParser) {
-  return eventParser.receiptLog(
-    receipt,
-    "TranscriptCreated(uint256,address,uint256)"
-  );
-}
-
-export function getSetMerkleRoot(receipt, eventParser) {
-  return eventParser.receiptLog(
-    receipt,
-    "TranscriptMerkleRootSet(uint256,bytes32,bytes32)"
-  );
-}
-
-/**
  * This class provides a mint method which is compatible with hardhat /
  * loadFixture It can be used to efficiently ensure a test case has a freshly
  * created game to work with.
@@ -43,26 +24,55 @@ export class Minter {
     if (!options.mapRootLabel)
       this.options.mapRootLabel = "chaintrap-dungeon:static";
 
-    this.collection = readJsonData("maps/map02.json");
-    this.map = getMap(this.collection).map;
-    this.topology = LogicalTopology.fromCollectionJSON(this.collection);
-    this.trie = this.topology.encodeTrie();
     this.minter = new GameMint();
     this.minter.configureMetadataOptions(this.options);
     this.minter.configureNFTStorageOptions(this.options);
     this.minter.configureGameIconOptions(this.options);
     this.minter.configureMaptoolOptions(this.options);
+
+    this.collection = undefined;
+    this.map = undefined;
+    this.topology = undefined;
+    this.trie = undefined;
+  }
+
+  /**
+   *
+   * @param {{collectionName?}} options
+   */
+  loadMap(options) {
+    this.collection = readJsonData(
+      options?.collectionName ?? "maps/map02.json"
+    );
+    this.map = getMap(this.collection).map;
+    this.topology = LogicalTopology.fromCollectionJSON(this.collection);
+    this.trie = this.topology.encodeTrie();
+  }
+
+  async mint(options) {
+    this.map = options?.map;
+    this.topology = options?.topology;
+    this.trie = options?.trie;
+
+    if (!(this.topology && this.trie))
+      throw new Error(
+        `topology and trie are required to mint, consider using loadMap`
+      );
+
     this.minter.configureMapOptions({
       ...this.options,
       topology: this.topology,
       map: this.map,
       trie: this.trie,
     });
-  }
 
-  async mint() {
-    await this.minter.prepareGameImage();
-    await this.minter.publishMetadata();
+    if (this.map && !options.noMETADATA) {
+      await this.minter.prepareGameImage();
+      await this.minter.publishMetadata();
+    } else {
+      this.minter.gameIcon = "image not configured";
+      this.minter.initArgs.tokenURI = "token URI not configured";
+    }
     const r = await this.minter.mint(this.arena);
     return r;
   }
