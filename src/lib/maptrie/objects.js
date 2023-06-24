@@ -63,6 +63,8 @@ export function leafHash(prepared) {
  * @param {[][number|string]} inputs
  */
 export function directPreimage(inputs) {
+  return inputs;
+  /*
   const leafPreimage = [];
   for (const input of inputs) {
     let value;
@@ -76,6 +78,7 @@ export function directPreimage(inputs) {
   }
 
   return ethers.utils.concat(leafPreimage);
+  */
 }
 
 /**
@@ -87,8 +90,8 @@ export function directPreimage(inputs) {
  */
 export class LeafObject {
   // static ABI = ["uint16 type", "bytes leaf"];
-  // static ABI = ["uint256 typeId", "bytes32[][] inputs"];
-  static ABI = ["uint256 typeId", "bytes inputs"];
+  static ABI = ["uint256 typeId", "bytes32[][] inputs"];
+  // static ABI = ["uint256 typeId", "bytes inputs"];
 
   /**
    * @constructor

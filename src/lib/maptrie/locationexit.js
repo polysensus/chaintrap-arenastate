@@ -26,11 +26,11 @@ export class LocationExit {
         `a reference resolver is required to prepare LocationExit instances`
       );
 
-    const scene = resolveValue(this.sceneInputRef);
+    const sceneMenuItem = resolveValue(this.sceneInputRef);
     const location = resolveValue(this.locationRef);
     if (!options.unconditioned)
-      return [[conditionInput(scene)], [conditionInput(location)]];
-    return [[scene], [location]];
+      return [sceneMenuItem.map((i) => conditionInput(i)), [conditionInput(location)]];
+    return [sceneMenuItem, [location]];
   }
 
   /**

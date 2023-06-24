@@ -364,9 +364,10 @@ export class LogicalTopology {
         const inputs = target.leaf.inputs({
           resolveValue: this.resolveValueRef.bind(this),
         });
-        // each input entry is an array, the indexed value always refers to the
-        // *last* element of that array.
-        return inputs[ref.index][inputs[ref.index].length - 1];
+        // // each input entry is an array, the indexed value always refers to the
+        // // *last* element of that array.
+        // return inputs[ref.index][inputs[ref.index].length - 1];
+        return inputs[ref.index];
       default:
         throw new Error(`unsupported reference type ${ref.type}`);
     }
