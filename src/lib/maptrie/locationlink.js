@@ -4,19 +4,12 @@
 
 import { conditionInput } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
-import { LogicalRefType } from "./logicalref.js";
 
 /**
- * Prepares [LINK, [[REF(#E)], [#S]]]
- * #S is the scene menu key
+ * Prepares [LINK, [[REF(#Ea)], [REF(#Eb)]]]
  */
 export class LocationLink {
   static ObjectType = ObjectType.Link2;
-  /**
-   *
-   * @param {number|string} location location number or token
-   * @param {*} sceneMenuKey trie key for the scene menu choice data associated with this location.
-   */
   constructor(exitRefA, exitRefB) {
     this.exitRefA = exitRefA;
     this.exitRefB = exitRefB;
@@ -47,14 +40,6 @@ export class LocationLink {
   }
 
   static hydrate(prepared, options) {
-    if (prepared[0] !== LocationLink.ObjectType)
-      throw new Error(`bad type ${prepared[0]} for LocationLink`);
-
-    const recoverTarget = options?.recoverTarget;
-    if (!recoverTarget)
-      throw new Error(`a reference recovery call back is required`);
-    const a = recoverTarget(prepared[1][0][0]);
-    const b = recoverTarget(prepared[1][1][0]);
-    return new LocationLink(a, b);
+    throw new Error('tbd ...');
   }
 }

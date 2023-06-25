@@ -136,11 +136,6 @@ describe("LogicalTopology entryCommit tests", function () {
 
     // Let the player start location id be 0 (the first location added above)
 
-    let startId = 0;
-
-    // Let the player chose the first exit on the east side.
-    // The value commit (above) is the REF(p(SCENE),i) input value from the
-    choice = 0; // input 0 is [3, 0]
     // Set STACK(0) to location0
     leaves.push({
       typeId: location0Prepared[0],
