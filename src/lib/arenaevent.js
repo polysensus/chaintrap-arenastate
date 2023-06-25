@@ -6,6 +6,8 @@ import { ABIName } from "./abiconst.js";
 
 import { EventParser } from "./chainkit/eventparser.js";
 
+import { undefinedIfZeroBytesLike } from "./chainkit/ethutil.js";
+
 /**
  *
  * @param {EventParser} eventParser
@@ -90,9 +92,12 @@ export class ArenaEvent {
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.update = {
-          choices: parsedLog.args.choices,
-          scene: msgpack.decode(arrayify(parsedLog.args.data)),
+          choices: parsedLog.args.choices
         };
+        const data = undefinedIfZeroBytesLike(parsedLog.args.data);
+        if (data)
+          arenaEvent.update.scene = msgpack.decode(arrayify(data));
+
         break;
 
       case ABIName.TranscriptEntryCommitted:
@@ -102,7 +107,7 @@ export class ArenaEvent {
           lastEID: arenaEvent.eid,
           rootLabel: parsedLog.args.rootLabel,
           outcome: parsedLog.args.outcome,
-          node: parsedLog.args.node,
+          inputChoice: parsedLog.args.inputChoice,
           data: parsedLog.args.data,
         };
         break;
@@ -119,7 +124,6 @@ export class ArenaEvent {
         arenaEvent.update = {
           rootLabel: parsedLog.args.rootLabel,
           outcome: parsedLog.args.outcome,
-          node: parsedLog.args.node,
           // The scene is left to TranscriptEntryChoices
           // data: ev.args.data,
           // scene: msgpack.decode(arrayify(ev.args.data))

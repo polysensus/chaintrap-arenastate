@@ -6,17 +6,16 @@
 import { conditionInput } from "./objects.js";
 
 import { ObjectType } from "./objecttypes.js";
-import { LogicalRef, LogicalRefType } from "./logicalref.js";
+import { LogicalRef } from "./logicalref.js";
 
 /**
- * [EXIT, [[REF(#S, i)], [REF(#L)]]]
+ * [EXIT, [[REF(#L, i)]]]
  */
 export class LocationExit {
   static ObjectType = ObjectType.Exit;
 
-  constructor(sceneInputRef, locationRef) {
-    this.sceneInputRef = sceneInputRef;
-    this.locationRef = locationRef;
+  constructor(locationExitRef) {
+    this.locationExitRef = locationExitRef;
   }
 
   inputs(options) {
@@ -26,11 +25,10 @@ export class LocationExit {
         `a reference resolver is required to prepare LocationExit instances`
       );
 
-    const sceneMenuItem = resolveValue(this.sceneInputRef);
-    const location = resolveValue(this.locationRef);
+    const locationExit = resolveValue(this.locationExitRef);
     if (!options.unconditioned)
-      return [sceneMenuItem.map((i) => conditionInput(i)), [conditionInput(location)]];
-    return [sceneMenuItem, [location]];
+      return [locationExit.map((i) => conditionInput(i))];
+    return [locationExit];
   }
 
   /**
@@ -43,34 +41,5 @@ export class LocationExit {
 
   static hydrate(prepared, options) {
     throw new Error(`needs more thought`);
-    if (prepared[0] !== LocationExit.ObjectType)
-      throw new Error(`bad type ${prepared[0]} for LocationExit`);
-
-    const recoverTarget = options?.recoverTarget;
-    if (!recoverTarget)
-      throw new Error(`a reference recovery call back is required`);
-    const { exitId, exitMenu } = recoverTarget(
-      ObjectType.ExitMenu,
-      prepared[1][0][0]
-    );
-    const sceneInputRef = new LogicalRef(
-      LogicalRefType.ProofInput,
-      ObjectType.ExitMenu,
-      exitId,
-      undefined
-    );
-
-    const { location2Id, locationMenu } = recoverTarget(
-      LogicalRefType.Proof,
-      ObjectType.Location2,
-      prepared[1][0][1]
-    );
-    const locationRef = new LogicalRef(
-      LogicalRefType.Proof,
-      ObjectType.Location2,
-      location2Id
-    );
-
-    return new LocationExit(sceneInputRef, locationRef);
   }
 }

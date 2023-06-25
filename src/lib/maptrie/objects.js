@@ -9,11 +9,9 @@ import * as msgpack from "@msgpack/msgpack";
 
 import { Access } from "./access.js";
 import { Link } from "./link.js";
-import { ExitMenu } from "./exitmenu.js";
-import { LocationExit } from "./locationexit.js";
+import { LocationChoices } from "./locationchoices.js";
 import { LocationLink } from "./locationlink.js";
 import { ObjectType } from "./objecttypes.js";
-import { LocationMenu } from "./locationscene.js";
 
 /**
  * Convert an input value to an ethers compatible representation of a solidity
@@ -142,22 +140,20 @@ export class ObjectCodec {
   static typePrepare = Object.fromEntries([
     [ObjectType.Access, (leaf) => leaf],
     [ObjectType.Link, (leaf) => leaf],
-    [ObjectType.ExitMenu, (leaf) => leaf.prepare()],
     [ObjectType.Exit, (leaf, options) => leaf.prepare(options)],
-    [ObjectType.Location2, (leaf, options) => leaf.prepare(options)],
+    [ObjectType.LocationChoices, (leaf, options) => leaf.prepare(options)],
     [ObjectType.Link2, (leaf, options) => leaf.prepare(options)],
   ]);
   static typeHydrate = Object.fromEntries([
     [ObjectType.Access, (prepared) => new Access(prepared)],
     [ObjectType.Link, (prepared) => new Link(prepared.a, prepared.b)],
-    [ObjectType.ExitMenu, (prepared) => ExitMenu.hydrate(prepared)],
     [
       ObjectType.Exit,
       (prepared, options) => LocationExit.hydrate(prepared, options),
     ],
     [
-      ObjectType.Location2,
-      (prepared, options) => LocationMenu.hydrate(prepared, options),
+      ObjectType.LocationChoices,
+      (prepared, options) => LocationChoices.hydrate(prepared, options),
     ],
     [
       ObjectType.Link2,

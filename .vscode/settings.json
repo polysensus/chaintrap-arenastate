@@ -39,6 +39,7 @@
     "lastgame",
     "libproofstack",
     "listplayers",
+    "logit",
     "mapfile",
     "maptool",
     "maptrie",

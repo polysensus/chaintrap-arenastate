@@ -8,4 +8,5 @@ export class ObjectType {
   static Location2 = 6;
   static Exit = 7;
   static Link2 = 8;
+  static LocationChoices = 9;
 }

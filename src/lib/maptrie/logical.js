@@ -5,8 +5,7 @@ import { getMap } from "../map/collection.js";
 import { Join } from "./join.js";
 import { Access } from "./access.js";
 import { Link } from "./link.js";
-import { ExitMenu } from "./exitmenu.js";
-import { LocationMenu } from "./locationscene.js";
+import { LocationChoices } from "./locationchoices.js";
 import { LocationExit } from "./locationexit.js";
 import { LocationLink } from "./locationlink.js";
 import { ObjectCodec, LeafObject, leafHash } from "./objects.js";
@@ -54,8 +53,8 @@ export class LogicalTopology {
      * For each item, we get a leaf encoding [LOCATION, [[l], [REF(#S)]]]
      * REF(#S) -> the key (hash) encoding of this.exitMenus[l]
      */
-    this.locationMenus = [];
-    this.locationMenuKeys = {};
+    this.locationChoices = [];
+    this.locationChoicesKeys = {};
 
     /**
      * For each item, we get a leaf encoding [EXIT, [[REF(#S, i)], [REF(#L)]]]
@@ -87,13 +86,17 @@ export class LogicalTopology {
   _resetCommit() {
     this.exitMenus = [];
     this.exitMenuKeys = {};
-    this.locationMenus = [];
-    this.locationMenuKeys = {};
+    this.locationChoices = [];
+    this.locationChoicesKeys = {};
     this.exits = [];
     this.exitKeys = {};
     this.locationExits = {};
     this.locationExitLinks = [];
     this.locationExitLinkKeys = {};
+
+    this.locationChoicesx = [];
+    this.locationChoiceKeysx = {};
+
     this._committed = false;
   }
 
@@ -162,60 +165,33 @@ export class LogicalTopology {
     this._resetCommit();
 
     for (let locationId = 0; locationId < this.locations.length; locationId++) {
-      let exitMenu = this.locationExitMenu(locationId);
-      let leaf = new LeafObject({ type: ObjectType.ExitMenu, leaf: exitMenu });
+      const sideExits = this.locationExitChoices(locationId); // the flattened list of [[side, exit], ...., [side, exit]]
+      const location = new LocationChoices(locationId, sideExits);
 
-      // exit menus are quite likely to collide by co-incidence when de-coupled
-      // from the locations that host them. we need to guarantee uniqueness for
-      // the trie to work as expected.
-      const exitMenuKey = leafHash(this.prepareLeaf(leaf));
-      let exitMenuIndex = this.exitMenuKeys[exitMenuKey];
-      if (exitMenuKey in this.exitMenuKeys)
-        exitMenu = this.exitMenus[exitMenuIndex].leaf;
-      else {
-        exitMenuIndex = this.exitMenus.length;
-        this.exitMenus.push(leaf);
-        this.exitMenuKeys[exitMenuKey] = exitMenuIndex;
-      }
-
-      // the location/menu association is unique
-
-      const locationMenu = new LocationMenu(
-        locationId,
-        new LogicalRef(LogicalRefType.Proof, ObjectType.ExitMenu, exitMenuIndex)
-      );
-      leaf = new LeafObject({
-        type: LocationMenu.ObjectType,
-        leaf: locationMenu,
+      let leaf = new LeafObject({
+        type: LocationChoices.ObjectType,
+        leaf: location,
       });
 
-      const locationMenuKey = leafHash(this.prepareLeaf(leaf));
-      if (locationMenuKey in this.locationMenuKeys)
+      const locationChoicesKey = leafHash(this.prepareLeaf(leaf));
+      if (locationChoicesKey in this.locationChoicesKeys)
         throw new Error(
-          `implementation assumption failed, location menu's are expected to be naturally unique`
+          `locations are expected to be naturally unique`
         );
 
-      this.locationMenus.push(leaf);
-      this.locationMenuKeys[locationMenuKey] = this.locationMenus.length - 1;
+      this.locationChoices.push(leaf);
+      this.locationChoicesKeys[locationChoicesKey] = this.locationChoices.length - 1;
 
       // We need a node for each of the locations exits. We most easily derive this from the exitMenu
-      let inputs = exitMenu.inputs();
-      for (let j = 0; j < inputs.length; j++) {
-        // Note: we don't need to use referenceProofInput to create the
-        // sceneInputRef's here because we are making references for all of the
-        // inputs
-        const sceneInputRef = new LogicalRef(
+      for (let j = 0; j < sideExits.length; j++) {
+
+        const locationChoiceRef = new LogicalRef(
           LogicalRefType.ProofInput,
-          ObjectType.ExitMenu,
-          exitMenuIndex,
-          j
+          ObjectType.LocationChoices,
+          locationId,
+          location.iChoices() + j
         );
-        const locationRef = new LogicalRef(
-          LogicalRefType.Proof,
-          ObjectType.Location2,
-          locationId
-        );
-        const locationExit = new LocationExit(sceneInputRef, locationRef);
+        const locationExit = new LocationExit(locationChoiceRef);
 
         leaf = new LeafObject({
           type: LocationExit.ObjectType,
@@ -226,19 +202,15 @@ export class LogicalTopology {
         const locationExitIndex = this.exits.length;
         this.exitKeys[key] = locationExitIndex;
         this.locationExits[
-          `${locationId}:${deconditionInput(inputs[j][0])}:${deconditionInput(
-            inputs[j][1]
-          )}`
+          `${locationId}:${sideExits[j][0]}:${sideExits[j][1]}`
         ] = locationExitIndex;
         this.exits.push(leaf);
       }
     }
 
     for (const link of this.links()) {
-      const ida =
-        this.locationExits[`${link.a.location}:${link.a.side}:${link.a.exit}`];
-      const idb =
-        this.locationExits[`${link.b.location}:${link.b.side}:${link.b.exit}`];
+      const ida = this.exitId(link.a.location, link.a.side, link.a.exit);
+      const idb = this.exitId(link.b.location, link.b.side, link.b.exit);
       const refa = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, ida);
       const refb = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, idb);
 
@@ -277,13 +249,9 @@ export class LogicalTopology {
   }
 
   *leaves() {
-    // exitMenus are the unique encodings of all available exit menus accross all locations.
-    // exitMenus only exist if commit() has been called
-    for (const leaf of this.exitMenus) yield this.prepareLeaf(leaf);
 
-    // locationMenus encode a relation between the location and its exit menu.
-    // locationMenus only exist if commit() has been called
-    for (const leaf of this.locationMenus) yield this.prepareLeaf(leaf);
+    // locationChoices encodes a location and the choices that exist there
+    for (const leaf of this.locationChoices) yield this.prepareLeaf(leaf);
 
     for (const leaf of this.exits) yield this.prepareLeaf(leaf);
 
@@ -331,26 +299,42 @@ export class LogicalTopology {
   }
 
   /**
+   * Return the exit id for the location, side, exit triple
+   * @param {*} location 
+   * @param {*} side 
+   * @param {*} exit 
+   */
+  exitId(location, side, exit) {
+    const id = this.locationExits[`${location}:${side}:${exit}`];
+    if (typeof id === 'undefined')
+      throw new Error(`location exit not found for ${location}:${side}:${exit}`);
+    return id;
+  }
+
+  /**
+   * 
+   * @param {number} typeId 
+   * @param {number} id 
+   */
+  leaf(typeId, id) {
+    switch (typeId) {
+      case ObjectType.LocationChoices:
+        return this.locationChoices[id];
+      case ObjectType.Exit:
+        return this.exits[id];
+      case ObjectType.Link2:
+        return this.locationExitLinks[id];
+    }
+    return undefined;
+  }
+
+  /**
    *
    * @param {LogicalRef} ref
    * @returns a value suitable for the 'value' entry in a proof input
    */
   resolveValueRef(ref) {
-    let target;
-    switch (ref.targetType) {
-      case ObjectType.ExitMenu:
-        target = this.exitMenus[ref.id];
-        break;
-      case ObjectType.Location2:
-        target = this.locationMenus[ref.id];
-        break;
-      case ObjectType.Exit:
-        target = this.exits[ref.id];
-        break;
-      case ObjectType.Link2:
-        target = this.locationExitLinks[ref.id];
-        break;
-    }
+    const target = this.leaf(ref.targetType, ref.id);
     if (!target)
       throw new Error(`unknown reference targetType ${ref.targetType}`);
 
@@ -390,7 +374,7 @@ export class LogicalTopology {
         target = this.exitMenus[id];
         break;
       case ObjectType.Location2:
-        id = this.locationMenuKeys[value];
+        id = this.locationChoicesKeys[value];
         target = this.locationMenu[id];
         break;
       case ObjectType.Exit:
@@ -466,14 +450,16 @@ export class LogicalTopology {
     }
   }
 
-  locationExitMenu(location) {
-    const choices = [[], [], [], []];
+  locationExitChoices(location) {
+    const choices = [];
     const loc = this.locations[location];
-    // We just need the count of exits on each side. the exit identifiers are
-    // local to the scene and are just the enumeration of that count.
-    for (let side = 0; side < choices.length; side++)
-      choices[side] = loc.sides[side].length;
-    return new ExitMenu(choices);
+    for (let side = 0; side < loc.sides.length; side++) {
+      // for the specific case of exits we could compress this by just storing
+      // the counts, but we want the choice menus to be more general beasts.
+      for (let exit=0; exit < loc.sides[side].length; exit++)
+        choices.push([side, exit])
+    }
+    return choices;
   }
 
   /**
