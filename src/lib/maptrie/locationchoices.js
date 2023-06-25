@@ -24,6 +24,27 @@ export class LocationChoices {
    */
   iChoices() {return 1}
 
+  /**
+   * @param {number[]} choice
+   * @returns {number} matching input index or undefined
+   */
+  matchInput(choice) {
+
+    const inputs = this.inputs({ unconditioned: true });
+    for (let i = this.iChoices(); i < inputs.length; i++) {
+      if (choice.length !== inputs[i].length)
+        continue
+
+      let matched = 0;
+      for (let j = 0; j < choice.length; j++)
+        if (choice[j] === inputs[i][j])
+          matched += 1;
+      if (matched === choice.length)
+        return i;
+    }
+  }
+
+
   inputs(options) {
 
     if (!options.unconditioned)

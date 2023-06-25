@@ -44,21 +44,4 @@ export class ExitMenu {
   prepare() {
     return [ExitMenu.ObjectType, this.inputs()];
   }
-
-  static hydrate(prepared) {
-    const choices = {};
-    for (const [side, exit] of prepared[1]) {
-      const count = choices[side] ?? 0;
-      choices[side] = count + 1;
-      if (choices[side] != exit + 1)
-        throw Error(`bad exit encoding, exit indices should be sequential`);
-    }
-    const sideExits = [[], [], [], []];
-    for (let side = 0; side < sideExits.length; side++) {
-      side = conditionInput(side);
-      sideExits[side] = choices[side] ?? 0;
-    }
-
-    return new ExitMenu(sideExits);
-  }
 }

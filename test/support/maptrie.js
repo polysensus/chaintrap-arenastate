@@ -20,8 +20,8 @@ export function trieForMap02() {
   const leaves = topo.links().map(
     (link) =>
       new LeafObject({
-        type: ObjectType.Link,
-        leaf: ObjectCodec.encode(link),
+        type: ObjectType.Link2,
+        leaf: link,
       })
   );
 

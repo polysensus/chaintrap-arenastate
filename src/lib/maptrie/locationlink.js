@@ -38,8 +38,4 @@ export class LocationLink {
   prepare(options) {
     return [LocationLink.ObjectType, this.inputs(options)];
   }
-
-  static hydrate(prepared, options) {
-    throw new Error('tbd ...');
-  }
 }

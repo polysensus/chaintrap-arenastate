@@ -42,20 +42,4 @@ export class LocationMenu {
   prepare(options) {
     return [LocationMenu.ObjectType, this.inputs(options)];
   }
-
-  static hydrate(prepared, options) {
-    if (prepared[0] !== LocationMenu.ObjectType)
-      throw new Error(`bad type ${prepared[0]} for LocationMenu`);
-
-    const recoverTarget = options?.recoverTarget;
-    if (!recoverTarget)
-      throw new Error(`a reference recovery call back is required`);
-    const location = prepared[1][0][0];
-    const sceneMenuRef = recoverTarget(
-      LogicalRefType.Proof,
-      ObjectType.ExitMenu,
-      prepared[1][1][0]
-    );
-    return new LocationMenu(location, sceneMenuRef);
-  }
 }

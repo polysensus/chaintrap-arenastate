@@ -38,8 +38,4 @@ export class LocationExit {
   prepare(options) {
     return [LocationExit.ObjectType, this.inputs(options)];
   }
-
-  static hydrate(prepared, options) {
-    throw new Error(`needs more thought`);
-  }
 }

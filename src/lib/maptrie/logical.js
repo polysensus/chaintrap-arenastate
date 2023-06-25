@@ -41,26 +41,9 @@ export class LogicalTopology {
     this.locations = [];
     this.locations2 = [];
 
-    /**
-     * Each this.exitMenus[] encodes the choice of exits at each location.
-     *
-     * For each item, we get a leaf encoding: [SCENE-EXITS, [[side, exit], ..., ]]
-     */
-    this.exitMenus = [];
-    this.exitMenuKeys = {};
-
-    /**
-     * For each item, we get a leaf encoding [LOCATION, [[l], [REF(#S)]]]
-     * REF(#S) -> the key (hash) encoding of this.exitMenus[l]
-     */
     this.locationChoices = [];
     this.locationChoicesKeys = {};
 
-    /**
-     * For each item, we get a leaf encoding [EXIT, [[REF(#S, i)], [REF(#L)]]]
-     * REF(#S, i) -> the i'th input of the SCENE/exitMenu S
-     * REF(#L) -> the key of location menu L
-     */
     this.exits = [];
     this.exitKeys = {};
     // To encode location links we need to be able to reference by (location, side, exit) -> exit
@@ -76,6 +59,7 @@ export class LogicalTopology {
      */
     this.locationExitLinks = [];
     this.locationExitLinkKeys = {};
+    this.locationExitLinkIds = {};
 
     /**
      * @readonly
@@ -84,7 +68,6 @@ export class LogicalTopology {
   }
 
   _resetCommit() {
-    this.exitMenus = [];
     this.exitMenuKeys = {};
     this.locationChoices = [];
     this.locationChoicesKeys = {};
@@ -93,9 +76,6 @@ export class LogicalTopology {
     this.locationExits = {};
     this.locationExitLinks = [];
     this.locationExitLinkKeys = {};
-
-    this.locationChoicesx = [];
-    this.locationChoiceKeysx = {};
 
     this._committed = false;
   }
@@ -223,17 +203,7 @@ export class LogicalTopology {
       let locationExitLinkIndex = this.locationExitLinks.length;
       this.locationExitLinkKeys[key] = locationExitLinkIndex;
       this.locationExitLinks.push(leaf);
-
-      /*
-      const locationExitLinkBA = new LocationLink(refb, refa);
-      leaf = new LeafObject({type:ObjectType.Link2, leaf:locationExitLinkBA});
-      key = leafHash(this.prepareLeaf(leaf));
-      if (key in this.locationExitLinkKeys)
-        throw new Error(`uh really ?`);
-      locationExitLinkIndex = this.locationExitLinks.length;
-      this.locationExitLinkKeys[key] = locationExitLinkIndex;
-      this.locationExitLinks.push(leaf);
-      */
+      this.locationExitLinkIds[`${link.a.location}:${link.a.side}:${link.a.exit}`] = locationExitLinkIndex;
     }
 
     this._committed = true;
@@ -256,8 +226,6 @@ export class LogicalTopology {
     for (const leaf of this.exits) yield this.prepareLeaf(leaf);
 
     for (const leaf of this.locationExitLinks) yield this.prepareLeaf(leaf);
-    // for (const link of this.links())
-    //   yield this.prepareObject({type:ObjectType.Link, leaf:link});
   }
 
   /**
@@ -279,17 +247,11 @@ export class LogicalTopology {
     });
   }
 
-  hydratePrepared(prepared) {
-    return ObjectCodec.hydrate(prepared, {
-      recoverTarget: this.recoverTarget.bind(this),
-    });
-  }
-
   referenceProofInput(targetType, id, options) {
     let input;
     switch (targetType) {
-      case ObjectType.ExitMenu:
-        input = this.exitMenus[id].leaf.matchInput(options);
+      case ObjectType.LocationChoices:
+        input = this.locationChoices[id].leaf.matchInput(options);
         break;
     }
     if (typeof input === "undefined")
@@ -306,6 +268,13 @@ export class LogicalTopology {
    */
   exitId(location, side, exit) {
     const id = this.locationExits[`${location}:${side}:${exit}`];
+    if (typeof id === 'undefined')
+      throw new Error(`location exit not found for ${location}:${side}:${exit}`);
+    return id;
+  }
+  locationLinkId(location, side, exit) {
+
+    const id = this.locationExitLinkIds[`${location}:${side}:${exit}`] = locationExitLinkIndex;
     if (typeof id === 'undefined')
       throw new Error(`location exit not found for ${location}:${side}:${exit}`);
     return id;
@@ -355,40 +324,6 @@ export class LogicalTopology {
   }
 
   /**
-   * Notice: this does not recover the index if the type is ProofInput. The
-   * caller is expected to have that context
-   * @param {*} targetType
-   * @param {*} value
-   * @returns
-   */
-  recoverTarget(targetType, value) {
-    let id, target;
-
-    switch (ref.targetType) {
-      case ObjectType.ExitMenu:
-        // value is the leaf encoding of an exit
-        id = this.exitMenuKeys[value];
-        target = this.exitMenus[id];
-        break;
-      case ObjectType.Location2:
-        id = this.locationChoicesKeys[value];
-        target = this.locationMenu[id];
-        break;
-      case ObjectType.Exit:
-        // value is the leaf encoding of an exit
-        id = this.exitKeys[value];
-        target = this.exits[id];
-        break;
-      case ObjectType.Link2:
-        id = this.locationExitLinkKeys[value];
-        target = this.locationExitLinks[id];
-        break;
-    }
-    if (!target) throw new Error(`targetType not known or tbd`);
-    return new LogicalRef(type, targetType, id);
-  }
-
-  /**
    * Yield all the location links on the topology. Yields both A->B and B->A by default.
    * @template {{unique:boolean}} OptionsLike
    * @param {OptionsLike} options
@@ -401,49 +336,6 @@ export class LogicalTopology {
       if (options?.unique) continue;
       // So we get A->B and B->A, and in future we may support one-way-doors
       yield new Link(link.b, link.a);
-    }
-  }
-
-  /**
-   * Return the merkle encode choice nodes available at location
-   * @param {number} location
-   */
-  locationChoices(location) {
-    const choices = [];
-    for (let side = 0; side < 4; side++) {
-      for (const prepared of this.locationSideChoices(location, side)) {
-        choices.push(leafHash(prepared));
-      }
-    }
-    return choices;
-  }
-
-  /**
-   * Enumerate the choices available at the location, on the specific side. The yields are encoded as LeafObjects
-   * @param {number} location
-   * @param {number} side
-   * @param {any} options
-   */
-  *locationSideChoices(location, side, options) {
-    for (const link of this.locationSideLinks(location, side, options)) {
-      yield ObjectCodec.prepare(
-        new LeafObject({ type: ObjectType.Link, leaf: link })
-      );
-    }
-  }
-
-  /**
-   * Enumerate the location links available at the location for the specific side
-   * @param {number} location
-   * @param {number} side
-   * @param {any} options
-   */
-  *locationSideLinks(location, side, options) {
-    const loc = this.locations[location];
-    for (let exit = 0; exit < loc.sides[side].length; exit++) {
-      const egress = new Access({ location, side, exit });
-      const ingress = this.accessJoin(egress);
-      yield new Link(egress, ingress);
     }
   }
 

@@ -15,12 +15,9 @@ import { LogicalRef, LogicalRefType } from "./logicalref.js";
 //
 import maps from "../../../data/maps/map02.json" assert { type: "json" };
 import {
-  ObjectCodec,
   LeafObject,
   leafHash,
-  directPreimage,
-  conditionInputs,
-  conditionInput,
+  conditionInputs
 } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
 
@@ -63,6 +60,9 @@ describe("LogicalTopology entryCommit tests", function () {
     const location1Exit = topo.leaf(ObjectType.Exit, topo.exitId(1, 1, 0));
     const location1ExitPrepared = topo.prepareLeaf(location1Exit);
     const location1ExitProof = trie.getProof(location1ExitPrepared);
+    const link = topo.leaf(ObjectType.Link2, topo.exitId(0, 3, 0));
+    const linkPrepared = topo.prepareLeaf(link);
+    const linkProof = trie.getProof(linkPrepared);
 
     const logit = (name, prepared, proof) => {
       // remember, the inputs are indirect, so prepared != inputs
@@ -153,8 +153,8 @@ describe("LogicalTopology entryCommit tests", function () {
 
     // Obtain an exit proof linking the exit menu choice to a specific location exit
     // [EXIT, [[REF(#L, i)]]]
-    // STACK(2) to the association of exit 0 with location 0 with exitMenu 0, choice 0.
-    // note that the location proof is at STACK(1)
+    // STACK(1) to the association of exit 0 with location 0 with exitMenu 0, choice 0.
+    // note that the location proof is at STACK(0)
     leaves.push({
       typeId: location0ExitPrepared[0],
       inputs: conditionInputs([[0, 1]])
@@ -181,6 +181,32 @@ describe("LogicalTopology entryCommit tests", function () {
     });
 
     logit('location1', location1Prepared, stack[stack.length -1]);
+
+    // Set STACK(3) to location 1 exit (ingress)
+    leaves.push({
+      typeId: location1ExitPrepared[0],
+      inputs: conditionInputs([[2, 1]])
+    });
+    stack.push({
+      inputRefs: [0],
+      proofRefs: [],
+      rootLabel: this.minter.minter.initArgs.rootLabels[0],
+      proof: location1ExitProof
+    });
+
+    leaves.push({
+      typeId: linkPrepared[0],
+      inputs: conditionInputs([
+        [ 1 ] , // STACK(1)
+        [ 3 ] // STACK(3)
+      ])
+    });
+    stack.push({
+      inputRefs: [],
+      proofRefs: [0, 1],
+      rootLabel: this.minter.minter.initArgs.rootLabels[0],
+      proof: linkProof
+    });
 
     // finally, reveal (and prove) the outcome and choices consequent from the player choice
     const user1Address = await this.user1Arena.signer.getAddress();

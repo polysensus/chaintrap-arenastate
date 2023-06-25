@@ -93,7 +93,7 @@ export class LeafObject {
 
   /**
    * @constructor
-   * @template {{type: ObjectType.Access, leaf: Access|object}} LeafObjectLike
+   * @template {{type: number, leaf: any}} LeafObjectLike
    * @param {LeafObjectLike} object
    */
   constructor(o) {
@@ -110,55 +110,20 @@ export class LeafObject {
   }
 
   /**
-   * Create a new LeafObject instance from a previously prepared one
-   * @param {[number, ethers.utils.BytesLike]} prepared
-   * @returns {LeafObject}
-   */
-  static hydrate(prepared) {
-    return ObjectCodec.hydrate(prepared);
-  }
-
-  /**
    * @template {{location: number, side: number, exit: number}} AccessLike
    * @template {{a:AccessLike, b:AccessLike}} LinkLike
    * @param {LinkLike} link
    */
   static linkLeaf(link) {
-    return new LeafObject({ type: ObjectType.Link, leaf: link });
-  }
-
-  /**
-   * @template {{location: number, side: number, exit: number}} AccessLike
-   * @param {AccessLike} access
-   */
-  static accessLeaf(access) {
-    return new LeafObject({ type: ObjectType.Access, leaf: access });
+    return new LeafObject({ type: ObjectType.Link2, leaf: link });
   }
 }
 
 export class ObjectCodec {
   static typePrepare = Object.fromEntries([
-    [ObjectType.Access, (leaf) => leaf],
-    [ObjectType.Link, (leaf) => leaf],
     [ObjectType.Exit, (leaf, options) => leaf.prepare(options)],
     [ObjectType.LocationChoices, (leaf, options) => leaf.prepare(options)],
     [ObjectType.Link2, (leaf, options) => leaf.prepare(options)],
-  ]);
-  static typeHydrate = Object.fromEntries([
-    [ObjectType.Access, (prepared) => new Access(prepared)],
-    [ObjectType.Link, (prepared) => new Link(prepared.a, prepared.b)],
-    [
-      ObjectType.Exit,
-      (prepared, options) => LocationExit.hydrate(prepared, options),
-    ],
-    [
-      ObjectType.LocationChoices,
-      (prepared, options) => LocationChoices.hydrate(prepared, options),
-    ],
-    [
-      ObjectType.Link2,
-      (prepared, options) => LocationLink.hydrate(prepared, options),
-    ],
   ]);
 
   /**
@@ -176,26 +141,5 @@ export class ObjectCodec {
     const [typeId, inputs] = preper(o.leaf, options);
 
     return [typeId, directPreimage(inputs)];
-  }
-
-  /**
-   * Decode and hydrate the wrapped leaf, given the results of abi decoding the
-   * ethers abi encoded leaf using {@link LeafObject.ABI}
-   * The round trip looks like this:
-   *  const encoded = ethers.utils.defaultAbiCoder.encode(LeafObject.ABI, ObjectCodec.prepare(leafObject))
-   *  const decoded = ethers.utils.defaultAbiCoder.decode(LeafObject.ABI, encoded)
-   * @param {ethers.utils.BytesLike} data
-   * @returns {LeafObject}
-   */
-  static hydrate(prepared) {
-    const encoded = ethers.utils.arrayify(prepared.leaf);
-    const decoded = msgpack.decode(encoded);
-    const hydrator = ObjectCodec.typeHydrate[prepared.type];
-    if (!hydrator) throw new Error(`type ${prepared.type} not configured`);
-
-    return new LeafObject({
-      type: prepared.type,
-      leaf: hydrator(decoded),
-    });
   }
 }
