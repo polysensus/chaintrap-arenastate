@@ -155,16 +155,14 @@ export class LogicalTopology {
 
       const locationChoicesKey = leafHash(this.prepareLeaf(leaf));
       if (locationChoicesKey in this.locationChoicesKeys)
-        throw new Error(
-          `locations are expected to be naturally unique`
-        );
+        throw new Error(`locations are expected to be naturally unique`);
 
       this.locationChoices.push(leaf);
-      this.locationChoicesKeys[locationChoicesKey] = this.locationChoices.length - 1;
+      this.locationChoicesKeys[locationChoicesKey] =
+        this.locationChoices.length - 1;
 
       // We need a node for each of the locations exits. We most easily derive this from the exitMenu
       for (let j = 0; j < sideExits.length; j++) {
-
         const locationChoiceRef = new LogicalRef(
           LogicalRefType.ProofInput,
           ObjectType.LocationChoices,
@@ -203,7 +201,9 @@ export class LogicalTopology {
       let locationExitLinkIndex = this.locationExitLinks.length;
       this.locationExitLinkKeys[key] = locationExitLinkIndex;
       this.locationExitLinks.push(leaf);
-      this.locationExitLinkIds[`${link.a.location}:${link.a.side}:${link.a.exit}`] = locationExitLinkIndex;
+      this.locationExitLinkIds[
+        `${link.a.location}:${link.a.side}:${link.a.exit}`
+      ] = locationExitLinkIndex;
     }
 
     this._committed = true;
@@ -219,7 +219,6 @@ export class LogicalTopology {
   }
 
   *leaves() {
-
     // locationChoices encodes a location and the choices that exist there
     for (const leaf of this.locationChoices) yield this.prepareLeaf(leaf);
 
@@ -262,28 +261,32 @@ export class LogicalTopology {
 
   /**
    * Return the exit id for the location, side, exit triple
-   * @param {*} location 
-   * @param {*} side 
-   * @param {*} exit 
+   * @param {*} location
+   * @param {*} side
+   * @param {*} exit
    */
   exitId(location, side, exit) {
     const id = this.locationExits[`${location}:${side}:${exit}`];
-    if (typeof id === 'undefined')
-      throw new Error(`location exit not found for ${location}:${side}:${exit}`);
+    if (typeof id === "undefined")
+      throw new Error(
+        `location exit not found for ${location}:${side}:${exit}`
+      );
     return id;
   }
   locationLinkId(location, side, exit) {
-
-    const id = this.locationExitLinkIds[`${location}:${side}:${exit}`] = locationExitLinkIndex;
-    if (typeof id === 'undefined')
-      throw new Error(`location exit not found for ${location}:${side}:${exit}`);
+    const id = (this.locationExitLinkIds[`${location}:${side}:${exit}`] =
+      locationExitLinkIndex);
+    if (typeof id === "undefined")
+      throw new Error(
+        `location exit not found for ${location}:${side}:${exit}`
+      );
     return id;
   }
 
   /**
-   * 
-   * @param {number} typeId 
-   * @param {number} id 
+   *
+   * @param {number} typeId
+   * @param {number} id
    */
   leaf(typeId, id) {
     switch (typeId) {
@@ -345,8 +348,8 @@ export class LogicalTopology {
     for (let side = 0; side < loc.sides.length; side++) {
       // for the specific case of exits we could compress this by just storing
       // the counts, but we want the choice menus to be more general beasts.
-      for (let exit=0; exit < loc.sides[side].length; exit++)
-        choices.push([side, exit])
+      for (let exit = 0; exit < loc.sides[side].length; exit++)
+        choices.push([side, exit]);
     }
     return choices;
   }

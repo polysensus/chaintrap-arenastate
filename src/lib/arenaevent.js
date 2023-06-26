@@ -92,11 +92,10 @@ export class ArenaEvent {
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.update = {
-          choices: parsedLog.args.choices
+          choices: parsedLog.args.choices,
         };
         const data = undefinedIfZeroBytesLike(parsedLog.args.data);
-        if (data)
-          arenaEvent.update.scene = msgpack.decode(arrayify(data));
+        if (data) arenaEvent.update.scene = msgpack.decode(arrayify(data));
 
         break;
 

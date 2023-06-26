@@ -14,11 +14,7 @@ import { LogicalTopology } from "./logical.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
 //
 import maps from "../../../data/maps/map02.json" assert { type: "json" };
-import {
-  LeafObject,
-  leafHash,
-  conditionInputs
-} from "./objects.js";
+import { LeafObject, leafHash, conditionInputs } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
 
 import { getGameCreated, getSetMerkleRoot } from "../arenaevent.js";
@@ -71,7 +67,7 @@ describe("LogicalTopology entryCommit tests", function () {
       let x = abiCoder.encode(LeafObject.ABI, prepared);
       console.log(`encoded:(${name})) ${hexlify(x)}`);
       console.log("");
-    }
+    };
 
     let egressChoices = [
       {
@@ -92,7 +88,7 @@ describe("LogicalTopology entryCommit tests", function () {
     ];
 
     // the input is [[location], [side, exit], ... [side, exit]]
-    let choice = egressChoices[0].inputs[location0.leaf.iChoices()+0];
+    let choice = egressChoices[0].inputs[location0.leaf.iChoices() + 0];
 
     transactor
       .method(
@@ -145,11 +141,10 @@ describe("LogicalTopology entryCommit tests", function () {
       inputRefs: [],
       proofRefs: [],
       rootLabel: this.minter.minter.initArgs.rootLabels[0],
-      proof: location0Proof
+      proof: location0Proof,
     });
 
-    logit('location0', location0Prepared, stack[stack.length -1]);
-
+    logit("location0", location0Prepared, stack[stack.length - 1]);
 
     // Obtain an exit proof linking the exit menu choice to a specific location exit
     // [EXIT, [[REF(#L, i)]]]
@@ -157,16 +152,16 @@ describe("LogicalTopology entryCommit tests", function () {
     // note that the location proof is at STACK(0)
     leaves.push({
       typeId: location0ExitPrepared[0],
-      inputs: conditionInputs([[0, 1]])
+      inputs: conditionInputs([[0, 1]]),
     });
     stack.push({
       inputRefs: [0],
       proofRefs: [],
       rootLabel: this.minter.minter.initArgs.rootLabels[0],
-      proof: location0ExitProof
+      proof: location0ExitProof,
     });
 
-    logit('EXIT', location0ExitPrepared, location0ExitProof);
+    logit("EXIT", location0ExitPrepared, location0ExitProof);
 
     // Set STACK(2) to location1
     leaves.push({
@@ -177,35 +172,35 @@ describe("LogicalTopology entryCommit tests", function () {
       inputRefs: [],
       proofRefs: [],
       rootLabel: this.minter.minter.initArgs.rootLabels[0],
-      proof: location1Proof
+      proof: location1Proof,
     });
 
-    logit('location1', location1Prepared, stack[stack.length -1]);
+    logit("location1", location1Prepared, stack[stack.length - 1]);
 
     // Set STACK(3) to location 1 exit (ingress)
     leaves.push({
       typeId: location1ExitPrepared[0],
-      inputs: conditionInputs([[2, 1]])
+      inputs: conditionInputs([[2, 1]]),
     });
     stack.push({
       inputRefs: [0],
       proofRefs: [],
       rootLabel: this.minter.minter.initArgs.rootLabels[0],
-      proof: location1ExitProof
+      proof: location1ExitProof,
     });
 
     leaves.push({
       typeId: linkPrepared[0],
       inputs: conditionInputs([
-        [ 1 ] , // STACK(1)
-        [ 3 ] // STACK(3)
-      ])
+        [1], // STACK(1)
+        [3], // STACK(3)
+      ]),
     });
     stack.push({
       inputRefs: [],
       proofRefs: [0, 1],
       rootLabel: this.minter.minter.initArgs.rootLabels[0],
-      proof: linkProof
+      proof: linkProof,
     });
 
     // finally, reveal (and prove) the outcome and choices consequent from the player choice
@@ -216,44 +211,24 @@ describe("LogicalTopology entryCommit tests", function () {
       .method(this.guardianArena.transcriptEntryResolve, gid, {
         participant: user1Address,
         outcome: 3, // Accepted
-        stack,
-        leaves,
+        proof: {
+          choiceSetType: 9,
+          transitionType: 8,
+          stack,
+          leaves,
+        },
         data: "0x",
-        choiceLeafIndex: 2 // XXX: TODO add proofs for the egress / ingress link and the ingress / menu link
+        choiceLeafIndex: 2, // XXX: TODO add proofs for the egress / ingress link and the ingress / menu link
       })
       .requireLogs(
         "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)",
         "TranscriptEntryOutcome(uint256,address,uint256,address,bytes32,uint8,bytes)"
       );
 
-    // TODO: get the participant commit working
     for await (const r of transactor.transact()) {
       console.log(
         Object.keys(r.events).map((name) => `${name}[${r.events[name].length}]`)
       );
     }
-
-    /*
-    // --- Exit E (egress)
-    let refMenuInput = topo.referenceProofInput(ObjectType.ExitMenu, id, {
-      side: 3,
-      exit: 0,
-    });
-
-    let refLocation = new LogicalRef(
-      LogicalRefType.Proof,
-      ObjectType.Location2,
-      0
-    );
-
-    let egressExit = new LeafObject({
-      type: LocationExit.ObjectType,
-      leaf: new LocationExit(refMenuInput, refLocation),
-    });
-    let preparedExit = topo.prepareLeaf(location0Exit);
-
-*/
-
-    // exitMenuKey is the the leaf for exit 0 (the start position of the player)
   });
 });

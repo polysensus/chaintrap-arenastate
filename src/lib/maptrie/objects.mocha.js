@@ -8,7 +8,6 @@ import { Link } from "./link.js";
 import { ObjectCodec, LeafObject } from "./objects.js";
 
 describe("Object trie Access tests", function () {
-
   it("Should abi encode a leaf object", function () {
     let encoded, decoded;
     // various examples of possible encodings, an 'x' prefix means it doesn't work

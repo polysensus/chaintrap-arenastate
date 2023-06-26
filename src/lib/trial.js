@@ -43,7 +43,7 @@ export class Trial {
    * @returns {{data, choices}}
    */
   scene(location) {
-    throw new Error('nyi');
+    throw new Error("nyi");
   }
 
   /**
@@ -54,7 +54,7 @@ export class Trial {
     // one of each for each trialist.
     const choices = [];
     const data = [];
-    throw new Error('nyi');
+    throw new Error("nyi");
 
     for (let itrialist = 0; itrialist < starts.length; itrialist++) {
       const scene = this.scene(starts[itrialist]);
