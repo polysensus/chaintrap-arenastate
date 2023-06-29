@@ -34,7 +34,6 @@ export class Trialist {
       ],
       {
         profile: (profile) => undefinedIfZeroBytesLike(profile),
-        node: (node) => undefinedIfZeroBytesLike(node),
         data: (data) => undefinedIfZeroBytesLike(data),
       }
     );
