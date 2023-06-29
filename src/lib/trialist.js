@@ -1,5 +1,7 @@
 import { ABIName } from "./abiconst.js";
-import { TrialistState } from "./trialiststate.js";
+import { undefinedIfZeroBytesLike } from "./chainkit/ethutil.js";
+
+import { PropDelta } from "./propdelta.js";
 
 export const TrialistEvents = Object.fromEntries([
   [ABIName.TranscriptRegistration, true],
@@ -9,11 +11,33 @@ export const TrialistEvents = Object.fromEntries([
 ]);
 
 export class Trialist {
+
+
   static handlesEvent(name) {
     return TrialistEvents[name];
   }
 
   constructor() {
+
+    this.propDelta = new PropDelta(
+      [
+        "registered",
+        "address",
+        "profile",
+        "rootLabel",
+        "inputChoice",
+        "choices",
+        "scene",
+        "data",
+        "lastEID",
+      ],
+      {
+        profile: (profile) => undefinedIfZeroBytesLike(profile),
+        node: (node) => undefinedIfZeroBytesLike(node),
+        data: (data) => undefinedIfZeroBytesLike(data),
+      }
+    );
+
     this.state = {};
     this._previous = {};
     this._delta = {};
@@ -82,7 +106,7 @@ export class Trialist {
     else this.eids[eid] = Object.fromEntries([[eventID, event]]);
 
     if (event.update) {
-      const delta = TrialistState.delta(this.state, event.update);
+      const delta = this.propDelta.delta(this.state, event.update);
       Object.assign(this.state, delta);
       // delta accumulates forever until collected. It is the delta since the last collection.
       Object.assign(this._delta, delta);
@@ -97,7 +121,7 @@ export class Trialist {
         const lastOutcomeState = this.outcomeStates[lastOutcomeEID];
 
         // Also, automatically provide delta's for each outcome event (Accepted, Rejected or otherwise)
-        this.outcomeDelta[eid] = TrialistState.delta(
+        this.outcomeDelta[eid] = this.propDelta.delta(
           lastOutcomeState,
           this.state
         );

@@ -48,6 +48,8 @@ export class ArenaEventParser extends EventParser {
  * }} ParsedGameLogLike
  */
 export class ArenaEvent {
+
+  static PARTICIPANT_
   /**
    * @constructor
    * @param {ParsedGameLogLike} parsed parsed and normalized game event
@@ -105,16 +107,9 @@ export class ArenaEvent {
         arenaEvent.update = {
           lastEID: arenaEvent.eid,
           rootLabel: parsedLog.args.rootLabel,
-          outcome: parsedLog.args.outcome,
           inputChoice: parsedLog.args.inputChoice,
           data: parsedLog.args.data,
         };
-        break;
-      case ABIName.ArgumentProven:
-        arenaEvent.eid = parsedLog.args.eid;
-        arenaEvent.subject = parsedLog.args.participant;
-        arenaEvent.advocate = parsedLog.args.advocate;
-        arenaEvent.update = {};
         break;
       case ABIName.TranscriptEntryOutcome:
         arenaEvent.eid = parsedLog.args.eid;

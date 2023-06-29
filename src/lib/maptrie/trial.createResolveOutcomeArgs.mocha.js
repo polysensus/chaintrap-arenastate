@@ -1,8 +1,6 @@
 // @ts-check
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { ethers } from "ethers";
 import * as msgpack from "@msgpack/msgpack";
 
 import { LogicalTopology } from "./logical.js";
@@ -19,6 +17,10 @@ import { Transactor } from "../chainkit/transactor.js";
 
 describe("Trial createResolveOutcomeArgs tests", function () {
   it("Should resolve a location exit choice", async function () {
+    if (!this.gameOptions || !this.mintGame) {
+      this.skip();
+    }
+
     const topo = new LogicalTopology();
     topo.extendJoins([{ joins: [0, 1], sides: [3, 1] }]); // rooms 0,1 sides EAST, WEST
     topo.extendLocations([

@@ -2,7 +2,9 @@ import hre from "hardhat";
 const ethers = hre.ethers;
 import * as msgpack from "@msgpack/msgpack";
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { LogicalTopology } from "../src/lib/maptrie/logical.js";
+import { conditionInputs } from "../src/lib/maptrie/objects.js";
+import { LocationChoices } from "../src/lib/maptrie/locationchoices.js";
 
 import { getGameCreated, getSetMerkleRoot } from "../src/lib/arenaevent.js";
 //
@@ -20,20 +22,34 @@ describe("StateRoster# load", async function () {
       this.skip();
     }
 
+    const topo = new LogicalTopology();
+    topo.extendJoins([{ joins: [0, 1], sides: [3, 1] }]); // rooms 0,1 sides EAST, WEST
+    topo.extendLocations([
+      { sides: [[], [], [], [0]], flags: {} },
+      { sides: [[], [0], [], []], flags: {} },
+    ]);
+    const trial = new Trial({topology: topo})
+    trial.topology.commit();
+
+    // mint without publishing nft metadata
+    let r = await this.mintGame({ topology: topo, trie: trial.topology.trie });
+
+    const startLocationId = 0;
+
+
     const user1Address = await this.user1Arena.signer.getAddress();
 
-    const trial = Trial.fromCollectionJSON(this.minter.collection);
-    const { choices, data } = trial.createStartGameArgs([0]);
-    expect(choices.length).to.equal(1);
-    expect(data.length).to.equal(1);
+    // this.minter.loadMap();
+    // const trial = Trial.fromCollectionJSON(this.minter.collection);
+    let inputIndex = trial.topology.locationChoices[startLocationId].leaf.matchInput([3, 0]);
+    let inputs = trial.topology.locationChoicesPrepared[startLocationId][1];
+    let userChoice = inputs[inputIndex];
 
-    const userChoice = choices[0][0];
-
-    this.minter.loadMap();
-    let r = await loadFixture(this.mintGame);
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
     const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedLog.args.label;
+
+    const startArgs = trial.createStartGameArgs([startLocationId], this.minter.minter);
 
     let transactor = new Transactor(arenaEvents);
     transactor
@@ -43,27 +59,27 @@ describe("StateRoster# load", async function () {
         msgpack.encode({ nickname: "alice" })
       )
       .requireLogs("TranscriptRegistration(uint256,address,bytes)")
-      .method(this.guardianArena.startTranscript, gid, { choices, data })
+      .method(this.guardianArena.startTranscript, gid, startArgs)
       .requireLogs(
         "TranscriptStarted(uint256)",
-        "TranscriptEntryChoices(uint256,address,uint256,bytes32[],bytes)"
+        "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
       )
       .method(this.user1Arena.transcriptEntryCommit, gid, {
         rootLabel,
-        node: userChoice,
+        input: userChoice,
         data: "0x",
       })
       .requireLogs(
-        "TranscriptEntryCommitted(uint256,address,uint256,bytes32,bytes32,bytes)"
+        "TranscriptEntryCommitted(uint256,address,uint256,bytes32,uint256,bytes)"
       )
       .method(
         this.guardianArena.transcriptEntryResolve,
         gid,
-        trial.createResolveOutcomeArgs(user1Address, userChoice)
+        trial.createResolveOutcomeArgs(user1Address, startLocationId, userChoice)
       )
       .requireLogs(
-        "TranscriptEntryChoices(uint256,address,uint256,bytes32[],bytes)",
-        "TranscriptEntryOutcome(uint256,address,uint256,address,bytes32,uint8,bytes32,bytes)"
+        "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)",
+        "TranscriptEntryOutcome(uint256,address,uint256,address,bytes32,uint8,bytes)"
       );
     for await (const r of transactor.transact()) {
       console.log(
@@ -96,8 +112,13 @@ describe("StateRoster# load", async function () {
       expect(state.address).to.equal(user1Address);
       expect(state.registered).to.be.true;
       expect(state.profile?.nickname).to.equal("alice");
-      expect(state.node).to.equal(userChoice);
       expect(state.rootLabel).to.equal(rootLabel);
+      expect(state.inputChoice.toNumber() === 1);
+      let a = state.choices.inputs[LocationChoices.CHOICE_INPUTS];
+      let b = conditionInputs([[1, 0]])[0];
+      expect(b.length).to.equal(2);
+      expect(a[0]).to.equal(b[0]);
+      expect(a[1]).to.equal(b[1]);
     }
   });
 });

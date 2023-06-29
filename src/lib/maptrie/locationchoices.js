@@ -12,6 +12,7 @@ import { LogicalRef } from "./logicalref.js";
 
 export class LocationChoices {
   static ObjectType = ObjectType.LocationChoices;
+  static CHOICE_INPUTS = 1;
 
   constructor(location, sideExits) {
     this.location = location;
@@ -23,7 +24,7 @@ export class LocationChoices {
    * @returns {number}
    */
   iChoices() {
-    return 1;
+    return LocationChoices.CHOICE_INPUTS;
   }
 
   /**

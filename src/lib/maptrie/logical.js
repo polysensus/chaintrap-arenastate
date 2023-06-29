@@ -9,7 +9,6 @@ import { LocationChoices } from "./locationchoices.js";
 import { LocationExit } from "./locationexit.js";
 import { LocationLink } from "./locationlink.js";
 import { ObjectCodec, LeafObject, leafHash } from "./objects.js";
-import { deconditionInput } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
 import { Location } from "./location.js";
