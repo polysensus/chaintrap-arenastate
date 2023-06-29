@@ -3,8 +3,7 @@ const ethers = hre.ethers;
 import * as msgpack from "@msgpack/msgpack";
 import { expect } from "chai";
 import { LogicalTopology } from "../src/lib/maptrie/logical.js";
-import { conditionInputs } from "../src/lib/maptrie/objects.js";
-import { LocationChoices } from "../src/lib/maptrie/locationchoices.js";
+import { conditionInputs, deconditionInput } from "../src/lib/maptrie/objects.js";
 
 import { getGameCreated, getSetMerkleRoot } from "../src/lib/arenaevent.js";
 //
@@ -113,12 +112,13 @@ describe("StateRoster# load", async function () {
       expect(state.registered).to.be.true;
       expect(state.profile?.nickname).to.equal("alice");
       expect(state.rootLabel).to.equal(rootLabel);
-      expect(state.inputChoice.toNumber() === 1);
-      let a = state.choices.inputs[LocationChoices.CHOICE_INPUTS];
+      expect(state.inputChoice.toNumber() === 1); // input choice at start
       let b = conditionInputs([[1, 0]])[0];
-      expect(b.length).to.equal(2);
-      expect(a[0]).to.equal(b[0]);
-      expect(a[1]).to.equal(b[1]);
+      expect(state.location.length).to.equal(1);
+      expect(deconditionInput(state.location[0])).to.equal(1);
+      expect(state.choices[0].length).to.equal(2);
+      expect(state.choices[0][0]).to.equal(b[0]);
+      expect(state.choices[0][1]).to.equal(b[1]);
     }
   });
 });

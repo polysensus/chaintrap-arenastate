@@ -12,6 +12,7 @@ import { LogicalRef } from "./logicalref.js";
 
 export class LocationChoices {
   static ObjectType = ObjectType.LocationChoices;
+  static LOCATION_INPUT = 0;
   static CHOICE_INPUTS = 1;
 
   constructor(location, sideExits) {

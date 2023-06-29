@@ -8,6 +8,8 @@ import { EventParser } from "./chainkit/eventparser.js";
 
 import { undefinedIfZeroBytesLike } from "./chainkit/ethutil.js";
 
+import { LocationChoices } from "./maptrie/locationchoices.js";
+
 /**
  *
  * @param {EventParser} eventParser
@@ -49,7 +51,6 @@ export class ArenaEventParser extends EventParser {
  */
 export class ArenaEvent {
 
-  static PARTICIPANT_
   /**
    * @constructor
    * @param {ParsedGameLogLike} parsed parsed and normalized game event
@@ -94,7 +95,8 @@ export class ArenaEvent {
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.update = {
-          choices: parsedLog.args.choices,
+          location: parsedLog.args.choices.inputs[LocationChoices.LOCATION_INPUT],
+          choices: parsedLog.args.choices.inputs.slice(LocationChoices.CHOICE_INPUTS)
         };
         const data = undefinedIfZeroBytesLike(parsedLog.args.data);
         if (data) arenaEvent.update.scene = msgpack.decode(arrayify(data));

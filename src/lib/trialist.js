@@ -26,6 +26,7 @@ export class Trialist {
         "profile",
         "rootLabel",
         "inputChoice",
+        "location",
         "choices",
         "scene",
         "data",
