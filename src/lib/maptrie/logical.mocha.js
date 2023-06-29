@@ -39,7 +39,7 @@ describe("LogicalTopology tests", function () {
     const topo = new LogicalTopology();
     topo.extendJoins(map02.model.corridors); // rooms 0,1 sides EAST, WEST
     topo.extendLocations(map02.model.rooms);
-    const trie = topo.encodeTrie();
+    const trie = topo.commit();
 
     for (const [i, v] of trie.entries()) {
       const proof = trie.getProof(i);
@@ -55,7 +55,7 @@ describe("LogicalTopology tests", function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
-    const trie = topo.encodeTrie();
+    const trie = topo.commit();
 
     // lets just be sure we get exceptions for obviously incorrect leaves
     expect(() => trie.getProof([12345, "0x123456"])).to.throw();
@@ -105,7 +105,7 @@ describe("LogicalTopology tests", function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
-    const trie = topo.encodeTrie();
+    const trie = topo.commit();
 
     // Show that we can get proofs linking the two locations via the described exits
 
@@ -170,7 +170,7 @@ describe("LogicalTopology tests", function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
-    const trie = topo.encodeTrie();
+    const trie = topo.commit();
 
     let id;
 

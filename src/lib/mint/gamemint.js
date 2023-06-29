@@ -79,6 +79,10 @@ export class GameMint {
     this.ipfs = undefined;
   }
 
+  rootLabel() {
+    return this.minter?.initArgs?.rootLabels[0];
+  }
+
   allOptionsConfigured() {
     return Object.keys(this._pendingOptions).length === 0;
   }

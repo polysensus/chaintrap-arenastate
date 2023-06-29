@@ -1,11 +1,13 @@
 import { ethers } from "ethers";
-import * as msgpack from "@msgpack/msgpack";
+// import * as msgpack from "@msgpack/msgpack";
 import { getMap } from "./map/collection.js";
 import { SceneCatalog } from "./map/scenecatalog.js";
 import { LogicalTopology } from "./maptrie/logical.js";
-import { LeafObject, ObjectCodec, leafHash } from "./maptrie/objects.js";
+import { LeafObject, conditionInputs, deconditionInput, leafHash } from "./maptrie/objects.js";
 
-import { ObjectType } from "./maptrie/objecttypes.js";
+const abiCoder = ethers.utils.defaultAbiCoder;
+const hexlify = ethers.utils.hexlify;
+
 /**
  * A realm holds all of the physical artifacts associated with the game and the
  * merkle tries used to prove action outcomes and so on.
@@ -14,28 +16,40 @@ import { ObjectType } from "./maptrie/objecttypes.js";
  * @typedef {import("@openzeppelin/merkle-tree").StandardMerkleTree} StandardMerkleTree
  */
 export class Trial {
+
   static fromCollectionJSON(maps, options) {
     const { map, name } = getMap(maps, options?.mapName);
-    options = { ...options, mapName: name };
-    return new Trial(map, options);
+    options = { ...options, mapName: name, map };
+    return new Trial(options);
   }
 
   /**
    * @constructor
    * @param {object} map
    */
-  constructor(map, options) {
+  constructor(options) {
     this.options = { ...options };
-    this.map = map;
-    this.scenes = new SceneCatalog();
-    this.scenes.load(map);
 
-    this.topology = new LogicalTopology();
-    this.topology.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
-    this.topology.extendLocations(map.model.rooms);
-    this.staticTrie = this.topology.encodeTrie();
+    this.map = undefined;
+    this.scenes = undefined;
+
+    if (options.map) {
+      this.map = map;
+      this.scenes = new SceneCatalog();
+      this.scenes.load(map);
+      this.topology = new LogicalTopology();
+      this.topology.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
+      this.topology.extendLocations(map.model.rooms);
+    } else {
+      this.topology = options.topology;
+    }
+    if (!options.topology)
+      throw new Error(`a pre built topology or a map must be provided`);
+
+    this.staticTrie = this.topology.commit();
     this.arena = undefined;
     this.gid = undefined;
+    this.rootLabel = undefined;
   }
 
   /**
@@ -50,42 +64,174 @@ export class Trial {
    * @param {[...number]} starts
    * @returns {{choices, data}}
    */
-  createStartGameArgs(starts) {
+  createStartGameArgs(starts, minter) {
     // one of each for each trialist.
-    const choices = [];
+
+    this.rootLabel = minter?.initArgs?.rootLabels[0];
+    if (!this.rootLabel)
+      throw new Error(`the game minter is required and its initArgs must have the rootLabels`);
+
+    const startChoices = [];
+    const proofs = [];
     const data = [];
-    throw new Error("nyi");
 
     for (let itrialist = 0; itrialist < starts.length; itrialist++) {
-      const scene = this.scene(starts[itrialist]);
-      data.push(scene.data);
-      choices.push(scene.choices);
+      const {choices, proof} = this.locationChoices(starts[itrialist]);
+      data.push("0x");
+      startChoices.push(choices);
+      proofs.push(proof);
     }
 
-    return { choices, data };
+    return {
+      rootLabel: this.rootLabel,
+      choices:startChoices, proofs, data
+    };
+  }
+
+  /**
+   * 
+   * @param {number} id  location id
+   * @returns {{choices: {typeId, inputs}, proof}}
+   */
+  locationChoices(id) {
+    const [typeId, inputs] = this.topology.locationChoicesPrepared[id];
+    const proof = this.topology.locationChoicesProof[id];
+    return {
+      choices: { typeId, inputs },
+      proof
+    }
   }
 
   /**
    *
    * @param {ethers.AddressLike} trialist
-   * @param {ethers.DataHexString} choice
+   * @param {ethers.DataHexString[]} choice
    * @returns
    */
-  createResolveOutcomeArgs(trialist, choice) {
-    const iProof = this.staticTrie.hashLookup[choice];
-    if (!iProof) {
-      throw new Error(`choice ${choice} not found in trie`);
-    }
-    // Note: If the choice doesn't match the choice recorded by the player the
-    // proof will be invalid. And the player can't set a choice that hasn't been
-    // made available by the guardian. So '3':Accepted is always appropriate and safe here
-    const { choices, data } = this.scene(this.choiceAccess[choice].location);
+  createResolveOutcomeArgs(trialist, locationId, choice) {
+    // const location = this.locationChoices[locationId];
+    const location = this.topology.locationChoices[locationId];
+
+    const [side, exit] = choice.map((i) => deconditionInput(i));
+    const locationInputIndex = location.leaf.matchInput([side, exit]);
+
+    const leaves = [];
+    const stack = [];
+
+    let prepared = this.topology.locationChoicesPrepared[locationId];
+    let proof = this.topology.locationChoicesProof[locationId];
+
+    const logit = (name, prepared, proof) => {
+      // remember, the inputs are indirect, so prepared != inputs
+      console.log(`leafHash: ${leafHash(prepared)}`);
+      console.log("proof", proof);
+      let x = abiCoder.encode(LeafObject.ABI, prepared);
+      console.log(`encoded:(${name})) ${hexlify(x)}`);
+      console.log("");
+    };
+
+
+    // STACK (0) current location
+    // [LOCATIONCHOICE, [[location], [choice], ... [choice]]] => #L
+    leaves.push( { typeId: prepared[0], inputs: prepared[1] });
+    stack.push({
+        inputRefs: [],
+        proofRefs: [],
+        rootLabel: this.rootLabel,
+        proof
+    });
+    logit("STACK(0) LOCATION", prepared, stack[stack.length - 1]);
+
+    // STACK(1) to EXIT proof
+    // Obtain an exit proof linking the EXIT to a specific location menu choice.
+    // [EXIT, [[REF(#L, i)]]]
+    // note that the proof for the current location choice is at STACK(0)
+    let id = this.topology.exitId(locationId, side, exit);
+    prepared = this.topology.exitsPrepared[id];
+    proof = this.topology.exitsProof[id];
+    // the inputs are indirect, the stack slot and the input index 
+    leaves.push( { typeId: prepared[0], inputs: conditionInputs([[0, locationInputIndex]]) });
+    stack.push({
+        inputRefs: [0], // mark the first input as an indirect reference to a prior stack entries proof input
+        proofRefs: [],
+        rootLabel: this.rootLabel,
+        proof
+    });
+    logit("STACK(1) EXIT", prepared, stack[stack.length - 1]);
+
+    const [ingressLocationId, ingressSide, ingressExit] = this.topology._accessJoin(locationId, side, exit);
+    prepared = this.topology.locationChoicesPrepared[ingressLocationId];
+    proof = this.topology.locationChoicesProof[ingressLocationId];
+
+    // Set STACK(2) to the ingress location
+    leaves.push({
+      typeId: prepared[0],
+      inputs: prepared[1],
+    });
+    stack.push({
+      inputRefs: [],
+      proofRefs: [],
+      rootLabel: this.rootLabel,
+      proof,
+    });
+    logit("STACK(2) INGRESS LOCATION", prepared, stack[stack.length - 1]);
+
+    // Set STACK(3) to ingress location exit
+    // Obtain an exit proof linking the EXIT to a specific location menu choice.
+    // [EXIT, [[REF(#L, i)]]]
+    // note that the proof for the ingress location choice is at STACK(2)
+    const ingressLocation = this.topology.locationChoices[ingressLocationId];
+    const ingressLocationInputIndex = ingressLocation.leaf.matchInput([ingressSide, ingressExit]);
+    id = this.topology.exitId(ingressLocationId, ingressSide, ingressExit);
+    prepared = this.topology.exitsPrepared[id];
+    proof = this.topology.exitsProof[id];
+
+    leaves.push( { typeId: prepared[0], inputs: conditionInputs([[2, ingressLocationInputIndex]]) });
+    stack.push({
+      inputRefs: [0], // mark the first input as an indirect reference to a prior stack entries proof input
+      proofRefs: [],
+      rootLabel: this.rootLabel,
+      proof,
+    });
+    logit("STACK(3) INGRESS EXIT", prepared, stack[stack.length - 1]);
+
+    // Now add the link. Note that links are directional. For each location exit
+    // pair there is a link from a -> b and also b->a. So the link used here
+    // must be FROM the *current* location. The 'finish' will likely be a one
+    // way link.
+
+    // Set STACK(4) to link  exit (stack 1), exit (stack 3)
+    // [LINK, [[REF(#E-S1)], [REF(#E-S3)]]]
+
+    id = this.topology.locationLinkId(locationId, side, exit); // from current location
+    prepared = this.topology.locationExitLinksPrepared[id];
+    proof = this.topology.locationExitLinksProof[id];
+    leaves.push({
+      typeId: prepared[0],
+      inputs: conditionInputs([
+        [1], // STACK(1)
+        [3], // STACK(3)
+      ]),
+    });
+    stack.push({
+      inputRefs: [],
+      proofRefs: [0, 1],
+      rootLabel: this.rootLabel,
+      proof,
+    });
+    logit("STACK(4) LINK", prepared, stack[stack.length - 1]);
+
     return {
       participant: trialist,
-      outcome: 3,
-      data,
-      proof: this.staticTrie.getProof(iProof),
-      choices,
-    };
+      outcome: 3, // Accepted
+      proof: {
+        choiceSetType: 9,
+        transitionType: 8,
+        stack,
+        leaves
+      },
+      data: "0x",
+      choiceLeafIndex: 2 // the new choice set if the proof is accepted
+    }
   }
 }

@@ -116,7 +116,7 @@ async function creategame2(program, options) {
 
   const collection = readJson(mapfile);
   const topo = LogicalTopology.fromCollectionJSON(collection, options.map);
-  const trie = topo.encodeTrie();
+  const trie = topo.commit();
 
   const minter = new GameMint();
   const mdOptions = { ...options, fetch };

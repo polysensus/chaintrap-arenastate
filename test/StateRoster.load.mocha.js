@@ -14,7 +14,6 @@ import { StateRoster } from "../src/lib/stateroster.js";
 import { Trial } from "../src/lib/trial.js";
 
 import { ABIName } from "../src/lib/abiconst.js";
-
 describe("StateRoster# load", async function () {
   it("Should start single player game and prove first move", async function () {
     if (!this.gameOptions || !this.mintGame) {

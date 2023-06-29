@@ -46,7 +46,7 @@ export class Minter {
     );
     this.map = getMap(this.collection).map;
     this.topology = LogicalTopology.fromCollectionJSON(this.collection);
-    this.trie = this.topology.encodeTrie();
+    this.trie = this.topology.commit();
   }
 
   async mint(options) {

@@ -39,12 +39,15 @@ export class LogicalTopology {
      * @readonly
      */
     this.locations = [];
-    this.locations2 = [];
 
     this.locationChoices = [];
+    this.locationChoicesPrepared = [];
+    this.locationChoicesProof = [];
     this.locationChoicesKeys = {};
 
     this.exits = [];
+    this.exitsPrepared = [];
+    this.exitsProof = [];
     this.exitKeys = {};
     // To encode location links we need to be able to reference by (location, side, exit) -> exit
     // `${location}:${side}:${exit}` -> exit
@@ -58,25 +61,34 @@ export class LogicalTopology {
      * REF(#E') -> exit E' ingress at location'
      */
     this.locationExitLinks = [];
+    this.locationExitLinksPrepared = [];
+    this.locationExitLinksProof = [];
     this.locationExitLinkKeys = {};
     this.locationExitLinkIds = {};
 
     /**
      * @readonly
      */
+    this.trie = undefined;
     this._committed = false;
   }
 
   _resetCommit() {
-    this.exitMenuKeys = {};
     this.locationChoices = [];
+    this.locationChoicesPrepared = [];
+    this.locationChoicesProof = [];
     this.locationChoicesKeys = {};
     this.exits = [];
+    this.exitsPrepared = [];
+    this.exitsProof = [];
     this.exitKeys = {};
     this.locationExits = {};
     this.locationExitLinks = [];
+    this.locationExitLinksPrepared = [];
+    this.locationExitLinksProof = [];
     this.locationExitLinkKeys = {};
 
+    this._trie = undefined;
     this._committed = false;
   }
 
@@ -138,8 +150,9 @@ export class LogicalTopology {
   }
 
   /**
-   * Encode the relations between the locations given the available exits and
-   * joins (corridors) at each.
+   * Commit the whole map topology to a merkle trie, building a cache of entries
+   * for use during the game.
+   * @returns {StandardMerkleTree}
    */
   commit() {
     this._resetCommit();
@@ -152,13 +165,16 @@ export class LogicalTopology {
         type: LocationChoices.ObjectType,
         leaf: location,
       });
+      let prepared = this.prepareLeaf(leaf);
 
-      const locationChoicesKey = leafHash(this.prepareLeaf(leaf));
-      if (locationChoicesKey in this.locationChoicesKeys)
+      let key = leafHash(prepared);
+      if (key in this.locationChoicesKeys)
         throw new Error(`locations are expected to be naturally unique`);
 
       this.locationChoices.push(leaf);
-      this.locationChoicesKeys[locationChoicesKey] =
+      this.locationChoicesPrepared.push(prepared);
+      this.locationChoicesProof.push()
+      this.locationChoicesKeys[key] =
         this.locationChoices.length - 1;
 
       // We need a node for each of the locations exits. We most easily derive this from the exitMenu
@@ -175,7 +191,8 @@ export class LogicalTopology {
           type: LocationExit.ObjectType,
           leaf: locationExit,
         });
-        const key = leafHash(this.prepareLeaf(leaf));
+        prepared = this.prepareLeaf(leaf);
+        key = leafHash(prepared);
 
         const locationExitIndex = this.exits.length;
         this.exitKeys[key] = locationExitIndex;
@@ -183,6 +200,7 @@ export class LogicalTopology {
           `${locationId}:${sideExits[j][0]}:${sideExits[j][1]}`
         ] = locationExitIndex;
         this.exits.push(leaf);
+        this.exitsPrepared.push(prepared);
       }
     }
 
@@ -197,34 +215,32 @@ export class LogicalTopology {
         type: ObjectType.Link2,
         leaf: locationExitLinkAB,
       });
-      let key = leafHash(this.prepareLeaf(leaf));
+      let prepared = this.prepareLeaf(leaf);
+      let key = leafHash(prepared);
       let locationExitLinkIndex = this.locationExitLinks.length;
       this.locationExitLinkKeys[key] = locationExitLinkIndex;
       this.locationExitLinks.push(leaf);
+      this.locationExitLinksPrepared.push(prepared);
       this.locationExitLinkIds[
         `${link.a.location}:${link.a.side}:${link.a.exit}`
       ] = locationExitLinkIndex;
     }
 
+    this.trie = StandardMerkleTree.of([
+      ...this.locationChoicesPrepared, ...this.exitsPrepared, ...this.locationExitLinksPrepared
+    ], LeafObject.ABI);
+
+    for (const prepared of this.locationChoicesPrepared)
+      this.locationChoicesProof.push(this.trie.getProof(prepared));
+
+    for (const prepared of this.exitsPrepared)
+      this.exitsProof.push(this.trie.getProof(prepared));
+
+    for (const prepared of this.locationExitLinksPrepared)
+      this.locationExitLinksProof.push(this.trie.getProof(prepared));
+
     this._committed = true;
-  }
-
-  /**
-   * Convenience to encode the whole topology as a merkle tree.
-   * @returns {StandardMerkleTree}
-   */
-  encodeTrie() {
-    if (!this._committed) this.commit();
-    return StandardMerkleTree.of([...this.leaves()], LeafObject.ABI);
-  }
-
-  *leaves() {
-    // locationChoices encodes a location and the choices that exist there
-    for (const leaf of this.locationChoices) yield this.prepareLeaf(leaf);
-
-    for (const leaf of this.exits) yield this.prepareLeaf(leaf);
-
-    for (const leaf of this.locationExitLinks) yield this.prepareLeaf(leaf);
+    return this.trie;
   }
 
   /**
@@ -274,8 +290,7 @@ export class LogicalTopology {
     return id;
   }
   locationLinkId(location, side, exit) {
-    const id = (this.locationExitLinkIds[`${location}:${side}:${exit}`] =
-      locationExitLinkIndex);
+    const id = this.locationExitLinkIds[`${location}:${side}:${exit}`];
     if (typeof id === "undefined")
       throw new Error(
         `location exit not found for ${location}:${side}:${exit}`

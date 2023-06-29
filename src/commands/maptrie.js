@@ -72,7 +72,7 @@ function maptrieproof(program, options, mapfile, which) {
   }
   const topo = LogicalTopology.fromCollectionJSON(maps);
 
-  const trie = topo.encodeTrie();
+  const trie = topo.commit();
 
   for (const [i, v] of trie.entries()) {
     if (i !== Number(which)) continue;

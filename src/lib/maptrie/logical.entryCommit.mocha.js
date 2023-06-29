@@ -6,8 +6,8 @@ import { ethers } from "ethers";
 import * as msgpack from "@msgpack/msgpack";
 
 const zeroPad = ethers.utils.zeroPad;
-const hexlify = ethers.utils.hexlify;
 const keccak256 = ethers.utils.keccak256;
+const hexlify = ethers.utils.hexlify;
 const abiCoder = ethers.utils.defaultAbiCoder;
 
 import { LogicalTopology } from "./logical.js";
@@ -25,7 +25,7 @@ import { Transactor } from "../chainkit/transactor.js";
 const { map02 } = maps;
 
 describe("LogicalTopology entryCommit tests", function () {
-  it("Should commit location exit choice", async function () {
+  it("Should resolve a location exit choice", async function () {
     // build and verify a proof stack showing that a specific location exits are bound to exit menu choice inputs
     const topo = new LogicalTopology();
     topo.extendJoins([{ joins: [0, 1], sides: [3, 1] }]); // rooms 0,1 sides EAST, WEST
@@ -33,7 +33,7 @@ describe("LogicalTopology entryCommit tests", function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
-    const trie = topo.encodeTrie();
+    const trie = topo.commit();
 
     // mint without publishing nft metadata
     let r = await this.mintGame({ topology: topo, trie });
@@ -146,6 +146,7 @@ describe("LogicalTopology entryCommit tests", function () {
 
     logit("location0", location0Prepared, stack[stack.length - 1]);
 
+    // Set STACK(1) to EXIT proof
     // Obtain an exit proof linking the exit menu choice to a specific location exit
     // [EXIT, [[REF(#L, i)]]]
     // STACK(1) to the association of exit 0 with location 0 with exitMenu 0, choice 0.
@@ -189,6 +190,7 @@ describe("LogicalTopology entryCommit tests", function () {
       proof: location1ExitProof,
     });
 
+    // Set STACK(4) to link  exit (stack 1), exit (stack 3)
     leaves.push({
       typeId: linkPrepared[0],
       inputs: conditionInputs([

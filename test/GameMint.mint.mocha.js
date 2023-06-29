@@ -32,7 +32,7 @@ describe("GameMint.mint tests", async function () {
     const iface = arena.getFacetInterface("ERC1155ArenaFacet");
 
     const topo = LogicalTopology.fromCollectionJSON(collection);
-    const trie = topo.encodeTrie();
+    const trie = topo.commit();
 
     const minter = new GameMint();
     const mdOptions = {
