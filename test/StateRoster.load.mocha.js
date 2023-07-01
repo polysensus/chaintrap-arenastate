@@ -3,7 +3,10 @@ const ethers = hre.ethers;
 import * as msgpack from "@msgpack/msgpack";
 import { expect } from "chai";
 import { LogicalTopology } from "../src/lib/maptrie/logical.js";
-import { conditionInputs, deconditionInput } from "../src/lib/maptrie/objects.js";
+import {
+  conditionInputs,
+  deconditionInput,
+} from "../src/lib/maptrie/objects.js";
 
 import { getGameCreated, getSetMerkleRoot } from "../src/lib/arenaevent.js";
 //
@@ -27,7 +30,7 @@ describe("StateRoster# load", async function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
-    const trial = new Trial({topology: topo})
+    const trial = new Trial({ topology: topo });
     trial.topology.commit();
 
     // mint without publishing nft metadata
@@ -35,12 +38,13 @@ describe("StateRoster# load", async function () {
 
     const startLocationId = 0;
 
-
     const user1Address = await this.user1Arena.signer.getAddress();
 
     // this.minter.loadMap();
     // const trial = Trial.fromCollectionJSON(this.minter.collection);
-    let inputIndex = trial.topology.locationChoices[startLocationId].leaf.matchInput([3, 0]);
+    let inputIndex = trial.topology.locationChoices[
+      startLocationId
+    ].leaf.matchInput([3, 0]);
     let inputs = trial.topology.locationChoicesPrepared[startLocationId][1];
     let userChoice = inputs[inputIndex];
 
@@ -48,7 +52,10 @@ describe("StateRoster# load", async function () {
     const gid = getGameCreated(r, arenaEvents).gid;
     const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedLog.args.label;
 
-    const startArgs = trial.createStartGameArgs([startLocationId], this.minter.minter);
+    const startArgs = trial.createStartGameArgs(
+      [startLocationId],
+      this.minter.minter
+    );
 
     let transactor = new Transactor(arenaEvents);
     transactor
@@ -74,7 +81,11 @@ describe("StateRoster# load", async function () {
       .method(
         this.guardianArena.transcriptEntryResolve,
         gid,
-        trial.createResolveOutcomeArgs(user1Address, startLocationId, userChoice)
+        trial.createResolveOutcomeArgs(
+          user1Address,
+          startLocationId,
+          userChoice
+        )
       )
       .requireLogs(
         "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)",

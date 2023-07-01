@@ -4,8 +4,7 @@ import { ethers } from "ethers";
 
 import { readJson } from "./fsutil.js";
 import { programConnectArena } from "./connect.js";
-import { LogicalTopology } from "../lib/maptrie/logical.js";
-import { GameMint } from "../lib/mint/gamemint.js";
+import { Guardian } from "../lib/guardian.js";
 
 export function addCreategame2(program) {
   program
@@ -13,12 +12,19 @@ export function addCreategame2(program) {
     .description("create a new game")
     .option("--max-participants <max>", "maximum number of participants", 5)
     .option(
-      "--map <name>",
+      "--map-name <name>",
       `
 name of a specific map in the map collection file. if the file has a single
 entry, it is used by default. if it has many entries, the lexically first entry
 is selected`,
       undefined
+    )
+    .option(
+      "--map-root-label <name>",
+      `
+      The merkle root that commits the the game map and dungeon load to the chain is identified by this label.
+`,
+      "chaintrap-dungeon:static"
     )
     .option(
       "--name <name>",
@@ -115,62 +121,40 @@ async function creategame2(program, options) {
   const iface = arena.getFacetInterface("ERC1155ArenaFacet");
 
   const collection = readJson(mapfile);
-  const topo = LogicalTopology.fromCollectionJSON(collection, options.map);
-  const trie = topo.commit();
 
-  const minter = new GameMint();
-  const mdOptions = { ...options, fetch };
-  if (options.gameIconFilename && isFile(options.gameIconFilename)) {
-    mdOptions.gameIconBytes = readBinary(options.gameIconFilename);
-  }
-
-  const mapRootLabel = "chaintrap-dungeon:static";
-  minter.configureMetadataOptions(mdOptions);
-  minter.configureNFTStorageOptions(mdOptions);
-  minter.configureGameIconOptions(mdOptions);
-  minter.configureMaptoolOptions(mdOptions);
-  minter.configureMapOptions({
-    ...mdOptions,
-    mapRootLabel,
-    topology: topo,
-    trie,
-  });
-
-  await minter.prepareGameImage();
-  const metadataUrl = await minter.publishMetadata();
-  out(metadataUrl);
-
-  const r = await minter.mint(arena);
-  out(r.transactionHash);
-  const o = {
-    roots: {},
+  const mintOptions = {
+    ...program.opts(),
+    ...options,
   };
-  for (const log of r.logs) {
-    try {
-      const parsed = iface.parseLog(log);
-      out(parsed.name);
-      switch (parsed.name) {
-        case "TransferSingle":
-          o.id = parsed.args.id;
-          o.idHex = o.id.toHexString();
-          o.creator = parsed.args.to;
-          break;
-        case "URI":
-          o.uri = parsed.args.tokenURI;
-          break;
-        case "TranscriptMerkleRootSet":
-          o.roots[ethers.utils.parseBytes32String(parsed.args.label)] =
-            ethers.utils.hexlify(parsed.args.root);
-          break;
-        case "TranscriptCreated":
-          o.registrationLimit = parsed.args.registrationLimit.toNumber();
-          break;
-      }
-    } catch (err) {
-      out(`${err}`);
+
+  if (mintOptions.gameIconFilename && isFile(mintOptions.gameIconFilename)) {
+    mintOptions.gameIconBytes = readBinary(mintOptions.gameIconFilename);
+  }
+  const guardian = new Guardian(arena, mintOptions);
+  guardian.prepareDungeon(collection, { mapName: mintOptions.mapName });
+  guardian.finalizeDungeon();
+  const result = await guardian.mintGame({ fetch });
+
+  const o = { roots: {} };
+
+  for (const event of result.events()) {
+    const parsed = event.parsedLog;
+    switch (event.name) {
+      case "TransferSingle":
+        o.id = event.gid.toHexString();
+        o.creator = parsed.args.to;
+        break;
+      case "URI":
+        o.uri = parsed.args.tokenURI;
+        break;
+      case "TranscriptMerkleRootSet":
+        o.roots[ethers.utils.parseBytes32String(parsed.args.label)] =
+          ethers.utils.hexlify(parsed.args.root);
+        break;
+      case "TranscriptCreated":
+        o.registrationLimit = parsed.args.registrationLimit.toNumber();
+        break;
     }
   }
-  o.id = o.idHex;
-  delete o.idHex;
   out(`${JSON.stringify(o, null, "  ")}`);
 }

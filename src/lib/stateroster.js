@@ -7,7 +7,7 @@ import { ethers } from "ethers";
 import { getLogger } from "./log.js";
 //
 import { ABIName } from "./abiconst.js";
-import { Trialist } from "./trialist.js";
+import { TrialistState } from "./trialiststate.js";
 import { findGameEvents, getGameCreatedBlock } from "./arenaevent.js";
 
 export const log = getLogger("StateRoster");
@@ -64,10 +64,10 @@ export class StateRoster {
 
     switch (event.name) {
       case ABIName.TranscriptRegistration:
-        this.players[event.subject] = new Trialist();
+        this.players[event.subject] = new TrialistState();
         break;
     }
-    if (!Trialist.handlesEvent(event.name)) return;
+    if (!TrialistState.handlesEvent(event.name)) return;
     this.players[event.subject].applyEvent(event);
   }
 

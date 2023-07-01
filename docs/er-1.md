@@ -97,4 +97,4 @@ erDiagram
 - Automation for taking `Guardian` turns is likely. In this case, we say the `Automation` is an `Advocate`. This isn't represented in these diagrams.
 - No plan to automate game creation at this time.
 - The `Trial` is the physical environment for a `Game`. It sort of exists independently as the implicit container for the map, the merkle tries used to prove moves, and the association with the `Game`
-- The `Trial` has a life cycle independent to the `Game`
+- The `Trial` has a life cycle independent to the `Game`. After the game completes, the record of the trial can be seen forever on the chain. And its ownershipt can be subject to the outcome of the game.

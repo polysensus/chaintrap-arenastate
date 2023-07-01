@@ -10,15 +10,12 @@ export const TrialistEvents = Object.fromEntries([
   [ABIName.TranscriptEntryOutcome, true],
 ]);
 
-export class Trialist {
-
-
+export class TrialistState {
   static handlesEvent(name) {
     return TrialistEvents[name];
   }
 
   constructor() {
-
     this.propDelta = new PropDelta(
       [
         "registered",

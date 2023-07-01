@@ -1,3 +1,4 @@
+// TODO: extend or replace with lib/minter.js
 import ethers from "ethers";
 import fetch from "node-fetch";
 import { readBinaryData, readJsonData } from "./data.js";

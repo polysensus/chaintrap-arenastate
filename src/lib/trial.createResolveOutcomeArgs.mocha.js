@@ -3,17 +3,16 @@ import { expect } from "chai";
 
 import * as msgpack from "@msgpack/msgpack";
 
-import { LogicalTopology } from "./logical.js";
+import { LogicalTopology } from "./maptrie/logical.js";
 //
 // import maps from "../../../data/maps/map02.json" assert { type: "json" };
 // const { map02 } = maps;
 
-import { Trial } from "../trial.js";
-import { getGameCreated } from "../arenaevent.js";
-import { ArenaEvent } from "../arenaevent.js";
-import { EventParser } from "../chainkit/eventparser.js";
-import { Transactor } from "../chainkit/transactor.js";
-
+import { Trial } from "./trial.js";
+import { getGameCreated } from "./arenaevent.js";
+import { ArenaEvent } from "./arenaevent.js";
+import { EventParser } from "./chainkit/eventparser.js";
+import { Transactor } from "./chainkit/transactor.js";
 
 describe("Trial createResolveOutcomeArgs tests", function () {
   it("Should resolve a location exit choice", async function () {
@@ -27,7 +26,7 @@ describe("Trial createResolveOutcomeArgs tests", function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
-    const trial = new Trial({topology: topo})
+    const trial = new Trial({ topology: topo });
     trial.topology.commit();
 
     // mint without publishing nft metadata
@@ -38,13 +37,17 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
 
-
     // TODO: sort out once createCommitArgs is implemented on trial
-    let inputIndex = trial.topology.locationChoices[startLocationId].leaf.matchInput([3, 0]);
+    let inputIndex = trial.topology.locationChoices[
+      startLocationId
+    ].leaf.matchInput([3, 0]);
     let inputs = trial.topology.locationChoicesPrepared[startLocationId][1];
     let choice = inputs[inputIndex];
 
-    const startArgs = trial.createStartGameArgs([startLocationId], this.minter.minter);
+    const startArgs = trial.createStartGameArgs(
+      [startLocationId],
+      this.minter.minter
+    );
 
     let transactor = new Transactor(arenaEvents);
 
@@ -77,7 +80,11 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     }
 
     const user1Address = await this.user1Arena.signer.getAddress();
-    const resolveArgs = trial.createResolveOutcomeArgs(user1Address, startLocationId, choice);
+    const resolveArgs = trial.createResolveOutcomeArgs(
+      user1Address,
+      startLocationId,
+      choice
+    );
 
     transactor = new Transactor(arenaEvents);
     transactor
@@ -92,5 +99,5 @@ describe("Trial createResolveOutcomeArgs tests", function () {
         Object.keys(r.events).map((name) => `${name}[${r.events[name].length}]`)
       );
     }
-  })
+  });
 });

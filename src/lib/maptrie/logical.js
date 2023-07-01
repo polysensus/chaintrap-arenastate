@@ -172,9 +172,8 @@ export class LogicalTopology {
 
       this.locationChoices.push(leaf);
       this.locationChoicesPrepared.push(prepared);
-      this.locationChoicesProof.push()
-      this.locationChoicesKeys[key] =
-        this.locationChoices.length - 1;
+      this.locationChoicesProof.push();
+      this.locationChoicesKeys[key] = this.locationChoices.length - 1;
 
       // We need a node for each of the locations exits. We most easily derive this from the exitMenu
       for (let j = 0; j < sideExits.length; j++) {
@@ -225,9 +224,14 @@ export class LogicalTopology {
       ] = locationExitLinkIndex;
     }
 
-    this.trie = StandardMerkleTree.of([
-      ...this.locationChoicesPrepared, ...this.exitsPrepared, ...this.locationExitLinksPrepared
-    ], LeafObject.ABI);
+    this.trie = StandardMerkleTree.of(
+      [
+        ...this.locationChoicesPrepared,
+        ...this.exitsPrepared,
+        ...this.locationExitLinksPrepared,
+      ],
+      LeafObject.ABI
+    );
 
     for (const prepared of this.locationChoicesPrepared)
       this.locationChoicesProof.push(this.trie.getProof(prepared));

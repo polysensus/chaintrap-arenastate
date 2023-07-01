@@ -50,7 +50,6 @@ export class ArenaEventParser extends EventParser {
  * }} ParsedGameLogLike
  */
 export class ArenaEvent {
-
   /**
    * @constructor
    * @param {ParsedGameLogLike} parsed parsed and normalized game event
@@ -95,8 +94,11 @@ export class ArenaEvent {
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.eid = parsedLog.args.eid;
         arenaEvent.update = {
-          location: parsedLog.args.choices.inputs[LocationChoices.LOCATION_INPUT],
-          choices: parsedLog.args.choices.inputs.slice(LocationChoices.CHOICE_INPUTS)
+          location:
+            parsedLog.args.choices.inputs[LocationChoices.LOCATION_INPUT],
+          choices: parsedLog.args.choices.inputs.slice(
+            LocationChoices.CHOICE_INPUTS
+          ),
         };
         const data = undefinedIfZeroBytesLike(parsedLog.args.data);
         if (data) arenaEvent.update.scene = msgpack.decode(arrayify(data));

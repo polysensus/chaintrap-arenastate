@@ -3,7 +3,12 @@ import { ethers } from "ethers";
 import { getMap } from "./map/collection.js";
 import { SceneCatalog } from "./map/scenecatalog.js";
 import { LogicalTopology } from "./maptrie/logical.js";
-import { LeafObject, conditionInputs, deconditionInput, leafHash } from "./maptrie/objects.js";
+import {
+  LeafObject,
+  conditionInputs,
+  deconditionInput,
+  leafHash,
+} from "./maptrie/objects.js";
 
 const abiCoder = ethers.utils.defaultAbiCoder;
 const hexlify = ethers.utils.hexlify;
@@ -16,7 +21,6 @@ const hexlify = ethers.utils.hexlify;
  * @typedef {import("@openzeppelin/merkle-tree").StandardMerkleTree} StandardMerkleTree
  */
 export class Trial {
-
   static fromCollectionJSON(maps, options) {
     const { map, name } = getMap(maps, options?.mapName);
     options = { ...options, mapName: name, map };
@@ -69,14 +73,16 @@ export class Trial {
 
     this.rootLabel = minter?.initArgs?.rootLabels[0];
     if (!this.rootLabel)
-      throw new Error(`the game minter is required and its initArgs must have the rootLabels`);
+      throw new Error(
+        `the game minter is required and its initArgs must have the rootLabels`
+      );
 
     const startChoices = [];
     const proofs = [];
     const data = [];
 
     for (let itrialist = 0; itrialist < starts.length; itrialist++) {
-      const {choices, proof} = this.locationChoices(starts[itrialist]);
+      const { choices, proof } = this.locationChoices(starts[itrialist]);
       data.push("0x");
       startChoices.push(choices);
       proofs.push(proof);
@@ -84,12 +90,14 @@ export class Trial {
 
     return {
       rootLabel: this.rootLabel,
-      choices:startChoices, proofs, data
+      choices: startChoices,
+      proofs,
+      data,
     };
   }
 
   /**
-   * 
+   *
    * @param {number} id  location id
    * @returns {{choices: {typeId, inputs}, proof}}
    */
@@ -98,8 +106,8 @@ export class Trial {
     const proof = this.topology.locationChoicesProof[id];
     return {
       choices: { typeId, inputs },
-      proof
-    }
+      proof,
+    };
   }
 
   /**
@@ -130,15 +138,14 @@ export class Trial {
       console.log("");
     };
 
-
     // STACK (0) current location
     // [LOCATIONCHOICE, [[location], [choice], ... [choice]]] => #L
-    leaves.push( { typeId: prepared[0], inputs: prepared[1] });
+    leaves.push({ typeId: prepared[0], inputs: prepared[1] });
     stack.push({
-        inputRefs: [],
-        proofRefs: [],
-        rootLabel: this.rootLabel,
-        proof
+      inputRefs: [],
+      proofRefs: [],
+      rootLabel: this.rootLabel,
+      proof,
     });
     logit("STACK(0) LOCATION", prepared, stack[stack.length - 1]);
 
@@ -149,17 +156,21 @@ export class Trial {
     let id = this.topology.exitId(locationId, side, exit);
     prepared = this.topology.exitsPrepared[id];
     proof = this.topology.exitsProof[id];
-    // the inputs are indirect, the stack slot and the input index 
-    leaves.push( { typeId: prepared[0], inputs: conditionInputs([[0, locationInputIndex]]) });
+    // the inputs are indirect, the stack slot and the input index
+    leaves.push({
+      typeId: prepared[0],
+      inputs: conditionInputs([[0, locationInputIndex]]),
+    });
     stack.push({
-        inputRefs: [0], // mark the first input as an indirect reference to a prior stack entries proof input
-        proofRefs: [],
-        rootLabel: this.rootLabel,
-        proof
+      inputRefs: [0], // mark the first input as an indirect reference to a prior stack entries proof input
+      proofRefs: [],
+      rootLabel: this.rootLabel,
+      proof,
     });
     logit("STACK(1) EXIT", prepared, stack[stack.length - 1]);
 
-    const [ingressLocationId, ingressSide, ingressExit] = this.topology._accessJoin(locationId, side, exit);
+    const [ingressLocationId, ingressSide, ingressExit] =
+      this.topology._accessJoin(locationId, side, exit);
     prepared = this.topology.locationChoicesPrepared[ingressLocationId];
     proof = this.topology.locationChoicesProof[ingressLocationId];
 
@@ -181,12 +192,18 @@ export class Trial {
     // [EXIT, [[REF(#L, i)]]]
     // note that the proof for the ingress location choice is at STACK(2)
     const ingressLocation = this.topology.locationChoices[ingressLocationId];
-    const ingressLocationInputIndex = ingressLocation.leaf.matchInput([ingressSide, ingressExit]);
+    const ingressLocationInputIndex = ingressLocation.leaf.matchInput([
+      ingressSide,
+      ingressExit,
+    ]);
     id = this.topology.exitId(ingressLocationId, ingressSide, ingressExit);
     prepared = this.topology.exitsPrepared[id];
     proof = this.topology.exitsProof[id];
 
-    leaves.push( { typeId: prepared[0], inputs: conditionInputs([[2, ingressLocationInputIndex]]) });
+    leaves.push({
+      typeId: prepared[0],
+      inputs: conditionInputs([[2, ingressLocationInputIndex]]),
+    });
     stack.push({
       inputRefs: [0], // mark the first input as an indirect reference to a prior stack entries proof input
       proofRefs: [],
@@ -228,10 +245,10 @@ export class Trial {
         choiceSetType: 9,
         transitionType: 8,
         stack,
-        leaves
+        leaves,
       },
       data: "0x",
-      choiceLeafIndex: 2 // the new choice set if the proof is accepted
-    }
+      choiceLeafIndex: 2, // the new choice set if the proof is accepted
+    };
   }
 }

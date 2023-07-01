@@ -5,38 +5,10 @@ dotenv.config({ path: process.env.DOTENV_FILE ?? ".env" });
 
 import { program, Option } from "commander";
 
-import {
-  tokenuri,
-  lastGame,
-  gamelog,
-  stateroster,
-} from "./src/commands/gamestate.js";
-import {
-  listplayers,
-  joingame,
-  commitexituse,
-} from "./src/commands/players.js";
-
-import {
-  creategame,
-  setstart,
-  startgame,
-  completegame,
-  allowexituse,
-} from "./src/commands/guardian.js";
-
 import { addCreategame2 } from "./src/commands/creategame2.js";
 import { addJoingame2 } from "./src/commands/joingame2.js";
 import { addStartgame2 } from "./src/commands/startgame2.js";
-
-import { storegame, defaultGameIconPrompt } from "./src/commands/metadata.js";
-
-import { arenaAddress } from "./src/commands/arenaaddress.js";
-
-import { showProviders } from "./src/commands/providers.js";
-import { watchArena } from "./src/commands/watcharena.js";
-
-import { addMaptrie, addMaptrieProof } from "./src/commands/maptrie.js";
+import { addWatchArena } from "./src/commands/watcharena.js";
 
 program
   .enablePositionalOptions()
@@ -93,120 +65,13 @@ program.addOption(
 ); // On L1:1810633 Gwei    On L2:14923769 Gwei
 
 // ---
-addMaptrie(program);
-addMaptrieProof(program);
+addWatchArena(program);
 addCreategame2(program);
 addJoingame2(program);
 addStartgame2(program);
 // ---
 
-// ---
-program
-  .command("providers")
-  .description("get the address of the most recently deployed arena contract")
-  .option("-p, --providers <filename>")
-  .action((options) => showProviders(program, options));
-
-program
-  .command("watch")
-  .description("watch for events on the arena contract")
-  .option("-p, --providers <filename>")
-  .option(
-    "-w, --which <which>",
-    "name of the provider entry in providers file",
-    "caimst"
-  )
-  .action((options) => watchArena(program, options));
-
-// inspection, no wallet required (the deploy wallet is just a convenient way to work out the contract address)
-program
-  .command("arena")
-  .description("get the address of the most recently deployed arena contract")
-  .action((options) => arenaAddress(program, options));
-
-program
-  .command("lastgame")
-  .description("get the id of the last game created on the arena contract")
-  .action((options) => lastGame(program, options));
-
-program
-  .command("tokenuri <token>")
-  .description("report the game event logs")
-  .action((token, options) => tokenuri(program, options, token));
-
-program
-  .command("glog")
-  .description("report the game event logs")
-  .option("-g, --gid <gid>")
-  .option("-r, --raw", "raw json format dump")
-  .action((options) => gamelog(program, options));
-
-program
-  .command("roster")
-  .description("determine the current stateroster")
-  .option("-g, --gid <gid>")
-  .action((options) => stateroster(program, options));
-
-program
-  .command("listplayers")
-  .description("list the players registered for the game")
-  .option("-g, --gid <gid>")
-  .option(
-    "-s, --scene",
-    "full format start and current scene, otherwise just the name & wallet",
-    false
-  )
-  .option("-f, --filter <filter>", "filters: one of ['nostart', 'nothalted'")
-  .action((options) => listplayers(program, options));
-
-// ----
-// State changing.  The following methods require a wallet key (--key)
-
-// -- nft metadata
-program
-  .command("storegame")
-  .description("store the game nft metadata")
-  .option(
-    "-i, --iconfile <iconfile>",
-    "file on disc to use as icon (default is to generate one)"
-  )
-  .option(
-    "-p, --prompt <prompt>",
-    "The prompt string to send to DALL-E to generate the game image. A useful and tested default is provided",
-    defaultGameIconPrompt
-  )
-  .option(
-    "-n, --name <name>",
-    "Name the game. A generic default is provided",
-    "A game of chaintrap"
-  )
-  .action((options) => storegame(program, options));
-
-// -- guardian transactions
-program
-  .command("newgame")
-  .description("create a new game")
-  .option(
-    "-g, --maxplayers <max>",
-    "maximum number of players allowed to register",
-    5
-  )
-  .action((options) => creategame(program, options));
-
-program
-  .command("setstart <address> <room>")
-  .description("set the start location for the player")
-  .option("-g, --gid <gid>")
-  .action((address, room, options) =>
-    setstart(program, options, address, room)
-  );
-
-program
-  .command("startgame")
-  .description("close registration and start the game")
-  .option("-g, --gid <gid>")
-  .action((options) => startgame(program, options));
-
+/*
 program
   .command("completegame")
   .description("complete the game")
@@ -248,5 +113,6 @@ program
     "0:0"
   )
   .action((options) => commitexituse(program, options));
+*/
 
 program.parse();

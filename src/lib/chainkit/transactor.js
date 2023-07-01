@@ -13,10 +13,30 @@ export class TransactResult {
    * @param {import("ethers").utils.TransactionReceipt} receipt
    * @param {{string:ArenaEvent}} events
    */
-  constructor(receipt, events) {
+  constructor(receipt, events, ordered) {
     this.r = receipt;
-    this.events = events;
+    this._events = events;
+    this.ordered = ordered;
   }
+
+  eventByName(name, which = 0) {
+    if (!this._events[name]) throw new Error(`event ${name} not collected`);
+    if (which === -1) which = this._events[name].length - 1;
+
+    if (which >= this._events[name].length)
+      throw new Error(
+        `event ${name} only ${this._events[name].length} were collected`
+      );
+
+    return this._events[name][which];
+  }
+
+  *events() {
+    for (const [name, which] of this.ordered)
+      yield this.eventByName(name, which);
+    // yield this.events[name][which];
+  }
+  // todo: eventSigs over const [name, nameWhich, sig, sigWhich]
 }
 
 /**
@@ -176,11 +196,7 @@ export class TransactRequest {
     return this; // chainable
   }
 
-  /**
-   * Invoke the arenaMethod with its arguments and process the result
-   * @returns {TransactResult}
-   */
-  async transact() {
+  expectations() {
     const requiredNames = Object.fromEntries(
       this.logs.requiredNames.map((k) => [k, true])
     );
@@ -194,20 +210,20 @@ export class TransactRequest {
     const excluded = Object.fromEntries(
       this.logs.excluded.map((k) => [k, true])
     );
+    return {
+      requiredNames,
+      required,
+      anticipated,
+      excluded,
+    };
+  }
 
-    let tx, r;
-
-    try {
-      tx = await this._method(...this.args);
-      r = await tx.wait();
-    } catch (err) {
-      // This will match the custom solidity errors on the contracts which are
-      // obscured by the diamond proxy and re-throw as human readable
-      // representations of the raw error selectors.
-      throw customError(err);
-    }
+  collect(r) {
+    const { requiredNames, required, anticipated, excluded } =
+      this.expectations();
 
     const collected = {};
+    const ordered = [];
 
     for (const gev of this.logParser.receiptLogs(r)) {
       // collate anticipated, required and throw on excluded
@@ -220,12 +236,18 @@ export class TransactRequest {
         throw new Error(`unexpected log signature ${sig}`);
       if (sig in excluded) throw new Error(`excluded log signature ${sig}`);
       delete required[sig];
-      collected[sig] = [...(collected[sig] ?? []), gev];
-
       if (name in requiredNames) {
-        collected[name] = [...(collected[name] ?? []), gev];
         delete requiredNames[name];
       }
+
+      collected[sig] = [...(collected[sig] ?? []), gev];
+      collected[name] = [...(collected[name] ?? []), gev];
+      ordered.push([
+        name,
+        collected[name].length - 1,
+        sig,
+        collected[sig].length - 1,
+      ]);
     }
 
     if (Object.keys(required).length !== 0)
@@ -233,7 +255,27 @@ export class TransactRequest {
         `required signatures missing: ${Object.keys(required).join(", ")}`
       );
 
-    return new TransactResult(r, collected);
+    return new TransactResult(r, collected, ordered);
+  }
+
+  /**
+   * Invoke the arenaMethod with its arguments and process the result
+   * @returns {TransactResult}
+   */
+  async transact() {
+    let tx, r;
+
+    try {
+      tx = await this._method(...this.args);
+      r = await tx.wait();
+    } catch (err) {
+      // This will match the custom solidity errors on the contracts which are
+      // obscured by the diamond proxy and re-throw as human readable
+      // representations of the raw error selectors.
+      throw customError(err);
+    }
+
+    return this.collect(r);
   }
 }
 
