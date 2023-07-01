@@ -1,8 +1,6 @@
-import { Option } from "commander";
 import { ethers } from "ethers";
-import * as msgpack from "@msgpack/msgpack";
-
 import { programConnectArena } from "./connect.js";
+import { Trialist } from "../lib/trialist.js";
 
 const out = console.log;
 
@@ -20,19 +18,8 @@ async function joingame2(program, options) {
     throw new Error("The arena address must be supplied for this command");
 
   const arena = await programConnectArena(program, options);
-  const iface = arena.getFacetInterface("ArenaFacet");
   const id = ethers.BigNumber.from(options.id);
-  const profile = ethers.utils.arrayify(
-    msgpack.encode({ nickname: options.nickname })
-  );
-  const tx = await arena.register(id, profile);
-  const r = await tx.wait();
-  for (const log of r.logs) {
-    try {
-      const parsed = iface.parseLog(log);
-      out(parsed.name);
-    } catch (err) {
-      out(`${err}`);
-    }
-  }
+  const trialist = new Trialist(arena);
+  await trialist.joinGame(id, options);
+  out(`registered for ${options.id}`);
 }
