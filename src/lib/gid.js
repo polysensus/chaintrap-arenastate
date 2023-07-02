@@ -16,8 +16,7 @@ export function numberToGid(num) {
 
 export function gidEnsureType(gid) {
   const bytes = ethers.utils.arrayify(gid.toHexString());
-  if (bytes.length > 17)
-    throw new Error(`gid ${gid} to large`);
+  if (bytes.length > 17) throw new Error(`gid ${gid} to large`);
 
   if (bytes.length === 17) {
     if (bytes[0] !== 4 && bytes[0] !== 0)
@@ -27,18 +26,16 @@ export function gidEnsureType(gid) {
   }
 
   const empty = new Uint8Array(17 - bytes.length);
-  empty[0] = 4
+  empty[0] = 4;
   return ethers.BigNumber.from(ethers.utils.concat(empty, bytes));
 }
 
 /**
- * 
- * @param {number|ethers.BigNumber|string} value 
+ *
+ * @param {number|ethers.BigNumber|string} value
  */
 export function asGid(value) {
-  if (value.constructor.name === 'Number')
-    return numberToGid(value);
-  if (value.constructor.name === 'BigNumber')
-    return gidEnsureType(value);
+  if (value.constructor.name === "Number") return numberToGid(value);
+  if (value.constructor.name === "BigNumber") return gidEnsureType(value);
   return gidEnsureType(ethers.BigNumber.from(value));
 }

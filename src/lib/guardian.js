@@ -11,7 +11,6 @@ export class Guardian {
   }
 
   init(eventParser, options) {
-
     if (options) this.initialOptions = { ...options };
 
     if (eventParser) this.eventParser = eventParser;
@@ -51,10 +50,10 @@ export class Guardian {
   preparedDungeon() {
     if (!this._dungeonPrepared) throw new Error(`dungeon not prepared`);
     return {
-      map:this.map,
+      map: this.map,
       topology: this.topology,
-      trie: this.trie
-    }
+      trie: this.trie,
+    };
   }
 
   finalizeDungeon() {
@@ -71,12 +70,16 @@ export class Guardian {
       throw new Error(`topology must be committed before minting`);
     if (!this._dungeonPrepared) throw new Error("dungeon not prepared");
 
-    options = {...options}
+    options = { ...options };
     if (!options.mapRootLabel)
       options.mapRootLabel = rootLabel(this.map, options.mapName);
 
-    this.minter.applyOptions({...options});
-    const r = await this.minter.mint({topology: this.topology, map:this.map, trie:this.trie});
+    this.minter.applyOptions({ ...options });
+    const r = await this.minter.mint({
+      topology: this.topology,
+      map: this.map,
+      trie: this.trie,
+    });
     const collector = new TransactRequest(this.eventParser);
     const result = collector
       .requireLogs(

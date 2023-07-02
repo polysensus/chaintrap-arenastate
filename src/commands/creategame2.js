@@ -7,7 +7,6 @@ import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
 import { ABIName } from "../lib/abiconst.js";
 
-
 export function addCreategame2(program) {
   program
     .command("creategame2")

@@ -233,7 +233,9 @@ export class GameMint {
       );
     if (!options.topology) throw new Error("a map topology is required");
     if (!options.mapRootLabel)
-      throw new Error("a map root label is required or a map object from which to derive one");
+      throw new Error(
+        "a map root label is required or a map object from which to derive one"
+      );
     // if (!options.map) throw new Error("a map is required");
 
     // Note: allowing for an undefined map is a concession to testability

@@ -15,16 +15,15 @@ export const log = getLogger("StateRoster");
 export const fmtev = (e) =>
   `gid: ${e.args.gid}, eid: ${e.args.eid}, ${e.event} bn: ${e.blockNumber}, topics: ${e.topics}, tx: ${e.transactionHash}`;
 
-
 export async function loadRoster(arena, gid, options) {
   log.debug(`Arena: ${arena.address} ${gid}, ${options}`);
 
-  const fromBlock = options.fromBlock ?? await getGameCreatedBlock(arena, gid)
+  const fromBlock =
+    options.fromBlock ?? (await getGameCreatedBlock(arena, gid));
 
   const events = await findGameEvents(arena, gid, fromBlock);
   const roster = new StateRoster(gid, options);
-  for (const event of events)
-    roster.applyEvent(event);
+  for (const event of events) roster.applyEvent(event);
   return roster;
 }
 

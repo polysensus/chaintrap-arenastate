@@ -17,7 +17,10 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     if (!this.gameOptions) {
       this.skip();
     }
-    const eventParser = new EventParser(this.guardianArena, ArenaEvent.fromParsedEvent);
+    const eventParser = new EventParser(
+      this.guardianArena,
+      ArenaEvent.fromParsedEvent
+    );
     const guardian = new Guardian(eventParser, this.gameOptions);
     guardian.prepareDungeon(maps, { mapName: "map02" });
     guardian.finalizeDungeon();

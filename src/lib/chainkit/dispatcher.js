@@ -10,17 +10,16 @@ export class Dispatcher {
     //  otherwise its not possible to clean up the listeners reliably
     this.contract = this.parser.contract;
 
-    this.listeners = {}
-    this.active = {}
+    this.listeners = {};
+    this.active = {};
   }
 
   createHandler(callback, signature, ...args) {
-
     const filter = this.contract.getFilter(signature, ...args);
     return {
       filter,
       signature,
-      callback
+      callback,
     };
   }
 
@@ -28,10 +27,9 @@ export class Dispatcher {
    * @param {{callback,filter,signature,listener}} handler a handler created by calling {@link createHandler}
    * @param {any} key arbitrary id which defaults to the handler callback
    * object, it is provided as context to the callback if it is != callback
-   * @returns 
+   * @returns
    */
   addHandler(handler, key = undefined) {
-
     const id = key ?? handler.callback;
 
     handler.listener = this.wrapCallback(handler.callback, key);
@@ -47,17 +45,15 @@ export class Dispatcher {
 
   /**
    * remove the identified ethers listening callback, or remove them all if no id is provided.
-   * 
+   *
    * @param {any} id of a specific handler, by default all current active listeners are stopped
    */
   stopListening(id = undefined) {
-
     const entries = id ? [id] : Object.keys(this.active);
 
     for (const id of entries) {
-      if (!this.active[id])
-        continue
-      const {filter, listener} = this.active[id];
+      if (!this.active[id]) continue;
+      const { filter, listener } = this.active[id];
       this.contract.off(filter, listener);
 
       delete this.active[id];
@@ -70,13 +66,11 @@ export class Dispatcher {
    * @param {any} id of a specific handler, by default all current non active listeners are started.
    */
   startListening(id = undefined) {
-
     const entries = id ? [id] : Object.keys(this.listeners);
 
     for (const id of entries) {
-      if (id in this.active)
-        continue;  
-      
+      if (id in this.active) continue;
+
       const handler = this.listeners[id];
       this.contract.on(handler.filter, handler.listener);
       this.active[id] = handler;
@@ -91,9 +85,8 @@ export class Dispatcher {
       const ev = this.parser.parse(log);
       if (!ev) return;
 
-      const args = []
-      if (key !== callback)
-        args.push(key);
+      const args = [];
+      if (key !== callback) args.push(key);
 
       return callback(ev, ...args);
     };

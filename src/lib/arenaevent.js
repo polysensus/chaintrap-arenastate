@@ -3,9 +3,7 @@ const arrayify = ethers.utils.arrayify;
 import * as msgpack from "@msgpack/msgpack";
 
 import { ABIName } from "./abiconst.js";
-import {
-  transcriptEventFilter, transcriptEventSig
- } from "./arenaabi.js";
+import { transcriptEventFilter, transcriptEventSig } from "./arenaabi.js";
 
 import { EventParser } from "./chainkit/eventparser.js";
 
@@ -191,7 +189,11 @@ export async function findGames(arena) {
 }
 
 export async function findRootLabels(arena, gid) {
-  const filter = transcriptEventFilter(arena, ABIName.TranscriptMerkleRootSet, gid);
+  const filter = transcriptEventFilter(
+    arena,
+    ABIName.TranscriptMerkleRootSet,
+    gid
+  );
   return arena.queryFilter(filter);
 }
 

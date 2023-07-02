@@ -17,9 +17,7 @@ const defaultJournalMax = 5;
 const defaultBlockHorizon = 30;
 
 export class Journal {
-
   constructor(eventParser, options) {
-
     this.initialOptions = { ...options };
 
     this._init(eventParser, options);
@@ -36,22 +34,26 @@ export class Journal {
     // note: updateOptions refers to transcripts so must be after they are defined above
     this.updateOptions(options);
 
-    this.dispatcher = options?.dispatcher ?? new Dispatcher(this.eventParser, {...this.options});
+    this.dispatcher =
+      options?.dispatcher ??
+      new Dispatcher(this.eventParser, { ...this.options });
     this.horizon = new TransactionHorizon(this.options.blockHorizon);
   }
 
-  openedIDs() { return Object.keys(this.transcripts); }
-  openedGids() { return this.openedIDs.map(ethers.BigNumber.from); }
+  openedIDs() {
+    return Object.keys(this.transcripts);
+  }
+  openedGids() {
+    return this.openedIDs.map(ethers.BigNumber.from);
+  }
 
   updateOptions(options) {
     options = { ...this.initialOptions, ...options };
 
     // The journal will track at most this many game transcripts
-    if (!options.maxTranscripts)
-      options.maxTranscripts = defaultJournalMax;
+    if (!options.maxTranscripts) options.maxTranscripts = defaultJournalMax;
 
-    if (!options.blockHorizon)
-      options.blockHorizon = defaultBlockHorizon;
+    if (!options.blockHorizon) options.blockHorizon = defaultBlockHorizon;
 
     if (Object.keys(this.transcripts).length > options.maxTranscripts)
       throw new Error(`can't reduce maxTranscripts below count of existing`);
@@ -59,17 +61,15 @@ export class Journal {
   }
 
   handlerKey(name, gidHex) {
-    return `${name}-#Journal-${gidHex}`
+    return `${name}-#Journal-${gidHex}`;
   }
 
   _handle(event, key) {
-
     // ethers listeners can't guarantee no duplicates. and also this handler is
     // called both from ethers and directly by this class when the transcripts
     // are initially opened. We don't de-dupe in the dispatcher because it
     // supports one -> many filter handling
-    if (this.horizon.known(event))
-      return;
+    if (this.horizon.known(event)) return;
 
     log.debug(`handling ${key}`);
 
@@ -77,20 +77,22 @@ export class Journal {
     if (!this.transcripts[gidHex])
       throw new Error(`Journal# TranscriptRegistration unknown gid ${gidHex}`);
 
-    this.transcripts[gidHex].applyEvent(event)
+    this.transcripts[gidHex].applyEvent(event);
   }
 
   /**
    * open transcript for the games
-   * @param {number|ethers.BigNumber} game 
+   * @param {number|ethers.BigNumber} game
    */
   openTranscript(gid, staticRoot, options) {
     const gidHex = gid.toHexString();
 
-    if (this.transcripts[gidHex])
-      throw new Error(`gid ${gidHex} already open`);
+    if (this.transcripts[gidHex]) throw new Error(`gid ${gidHex} already open`);
 
-    this.transcripts[gidHex] = new StateRoster(this.arena, {...this.options, ...options});
+    this.transcripts[gidHex] = new StateRoster(this.arena, {
+      ...this.options,
+      ...options,
+    });
     this.staticRoots[gidHex] = staticRoot;
 
     // Now that the roster instance exists, it is safe to start listening
@@ -107,12 +109,11 @@ export class Journal {
   }
 
   async staticRoot(gid, options) {
-
     let rootLabel = options?.rootLabel;
 
     const roots = {};
 
-    for (const log of (await findRootLabels(this.arena, gid))) {
+    for (const log of await findRootLabels(this.arena, gid)) {
       const parsed = this.eventParser.parse(log).parsedLog;
       roots[ethers.utils.parseBytes32String(parsed.args.label)] =
         ethers.utils.hexlify(parsed.args.root);
@@ -121,22 +122,28 @@ export class Journal {
       throw new Error(`no root labels found for id ${gid.toHexString()}`);
     if (Object.keys(roots).length != 1) {
       if (!rootLabel || !(rootLabel in roots))
-        throw new Error(`more than one  rootLabel found, use --root-label to disambiguate`);
-    } else
-      rootLabel = Object.keys(roots)[0];
+        throw new Error(
+          `more than one  rootLabel found, use --root-label to disambiguate`
+        );
+    } else rootLabel = Object.keys(roots)[0];
     const root = roots[rootLabel];
-    return {rootLabel, root};
+    return { rootLabel, root };
   }
 
   /**
    * open transcripts for the listed games
-   * @param {} options 
+   * @param {} options
    * @param  {...ethers.BigNumber} gids to watch
    */
 
   async watchGids(options, ...gids) {
-    if (Object.keys(this.transcripts).length + gids.length >= this.options.maxTranscripts)
-      throw new Error(`this journal is configured to track ${this.options.maxTranscripts} transcripts at most.`);
+    if (
+      Object.keys(this.transcripts).length + gids.length >=
+      this.options.maxTranscripts
+    )
+      throw new Error(
+        `this journal is configured to track ${this.options.maxTranscripts} transcripts at most.`
+      );
     for (const gid of gids) {
       const staticRoot = await this.staticRoot(gid, options);
       this.openTranscript(gid, staticRoot, options);
@@ -159,11 +166,11 @@ export class Journal {
 
   /**
    * open transcripts for the listed games
-   * @param {} options 
+   * @param {} options
    * @param  {ethers.BigNumber} gids to watch, can be correctly typed
    * game token ids or just game numbers. incorrectly typed token ids will throw
    */
   async watchGames(options, ...games) {
-    return this.watchGids(options, ...games.map(asGid))
+    return this.watchGids(options, ...games.map(asGid));
   }
 }

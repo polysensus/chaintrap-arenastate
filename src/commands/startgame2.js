@@ -1,4 +1,4 @@
-import {prepareGuardian, prepareGuardianArena} from "./prepareguardian.js";
+import { prepareGuardian, prepareGuardianArena } from "./prepareguardian.js";
 
 import { asGid } from "../lib/gid.js";
 import { Trial } from "../lib/trial.js";
@@ -33,11 +33,7 @@ async function startgame2(program, options) {
   // TODO: load furniture
   guardian.finalizeDungeon();
 
-  const trial = new Trial(
-    gid,
-    staticRootLabel,
-    guardian.preparedDungeon()
-  );
+  const trial = new Trial(gid, staticRootLabel, guardian.preparedDungeon());
   // now get the rootLabel for the initArgs
 
   const startArgs = trial.createStartGameArgs(

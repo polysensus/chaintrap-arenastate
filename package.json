@@ -13,8 +13,6 @@
     "lib": "src/lib"
   },
   "scripts": {
-    "test": "vitest run",
-    "test-watch": "vitest",
     "prepare": "rollup -c",
     "build": "rollup -c",
     "dev": "rollup -c -w",

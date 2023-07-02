@@ -45,7 +45,7 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     const trial = new Trial(gid, this.minter.options.mapRootLabel, {
       map: undefined,
       topology: topo,
-      trie
+      trie,
     });
 
     // TODO: sort out once createCommitArgs is implemented on trial
@@ -55,9 +55,7 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     let inputs = trial.topology.locationChoicesPrepared[startLocationId][1];
     let choice = inputs[inputIndex];
 
-    const startArgs = trial.createStartGameArgs(
-      [startLocationId]
-    );
+    const startArgs = trial.createStartGameArgs([startLocationId]);
 
     let transactor = new Transactor(arenaEvents);
 

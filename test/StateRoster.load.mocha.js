@@ -39,9 +39,9 @@ describe("StateRoster# load", async function () {
 
     const user1Address = await this.user1Arena.signer.getAddress();
 
-    let inputIndex = topo.locationChoices[
-      startLocationId
-    ].leaf.matchInput([3, 0]);
+    let inputIndex = topo.locationChoices[startLocationId].leaf.matchInput([
+      3, 0,
+    ]);
     let inputs = topo.locationChoicesPrepared[startLocationId][1];
     let userChoice = inputs[inputIndex];
 
@@ -49,18 +49,23 @@ describe("StateRoster# load", async function () {
     const gid = getGameCreated(r, arenaEvents).gid;
     const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedLog.args.label;
 
-    const trial = new Trial(ethers.BigNumber.from(1), this.minter.options.mapRootLabel, {
-      map: undefined,
-      topology: topo,
-      trie
-    })
-
-    const startArgs = trial.createStartGameArgs(
-      [startLocationId]
+    const trial = new Trial(
+      ethers.BigNumber.from(1),
+      this.minter.options.mapRootLabel,
+      {
+        map: undefined,
+        topology: topo,
+        trie,
+      }
     );
 
+    const startArgs = trial.createStartGameArgs([startLocationId]);
+
     const resolveArgs = trial.createResolveOutcomeArgs(
-      user1Address, startLocationId, userChoice);
+      user1Address,
+      startLocationId,
+      userChoice
+    );
 
     let transactor = new Transactor(arenaEvents);
     transactor
@@ -83,11 +88,7 @@ describe("StateRoster# load", async function () {
       .requireLogs(
         "TranscriptEntryCommitted(uint256,address,uint256,bytes32,uint256,bytes)"
       )
-      .method(
-        this.guardianArena.transcriptEntryResolve,
-        gid,
-        resolveArgs 
-      )
+      .method(this.guardianArena.transcriptEntryResolve, gid, resolveArgs)
       .requireLogs(
         "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)",
         "TranscriptEntryOutcome(uint256,address,uint256,address,bytes32,uint8,bytes)"

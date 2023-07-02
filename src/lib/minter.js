@@ -41,13 +41,16 @@ export class Minter {
   }
 
   async mint(options) {
-
-    const {topology, map, trie} = options;
+    const { topology, map, trie } = options;
     if (!(topology && trie))
       throw new Error(`topology, map and trie are required options for mint`);
 
     this.minter.configureMapOptions({
-      ...this.options, topology, map, trie });
+      ...this.options,
+      topology,
+      map,
+      trie,
+    });
 
     if (map && !this.options.noMETADATA) {
       await this.minter.prepareGameImage();

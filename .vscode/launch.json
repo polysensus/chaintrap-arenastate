@@ -54,7 +54,8 @@
       "args": [
         "--map",
         "${workspaceFolder}/data/maps/map02.json",
-        "--map-name", "map02",
+        "--map-name",
+        "map02",
         "startgame2",
         "--id",
         "0x0400000000000000000000000000000001",

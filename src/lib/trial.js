@@ -32,11 +32,9 @@ export class Trial {
    * @param {object} map
    */
   constructor(gid, staticRootLabel, dungeon, options = undefined) {
-
-  
     this.options = { ...options };
     this.gid = gid;
-    this.staticRootLabel = ethers.utils.formatBytes32String(staticRootLabel)
+    this.staticRootLabel = ethers.utils.formatBytes32String(staticRootLabel);
     this.map = dungeon.map;
     this.topology = dungeon.topology;
     this.staticTrie = dungeon.trie;

@@ -36,8 +36,13 @@ export async function prepareGuardian(eventParser, program, options) {
     ...options,
   };
 
-  if (guardianOptions.gameIconFilename && isFile(guardianOptions.gameIconFilename)) {
-    guardianOptions.gameIconBytes = readBinary(guardianOptions.gameIconFilename);
+  if (
+    guardianOptions.gameIconFilename &&
+    isFile(guardianOptions.gameIconFilename)
+  ) {
+    guardianOptions.gameIconBytes = readBinary(
+      guardianOptions.gameIconFilename
+    );
   }
   const guardian = new Guardian(eventParser, guardianOptions);
   guardian.prepareDungeon(collection, { mapName: guardianOptions.mapName });
