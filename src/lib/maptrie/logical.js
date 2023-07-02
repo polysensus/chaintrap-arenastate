@@ -1,15 +1,47 @@
+import { ethers } from "ethers";
+
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
+import { getMap } from "../map/collection.js";
 import { Join } from "./join.js";
 import { Access } from "./access.js";
 import { Link } from "./link.js";
-import { ObjectType, ObjectCodec, LeafObject } from "./objects.js";
+import { LocationChoices } from "./locationchoices.js";
+import { LocationExit } from "./locationexit.js";
+import { LocationLink } from "./locationlink.js";
+import { ObjectCodec, LeafObject, leafHash } from "./objects.js";
+import { ObjectType } from "./objecttypes.js";
+import { LogicalRef, LogicalRefType } from "./logicalref.js";
 import { Location } from "./location.js";
 
+export function rootLabel(map, mapName) {
+  if (!(map || mapName))
+    throw new Error(
+      "a map root label is required or a map object from which to derive one"
+    );
+  let rootLabel = `chaintrap:static`;
+
+  let defaultName = "un-named";
+  if (map) {
+    const beta = map.vrf_inputs?.proof?.beta;
+    if (beta) defaultName = beta.slice(0, 8);
+  }
+  rootLabel = mapName
+    ? `${rootLabel}:${mapName}`
+    : `${rootLabel}:${defaultName}`;
+  return rootLabel;
+}
+
+/**
+ * LogicalTopology encodes a map as a merkle trie. Providing for contract
+ * assertable existence proofs for locations and the logical connections between
+ * them.
+ *
+ * @template {{location:number, side: number, exit: number}} AccessLike
+ */
 export class LogicalTopology {
   /**
-   * proof that "an entry exists in joins which laves location i via side m, exit n, and enters location j, via side r, exit s"
+   * @constructor
    */
-
   constructor() {
     /**
      * Each this.joins[i].joins is a pair of indices into this.locations
@@ -24,21 +56,310 @@ export class LogicalTopology {
      * @readonly
      */
     this.locations = [];
+
+    this.locationChoices = [];
+    this.locationChoicesPrepared = [];
+    this.locationChoicesProof = [];
+    this.locationChoicesKeys = {};
+
+    this.exits = [];
+    this.exitsPrepared = [];
+    this.exitsProof = [];
+    this.exitKeys = {};
+    // To encode location links we need to be able to reference by (location, side, exit) -> exit
+    // `${location}:${side}:${exit}` -> exit
+    this.locationExits = {};
+
+    /**
+     *
+     * For each item, we get a leaf encoding [LINK, [[REF(#E)], [REF(#E')]]]
+     * Represents directional connection between a pair of locations
+     * REF(#E) -> exit E egress at location
+     * REF(#E') -> exit E' ingress at location'
+     */
+    this.locationExitLinks = [];
+    this.locationExitLinksPrepared = [];
+    this.locationExitLinksProof = [];
+    this.locationExitLinkKeys = {};
+    this.locationExitLinkIds = {};
+
+    /**
+     * @readonly
+     */
+    this.trie = undefined;
+    this._committed = false;
+  }
+
+  _resetCommit() {
+    this.locationChoices = [];
+    this.locationChoicesPrepared = [];
+    this.locationChoicesProof = [];
+    this.locationChoicesKeys = {};
+    this.exits = [];
+    this.exitsPrepared = [];
+    this.exitsProof = [];
+    this.exitKeys = {};
+    this.locationExits = {};
+    this.locationExitLinks = [];
+    this.locationExitLinksPrepared = [];
+    this.locationExitLinksProof = [];
+    this.locationExitLinkKeys = {};
+
+    this._trie = undefined;
+    this._committed = false;
   }
 
   /**
-   * Convenience to encode the whole topology as a merkle tree.
-   * @returns {StandardMerkleTree}
+   *
+   * @param {object} mapCollection
+   * @param {string|undefined} entryName
    */
-  encodeTrie() {
-    return StandardMerkleTree.of([...this.leaves()], LeafObject.ABI);
+  static fromCollectionJSON(mapCollection, entryName = undefined) {
+    const { map, name } = getMap(mapCollection, entryName);
+    const topo = new LogicalTopology();
+    topo.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
+    topo.extendLocations(map.model.rooms);
+    return topo;
   }
 
-  *leaves() {
-    for (const link of this.links())
-      yield ObjectCodec.prepare(
-        new LeafObject({ type: ObjectType.Link, leaf: link })
+  /**
+   * a list of objects describing the geometry of joins between pairs of locations
+   * @template {{
+   *  joins: [number, number],
+   *  join_sides:[number, number]}|{joins: [number, number],
+   *  sides:[number, number]}
+   * } JoinLike
+   * @param {JoinLike[]} joins - aka corridor
+   */
+  extendJoins(joins) {
+    for (const join of joins) {
+      const sides = join.sides ?? join.join_sides;
+      if (!sides)
+        throw new Error(
+          "badly structured join object, has neither sides nor join_sides"
+        );
+      this.joins.push(new Join([...join.joins], [...sides]));
+    }
+  }
+
+  /**
+   * A list of objects describing the geometry of locations
+   * @template {{joins:[number[], number[], number[], number[]], flags:Object.<string, boolean>}} LocationLike
+   * @template {{corridors:[number[], number[], number[], number[]], inter:boolean, main:boolean}} RoomLike
+   * @param {LocationLike[]|RoomLike[]} locations
+   */
+  extendLocations(locations) {
+    for (const loc of locations) {
+      if (loc.corridors) {
+        this.locations.push(
+          new Location(structuredClone(loc.corridors), {
+            inter: loc.inter,
+            main: loc.main,
+          })
+        );
+        continue;
+      }
+      if (!loc.sides) throw new Error("badly structured location object");
+      this.locations.push(
+        new Location(structuredClone(loc.sides), { ...loc.flags })
       );
+    }
+  }
+
+  /**
+   * Commit the whole map topology to a merkle trie, building a cache of entries
+   * for use during the game.
+   * @returns {StandardMerkleTree}
+   */
+  commit() {
+    this._resetCommit();
+
+    for (let locationId = 0; locationId < this.locations.length; locationId++) {
+      const sideExits = this.locationExitChoices(locationId); // the flattened list of [[side, exit], ...., [side, exit]]
+      const location = new LocationChoices(locationId, sideExits);
+
+      let leaf = new LeafObject({
+        type: LocationChoices.ObjectType,
+        leaf: location,
+      });
+      let prepared = this.prepareLeaf(leaf);
+
+      let key = leafHash(prepared);
+      if (key in this.locationChoicesKeys)
+        throw new Error(`locations are expected to be naturally unique`);
+
+      this.locationChoices.push(leaf);
+      this.locationChoicesPrepared.push(prepared);
+      this.locationChoicesProof.push();
+      this.locationChoicesKeys[key] = this.locationChoices.length - 1;
+
+      // We need a node for each of the locations exits. We most easily derive this from the exitMenu
+      for (let j = 0; j < sideExits.length; j++) {
+        const locationChoiceRef = new LogicalRef(
+          LogicalRefType.ProofInput,
+          ObjectType.LocationChoices,
+          locationId,
+          location.iChoices() + j
+        );
+        const locationExit = new LocationExit(locationChoiceRef);
+
+        leaf = new LeafObject({
+          type: LocationExit.ObjectType,
+          leaf: locationExit,
+        });
+        prepared = this.prepareLeaf(leaf);
+        key = leafHash(prepared);
+
+        const locationExitIndex = this.exits.length;
+        this.exitKeys[key] = locationExitIndex;
+        this.locationExits[
+          `${locationId}:${sideExits[j][0]}:${sideExits[j][1]}`
+        ] = locationExitIndex;
+        this.exits.push(leaf);
+        this.exitsPrepared.push(prepared);
+      }
+    }
+
+    for (const link of this.links()) {
+      const ida = this.exitId(link.a.location, link.a.side, link.a.exit);
+      const idb = this.exitId(link.b.location, link.b.side, link.b.exit);
+      const refa = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, ida);
+      const refb = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, idb);
+
+      const locationExitLinkAB = new LocationLink(refa, refb);
+      let leaf = new LeafObject({
+        type: ObjectType.Link2,
+        leaf: locationExitLinkAB,
+      });
+      let prepared = this.prepareLeaf(leaf);
+      let key = leafHash(prepared);
+      let locationExitLinkIndex = this.locationExitLinks.length;
+      this.locationExitLinkKeys[key] = locationExitLinkIndex;
+      this.locationExitLinks.push(leaf);
+      this.locationExitLinksPrepared.push(prepared);
+      this.locationExitLinkIds[
+        `${link.a.location}:${link.a.side}:${link.a.exit}`
+      ] = locationExitLinkIndex;
+    }
+
+    this.trie = StandardMerkleTree.of(
+      [
+        ...this.locationChoicesPrepared,
+        ...this.exitsPrepared,
+        ...this.locationExitLinksPrepared,
+      ],
+      LeafObject.ABI
+    );
+
+    for (const prepared of this.locationChoicesPrepared)
+      this.locationChoicesProof.push(this.trie.getProof(prepared));
+
+    for (const prepared of this.exitsPrepared)
+      this.exitsProof.push(this.trie.getProof(prepared));
+
+    for (const prepared of this.locationExitLinksPrepared)
+      this.locationExitLinksProof.push(this.trie.getProof(prepared));
+
+    this._committed = true;
+    return this.trie;
+  }
+
+  /**
+   *
+   * @param {{type, leaf}} o
+   */
+  prepareObject(o) {
+    return this.prepareLeaf(new LeafObject(o));
+  }
+
+  /**
+   *
+   * @param {LeafObject} lo
+   * @returns {[number, BytesLike]}
+   */
+  prepareLeaf(lo) {
+    return ObjectCodec.prepare(lo, {
+      resolveValue: this.resolveValueRef.bind(this),
+    });
+  }
+
+  referenceProofInput(targetType, id, options) {
+    let input;
+    switch (targetType) {
+      case ObjectType.LocationChoices:
+        input = this.locationChoices[id].leaf.matchInput(options);
+        break;
+    }
+    if (typeof input === "undefined")
+      throw new Error(`input not matched for targetType ${targetType}`);
+
+    return new LogicalRef(LogicalRefType.ProofInput, targetType, id, input);
+  }
+
+  /**
+   * Return the exit id for the location, side, exit triple
+   * @param {*} location
+   * @param {*} side
+   * @param {*} exit
+   */
+  exitId(location, side, exit) {
+    const id = this.locationExits[`${location}:${side}:${exit}`];
+    if (typeof id === "undefined")
+      throw new Error(
+        `location exit not found for ${location}:${side}:${exit}`
+      );
+    return id;
+  }
+  locationLinkId(location, side, exit) {
+    const id = this.locationExitLinkIds[`${location}:${side}:${exit}`];
+    if (typeof id === "undefined")
+      throw new Error(
+        `location exit not found for ${location}:${side}:${exit}`
+      );
+    return id;
+  }
+
+  /**
+   *
+   * @param {number} typeId
+   * @param {number} id
+   */
+  leaf(typeId, id) {
+    switch (typeId) {
+      case ObjectType.LocationChoices:
+        return this.locationChoices[id];
+      case ObjectType.Exit:
+        return this.exits[id];
+      case ObjectType.Link2:
+        return this.locationExitLinks[id];
+    }
+    return undefined;
+  }
+
+  /**
+   *
+   * @param {LogicalRef} ref
+   */
+  resolveValueRef(ref) {
+    const target = this.leaf(ref.targetType, ref.id);
+    if (!target)
+      throw new Error(`unknown reference targetType ${ref.targetType}`);
+
+    switch (ref.type) {
+      case LogicalRefType.Proof:
+        // referencing the encoded, provable, leaf value
+        return leafHash(this.prepareLeaf(target));
+      case LogicalRefType.ProofInput:
+        // prepared is [type, inputs]. inputs is always a 2 dimensional array
+
+        const targetHash = leafHash(this.prepareLeaf(target));
+        const inputs = target.leaf.inputs({
+          resolveValue: this.resolveValueRef.bind(this),
+        });
+        return [targetHash, ...inputs[ref.index]];
+      default:
+        throw new Error(`unsupported reference type ${ref.type}`);
+    }
   }
 
   /**
@@ -57,6 +378,18 @@ export class LogicalTopology {
     }
   }
 
+  locationExitChoices(location) {
+    const choices = [];
+    const loc = this.locations[location];
+    for (let side = 0; side < loc.sides.length; side++) {
+      // for the specific case of exits we could compress this by just storing
+      // the counts, but we want the choice menus to be more general beasts.
+      for (let exit = 0; exit < loc.sides[side].length; exit++)
+        choices.push([side, exit]);
+    }
+    return choices;
+  }
+
   /**
    * Return the link representation of the identified join
    * @param {number} join
@@ -68,7 +401,6 @@ export class LogicalTopology {
 
   /**
    * Return the link representation of the egress & corresponding ingress accesses
-   * @template {{location:number, side: number, exit: number}} AccessLike
    * @param {AccessLike} egress an access like object with location, side and exit properties
    * @returns {Link} a link where link.a is the egress and link.b the ingress at the other side.
    */
@@ -78,7 +410,6 @@ export class LogicalTopology {
 
   /**
    * Return the access on the other side of the join identified by the egress access
-   * @template {{location:number, side: number, exit: number}} AccessLike
    * @param {AccessLike} egress an access like object with location, side and exit properties
    * @returns {Access}
    */
@@ -99,17 +430,17 @@ export class LogicalTopology {
    * @returns {[number, number, number]}
    */
   _accessJoin(loc, side, which) {
-    const ijoin = this.locations[loc]?.sides[side]?.[which];
-    if (typeof ijoin === "undefined")
+    const iJoin = this.locations[loc]?.sides[side]?.[which];
+    if (typeof iJoin === "undefined")
       throw new Error(`invalid egress ${loc}:${side}${which}`);
-    const join = this.joins[ijoin];
+    const join = this.joins[iJoin];
 
     // get the other side by matching the egress side in the join and then taking the other entry
     const ingressSide = join.joins[0] === loc ? join.sides[1] : join.sides[0];
     // similarly for the ingress location
     const ingressLoc = join.joins[0] === loc ? join.joins[1] : join.joins[0];
     // now we find the exit index by searching the ingress location, side for the join
-    const ingressWhich = this.exitIndex(ijoin, ingressLoc, ingressSide);
+    const ingressWhich = this.exitIndex(iJoin, ingressLoc, ingressSide);
     if (typeof ingressWhich === "undefined")
       throw new Error(
         `invalid map, exitIndex not found for ${join}:${loc}:${ingressSide}`
@@ -164,45 +495,5 @@ export class LogicalTopology {
       );
 
     return new Access({ location, side, exit });
-  }
-
-  /**
-   * a list of objects describing the geometry of joins between pairs of locations
-   * @template {{joins: [number, number], join_sides:[number, number]}|{joins: [number, number], sides:[number, number]}} JoinLike
-   * @param {JoinLike[]} joins - aka corridor
-   */
-  extendJoins(joins) {
-    for (const join of joins) {
-      const sides = join.sides ?? join.join_sides;
-      if (!sides)
-        throw new Error(
-          "badly structured join object, has neither sides nor join_sides"
-        );
-      this.joins.push(new Join([...join.joins], [...sides]));
-    }
-  }
-
-  /**
-   * A list of objects describing the geometry of locations
-   * @template {{joins:[number[], number[], number[], number[]], flags:Object.<string, boolean>}} LocationLike
-   * @template {{corridors:[number[], number[], number[], number[]], inter:boolean, main:boolean}} RoomLike
-   * @param {LocationLike[]|RoomLike[]} locations
-   */
-  extendLocations(locations) {
-    for (const loc of locations) {
-      if (loc.corridors) {
-        this.locations.push(
-          new Location(structuredClone(loc.corridors), {
-            inter: loc.inter,
-            main: loc.main,
-          })
-        );
-        continue;
-      }
-      if (!loc.sides) throw new Error("badly structured location object");
-      this.locations.push(
-        new Location(structuredClone(loc.sides), { ...loc.flags })
-      );
-    }
   }
 }

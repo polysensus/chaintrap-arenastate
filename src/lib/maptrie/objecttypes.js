@@ -1,0 +1,7 @@
+export class ObjectType {
+  static Invalid = 0;
+  static Location2 = 6;
+  static Exit = 7;
+  static Link2 = 8;
+  static LocationChoices = 9;
+}

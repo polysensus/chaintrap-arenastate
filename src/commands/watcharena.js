@@ -2,12 +2,24 @@ import fs from "fs";
 import ora from "ora";
 
 import { isFile } from "./fsutil.js";
-import { getArenaAddress } from "./arenaaddress.js";
-import { arenaConnect } from "../lib/chaintrapabi.js";
-import { ABIName } from "../lib/abiconst.js";
-import { Dispatcher } from "../lib/dispatcher.js";
-import { ProviderContext, ProviderSwitch } from "../lib/providercontexts.js";
+import {
+  ProviderContext,
+  ProviderSwitch,
+} from "../lib/chainkit/providercontexts.js";
 const out = console.log;
+
+export function addWatchArena(program) {
+  program
+    .command("watch")
+    .description("watch for events on the arena contract")
+    .option("-p, --providers <filename>")
+    .option(
+      "-w, --which <which>",
+      "name of the provider entry in providers file",
+      "caimst"
+    )
+    .action((options) => watchArena(program, options));
+}
 
 export async function watchArena(program, options) {
   let cfgs = options.providers;
@@ -36,6 +48,7 @@ export async function watchArena(program, options) {
       signer = new ethers.Wallet(signer, ctx.provider);
     }
   }
+  /*
   const provider = signer || ctx.provider;
   const arenaAddress = await getArenaAddress(program, options, provider);
   const arena = arenaConnect(arenaAddress, provider);
@@ -46,8 +59,9 @@ export async function watchArena(program, options) {
     event: ${ev.name}
     ${JSON.stringify(ev.args)}
     `);
-  }, ABIName.GameCreated);
+  }, ABIName.TranscriptCreated);
   dispatcher.startListening();
+  */
 
   const spinner = ora(`waiting for events`).start();
   setTimeout(() => {

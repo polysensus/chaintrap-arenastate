@@ -2,7 +2,7 @@
   "name": "@polysensus/chaintrap-arenastate",
   "type": "module",
   "version": "0.0.23",
-  "description": "chaintrap arena libary to derive and model the arena contract state for specific game sessions",
+  "description": "chaintrap arena library to derive and model the arena contract state for specific game sessions",
   "main": "dist/chaintrap-arenastate.cjs",
   "module": "dist/chaintrap-arenastate.esm.js",
   "browser": "dist/chaintrap-arenastate.umd.js",
@@ -13,8 +13,6 @@
     "lib": "src/lib"
   },
   "scripts": {
-    "test": "vitest run",
-    "test-watch": "vitest",
     "prepare": "rollup -c",
     "build": "rollup -c",
     "dev": "rollup -c -w",
@@ -34,7 +32,7 @@
     "arenastate"
   ],
   "author": "robin@polysensus.com",
-  "license": "UNLICENSED",
+  "license": "APACHE-2",
   "bugs": {
     "url": "https://github.com/polysensus/chaintrap-arenastate/issues"
   },
@@ -48,12 +46,13 @@
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@openzeppelin/merkle-tree": "^1.0.4",
     "@polysensus/chaintrap-contracts": "file:../chaintrap-contracts",
-    "@polysensus/diamond-deploy": "file:../diamond-deploy",
+    "@polysensus/diamond-deploy": "^0.2.4",
     "@rollup/plugin-commonjs": "^23.0.3",
     "@rollup/plugin-json": "^5.0.2",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@vitest/coverage-c8": "^0.25.3",
     "cli-spinners": "^2.7.0",
+    "deep-equal": "^2.2.1",
     "dotenv": "^16.0.3",
     "eslint": "^8.29.0",
     "eslint-plugin-import": "^2.26.0",

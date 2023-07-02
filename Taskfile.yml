@@ -8,6 +8,7 @@ vars:
   FACETS_EXCLUDE: node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json
   CHAINTRAP_CONTRACTS_ABI_DIR: node_modules/@polysensus/chaintrap-contracts/abi
   DIAMOND_DEPLOY_JSON: .local/dev/diamond-deploy.json
+  DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
 
 dotenv: [".env"]
 
@@ -37,6 +38,25 @@ tasks:
         npm run lint
 
   build:
+    cmds:
+      - task: build:js
+      - task: build:diamond-deploy
+
+  test:preflight:
+    desc: start hardhat and deploy contracts for test:integ
+    cmds:
+      - task: dev:hh:restart
+      - task: deploy:hh-new
+      - |
+        set -e
+        tusk -q -f tusk-arena.yml diamond-find | tee arenaproxy.addr
+
+  test:
+    desc: run the integration tests
+    cmds:
+      - npx mocha './**/*.mocha.js'
+
+  build:js:
     desc: format and lint the code, then build the package
     deps: [format]
     cmds:
@@ -46,15 +66,13 @@ tasks:
     desc: generate the deployable list of facets
     cmds:
       - |
-        npx diamond-deploy list \
+        mkdir -p .local/dev
+        {{.DEPLOYCLI}} \
+          list \
           -I facet -i {{.CHAINTRAP_CONTRACTS_ABI_DIR}} \
           --exclude {{.FACETS_EXCLUDE}} \
           -n Diamond DiamondNew \
           --format json | tee {{.DIAMOND_DEPLOY_JSON}}
-
-  test:
-    cmds:
-      - task: test:unit
 
   deploy:
     desc: deploy the contracts to caimst and mumbai
@@ -116,7 +134,7 @@ tasks:
         tusk -f tusk-arena.yml deploy-arena
   deploy:hh-new:
     dotenv: [".env.hh"]
-    desc: deploy the contracts to hardhata (assumes the local server is listening on 8545)
+    desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
     cmds:
       - |
         tusk -f tusk-arena.yml deploy-arena-new
@@ -126,33 +144,6 @@ tasks:
     cmds:
       - |
         tusk -f tusk-arena.yml diamond-find
-
-  test:unit:
-    desc: run the unit tests
-    cmds:
-      - |
-        set -e
-        npm run test -- --coverage
-        npx mocha '**/*.mocha.{mjs,js}'
-
-  test:unit:ci:
-    desc: run the unit tests for the ci (juint output)
-    cmds:
-      - |
-        set -e
-        # npm run test -- --reporter junit --outputFile jest-junit.xml
-        npm run test -- --coverage
-        npx mocha --timeout 20000  '**/*.mocha.{mjs,js}'
-
-  test:integ:deploy:
-    desc: start hardhat and deploy contracts for test:integ
-    dotenv: [".env.hh"]
-    cmds:
-      - task: dev:hh:restart
-      - task: deploy:hh-new
-      - |
-        set -e
-        tusk -q -f tusk-arena.yml diamond-find | tee arenaproxy.addr
 
   dev:hh:start:
     desc: start a local hardhat node (if there isn't one running)

@@ -1,5 +1,5 @@
 import { isFile, readHexKey } from "./fsutil.js";
-import { resolveHardhatKey } from "../lib/hhkeys.js";
+import { resolveHardhatKey } from "../lib/chainkit/hhkeys.js";
 
 export function readKey(key) {
   if (!key) return;

@@ -1,14 +1,24 @@
 // @ts-check
 import { expect } from "chai";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { ethers } from "ethers";
+import * as msgpack from "@msgpack/msgpack";
 
 import { LogicalTopology } from "./logical.js";
-import { LinkLeaf } from "./leaves.js";
-import { Link } from "./link.js";
-import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
+import { LogicalRef, LogicalRefType } from "./logicalref.js";
 //
-import maps from "../map/mocks/map02.json" assert { type: "json" };
+import maps from "../../../data/maps/map02.json" assert { type: "json" };
+import {
+  LeafObject,
+  leafHash,
+  directPreimage,
+  conditionInputs,
+} from "./objects.js";
+import { ObjectType } from "./objecttypes.js";
+import { LocationExit } from "./locationexit.js";
+import { LocationLink } from "./locationlink.js";
+
 const { map02 } = maps;
 
 describe("LogicalTopology tests", function () {
@@ -16,25 +26,8 @@ describe("LogicalTopology tests", function () {
     const topo = new LogicalTopology();
     topo.extendJoins(map02.model.corridors); // rooms 0,1 sides EAST, WEST
     topo.extendLocations(map02.model.rooms);
+    const trie = topo.commit();
 
-    const trie = topo.encodeTrie();
-
-    for (const [i, v] of trie.entries()) {
-      const proof = trie.getProof(i);
-      console.log("Value:", v);
-      console.log("Proof:", proof);
-    }
-  });
-
-  it("Should build merkle for two room single join map", function () {
-    const topo = new LogicalTopology();
-    topo.extendJoins([{ joins: [0, 1], sides: [3, 1] }]); // rooms 0,1 sides EAST, WEST
-    topo.extendLocations([
-      { sides: [[], [], [], [0]], flags: {} },
-      { sides: [[], [0], [], []], flags: {} },
-    ]);
-
-    const trie = topo.encodeTrie();
     for (const [i, v] of trie.entries()) {
       const proof = trie.getProof(i);
       console.log("Value:", v);

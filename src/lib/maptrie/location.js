@@ -1,7 +1,12 @@
 import { namedFlags } from "./namedflags.js";
 
 export class LocationFlags {
-  static names = ["main", "inter"];
+  /*
+    california: as in "hotel california" flags the null link. we prove invalid moves by proving a link to hotel california.
+    main: the location is a normal room
+    inter: the location is an intersection
+   */
+  static names = ["california", "main", "inter"];
   /**
    * Calls {@link namedFlags} with the {@link LocationFlags.names}
    * @param {Object.<string, boolean>} flags

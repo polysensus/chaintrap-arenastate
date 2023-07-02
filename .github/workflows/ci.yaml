@@ -1,7 +1,7 @@
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+    #tags:
+    #  - "v[0-9]+.[0-9]+.[0-9]+"
 
 name: ci
 
@@ -16,13 +16,6 @@ jobs:
         with:
           APP_PEM: ${{ secrets.CICD_APP_PEM }}
           APP_ID: ${{ secrets.CICD_APP_ID }}
-
-      - name: Checkout the diamond-deploy repository
-        uses: actions/checkout@v3
-        with:
-          repository: polysensus/diamond-deploy
-          submodules: recursive
-          path: diamond-deploy
 
       - name: Checkout the contracts repository
         uses: actions/checkout@v3
@@ -43,6 +36,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.15.0
+          scope: "@polysensus"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -70,23 +65,18 @@ jobs:
 
         run: |
 
-          echo "" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc
-
-          pushd diamond-deploy
-          npm install
-          popd
           pushd chaintrap-contracts
           npm install
           task build
           popd
           pushd chaintrap-arenastate
 
+          task bootstrap
+
           grep chaintrap-contracts package.json
           grep chaintrap-contracts package-lock.json
           npm install
 
-          grep version node_modules/@polysensus/diamond-deploy/package.json
           grep version node_modules/@polysensus/chaintrap-contracts/package.json
           find node_modules/@polysensus/chaintrap-contracts/abi
 
@@ -96,21 +86,19 @@ jobs:
           ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
           task build
 
-      - name: unit tests
+      - name: test
         working-directory: chaintrap-arenastate
         run: |
           ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
-          task test:unit:ci
+          task test:preflight
+          task test
 
       - name: publish npm package
         working-directory: chaintrap-arenastate
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH }}
         if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         run: |
-          git checkout .npmrc
-          echo "" > .npmrc
-          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc
 
           # github has scale issues when there are a large (> 20 ) npm packages in
           # a repo, so force for fixes seems like the right thing for now.
@@ -118,17 +106,7 @@ jobs:
           if [[ ! $(git log -1 --pretty=%B) =~ '^release:v' ]]; then
             export FORCE=--force
           fi
-          npm publish $FORCE
-
-      - name: package cleanup
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: actions/delete-package-versions@v4
-        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
-        with:
-          package-name: "chaintrap-arenastate"
-          package-type: "npm"
-          min-versions-to-keep: 3
+          npm publish $FORCE --access public
 
       # this didn't work, despite looking like jest/junit format the reporter
       # crashed when looking at the time property

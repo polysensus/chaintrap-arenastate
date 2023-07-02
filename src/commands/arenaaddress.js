@@ -5,7 +5,7 @@ import { deriveContractAddress } from "@polysensus/diamond-deploy";
 import { programConnect } from "./connect.js";
 
 import { getLogger } from "../lib/log.js";
-import { resolveHardhatKey } from "../lib/hhkeys.js";
+import { resolveHardhatKey } from "../lib/chainkit/hhkeys.js";
 
 const log = getLogger("arenaaddress");
 const out = console.log;
