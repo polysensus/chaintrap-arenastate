@@ -38,6 +38,7 @@ export async function loadRoster(arena, gid, options) {
 export class StateRoster {
   constructor(gid, options = {}) {
     /**@readonly */
+
     this.gid = gid;
     /**@readonly */
     this.trialists = {};
@@ -65,5 +66,16 @@ export class StateRoster {
     if (!this.trialists[ethers.utils.getAddress(addr)]?.registered)
       return undefined;
     return this.trialists[addr];
+  }
+
+  *pendingOutcomes() {
+    for (const addr of Object.keys(this.trialists)) {
+      const trialist = this.trialists[addr];
+      const eid = trialist.last();
+      if (!trialist.pendingOutcome(eid))
+        continue
+      
+      yield {participant:addr, trialist};
+    }
   }
 }

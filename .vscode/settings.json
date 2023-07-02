@@ -15,6 +15,7 @@
     "chainkit",
     "chaintrapabi",
     "cmds",
+    "commitchoice",
     "commitexituse",
     "completegame",
     "Creategame",

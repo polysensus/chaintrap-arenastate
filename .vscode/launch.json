@@ -76,6 +76,22 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "resolvechoice",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "envFile": "${workspaceFolder}/.env.test",
+      "args": [
+        "--map",
+        "${workspaceFolder}/data/maps/map02.json",
+        "--map-name",
+        "map02",
+        "resolvechoice"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
       "name": "watch",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",

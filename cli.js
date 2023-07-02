@@ -10,6 +10,7 @@ import { addJoingame } from "./src/commands/joingame.js";
 import { addStartgame } from "./src/commands/startgame.js";
 import { addCommitChoice } from "./src/commands/commitchoice.js";
 import { addWatchArena } from "./src/commands/watcharena.js";
+import { addResolveChoice } from "./src/commands/resolvechoice.js";
 
 program
   .enablePositionalOptions()
@@ -72,6 +73,7 @@ addCreategame(program);
 addJoingame(program);
 addStartgame(program);
 addCommitChoice(program);
+addResolveChoice(program);
 // ---
 
 /*
@@ -80,42 +82,11 @@ program
   .description("complete the game")
   .option("-g, --gid <gid>")
   .action((options) => completegame(program, options));
-
-program
-  .command("allowexituse")
-  .description("validate and confirm the most recent exit uses for the players")
-  .option("-g, --gid <gid>")
-  .option("-p, --player <player>", "allow only one specific player")
-  .option("-c, --commit", "default is dry-run, set -c to issue the transaction")
-  .option(
-    "-H, --halt",
-    "halt the player, when an allow also halts it generally indicates success/completion or player death",
-    false
-  )
-  .action((options) => allowexituse(program, options));
-
-// -- aspirant transactions
-program
-  .command("join <nickname>")
-  .description("join the game, defaults to most recently created")
-  .option("-g, --gid <gid>")
-  .option(
-    "-c, --character <character>",
-    "character name, 'viking' or 'assassin'",
-    "assassin"
-  )
-  .action((nickname, options) => joingame(program, options, nickname));
-
-program
-  .command("commitexituse")
-  .description("aspirant commits to the use of a room exit")
-  .option("-g, --gid <gid>")
-  .option(
-    "-e, --sideexit <sideexit>",
-    "<side>:<exit-index> room side and exit index in that side to leave via",
-    "0:0"
-  )
-  .action((options) => commitexituse(program, options));
 */
 
-program.parse();
+try {
+  program.parse();
+} catch (err) {
+  console.log(err);
+  process.exit(1);
+}

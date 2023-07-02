@@ -1,7 +1,3 @@
-import { Option } from "commander";
-import fetch from "node-fetch";
-import { ethers } from "ethers";
-
 import { readJson } from "./fsutil.js";
 import { programConnectArena } from "./connect.js";
 import { Guardian } from "../lib/guardian.js";
@@ -23,10 +19,9 @@ export async function prepareGuardian(eventParser, program, options) {
   if (program.opts().verbose) vout = out;
   const mapfile = program.opts().map;
   if (!mapfile) {
-    out(
+    throw new Error(
       "a map file must be provided, use chaintrap-maptool to generate one or use one of its default examples"
     );
-    return;
   }
 
   const collection = readJson(mapfile);

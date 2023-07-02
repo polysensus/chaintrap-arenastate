@@ -26,6 +26,10 @@ async function commitchoice(program, options, side, exit) {
   const trialist = new Trialist(eventParser);
   await trialist.openTranscript(gid);
 
+  // TODO: load the state roster to check that the provided side & exit are
+  // available to the player. the contracts revert if they are wrong, so its not
+  // super critical just confusing.
+
   await trialist.commitLocationChoice(gid, parseInt(side), parseInt(exit));
   const sideName = {0:"north", 1: "west", 2: "south", 3: "east"}[side];
   console.log(`committed to exit ${exit} on the ${sideName} side`);

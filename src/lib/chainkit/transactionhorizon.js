@@ -22,14 +22,18 @@ export class TransactionHorizon {
     this._highestBlock = 0;
   }
 
+  logId(log) {
+    return `${log.transactionHash}${log.transactionIndex}:${log.logIndex}`
+  }
+
   /**
    * @template {{transactionHash}} EventLike
    * @param {EventLike} e
    * @returns
    */
-  haveEvent(e) {
-    return typeof this._recentTx[e.transactionHash] !== "undefined";
-  }
+  haveEvent(e) { return this.haveLogId(this.logId(e.log)); }
+
+  haveLogId(id) { return typeof this._recentTx[id] !== "undefined"; }
 
   /**
    * @template {{blockNumber, transactionHash}} EventLike
@@ -37,19 +41,17 @@ export class TransactionHorizon {
    * @returns
    */
   known(e) {
-    if (this.haveEvent(e)) {
-      log.debug(fmt(`<<<<<< Have memo for ${e.transactionHash}`));
+    const logId = this.logId(e.log);
+    if (this.haveLogId(logId)) {
       return true;
     }
 
-    log.debug(fmt(`>>>>>> memo for ${e.transactionHash}`));
-    this._recentTx[e.transactionHash] = e;
-    // if (!this._haveSeenEvent(e)) throw Error('erk ???')
+    this._recentTx[logId] = e;
 
     if (isUndefined(this._recentBlockTx[e.blockNumber])) {
       this._recentBlockTx[e.blockNumber] = [];
     }
-    this._recentBlockTx[e.blockNumber].push(e.transactionHash);
+    this._recentBlockTx[e.blockNumber].push(logId);
 
     if (e.blockNumber < this._lowestBlock) {
       this._lowestBlock = e.blockNumber;
@@ -77,9 +79,9 @@ export class TransactionHorizon {
         this._highestBlock - this._lowestBlock > this._blockHorizon
       ) {
         const bn = known.pop(); // pops the lowest because we reversed above
-        for (const tx of this._recentBlockTx[bn]) {
-          delete this._recentTx[tx];
-          log.debug(`droping memo of ${tx}`);
+        for (const logId of this._recentBlockTx[bn]) {
+          delete this._recentTx[logId];
+          log.debug(`droping memo of ${logId}`);
         }
         delete this._recentBlockTx[bn];
         this._lowestBlock = known[known.length - 1];

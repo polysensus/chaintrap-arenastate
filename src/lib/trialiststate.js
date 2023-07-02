@@ -10,6 +10,16 @@ export const TrialistEvents = Object.fromEntries([
   [ABIName.TranscriptEntryOutcome, true],
 ]);
 
+function maxKey(o) {
+  let max = -1;
+  for (let k of Object.keys(o)) {
+    k = Number(k)
+    if (k > max)
+      max = k
+  }
+  return max === -1 ? undefined : max;
+}
+
 export class TrialistState {
   static handlesEvent(name) {
     return TrialistEvents[name];
@@ -68,13 +78,32 @@ export class TrialistState {
   // --- read only external accessors for chain state
   get lastEID() {
     if (typeof this.state.lastEID === "undefined") return 0;
-    return this.state.lastEID;
+    return Number(this.state.lastEID);
   }
 
   get started() {
     return (
       typeof this.state.lastEID !== "undefined" || this.state.pendingExitUsed
     );
+  }
+
+  maxEventEID(name) {
+    return maxKey(this.eventsByABI);
+  }
+
+  pendingOutcome(eid) {
+    // get the greatest committed eid
+    if (typeof eid === 'undefined')
+      eid = this.last();
+    // if it hasn't been committed, its definitely not pending.
+    if (!this.eventsByABI[ABIName.TranscriptEntryCommitted][eid])
+      return false;
+    // If its committed and the outcome isn't recorded, then its definitely pending
+    if (!this.eventsByABI[ABIName.TranscriptEntryOutcome][eid])
+      return true
+
+    // definitely not pending.
+    return false;
   }
 
   // --- direct change method (these don't require updateBegin)
@@ -166,22 +195,7 @@ export class TrialistState {
     return { ...this.outcomeStates[which] };
   }
 
-  // --- update state control
-
   // --- private update methods
-  _haveEvent(event) {
-    let eid = event?.eid;
-    if (!eid) {
-      return false;
-    }
-    eid = Number(eid);
-
-    if (this.eids[eid]?.log.transactionHash !== event.log.transactionHash) {
-      return false;
-    }
-    // log.debug(`duplicate transaction hash, ignoring event: ${event.name}, tx: ${event.log.transactionHash}`)
-    return true;
-  }
 
   ordered(options) {
     let map = options?.abiName ? this.eventsByABI[options.abiName] : this.eids;

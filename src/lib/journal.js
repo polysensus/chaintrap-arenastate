@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { asGid } from "./gid.js";
+import { asGid, gidEnsureType } from "./gid.js";
 import { StateRoster } from "./stateroster.js";
 import { Dispatcher } from "./chainkit/dispatcher.js";
 import { TransactionHorizon } from "./chainkit/transactionhorizon.js";
@@ -147,12 +147,21 @@ export class Journal {
   }
 
   /**
-   * open transcripts for the listed games
+   * open transcripts for the listed games, populates the initial roster state
+   * and starts the listeners for future events.
    * @param {} options
    * @param  {...ethers.BigNumber} gids to watch
    */
+  async startListening(candidateGids, options) {
 
-  async watchGids(options, ...gids) {
+    // filter out any we are already watching
+    const gids = [];
+    for (const gid of candidateGids) {
+      if (this.transcripts[gid.toHexString()])
+        continue;
+      gids.push(gid)
+    }
+
     if (
       Object.keys(this.transcripts).length + gids.length >=
       this.options.maxTranscripts
@@ -160,6 +169,7 @@ export class Journal {
       throw new Error(
         `this journal is configured to track ${this.options.maxTranscripts} transcripts at most.`
       );
+
     for (const gid of gids) {
       const staticRoot = await this.findStaticRoot(gid, options);
       this.openTranscript(gid, staticRoot, options);
@@ -180,13 +190,7 @@ export class Journal {
     }
   }
 
-  /**
-   * open transcripts for the listed games
-   * @param {} options
-   * @param  {ethers.BigNumber} gids to watch, can be correctly typed
-   * game token ids or just game numbers. incorrectly typed token ids will throw
-   */
-  async watchGames(options, ...games) {
-    return this.watchGids(options, ...games.map(asGid));
+  pendingOutcomes(gid) {
+    return this.transcripts[gid.toHexString()].pendingOutcomes()
   }
 }

@@ -76,6 +76,11 @@ export class ArenaEvent {
       update: {},
     };
     switch (parsedLog.name) {
+      case "TransferSingle": 
+        break;
+      case "URI":
+        arenaEvent.gid = parsedLog.args.tokenId;
+        break;
       case ABIName.TranscriptCreated:
         arenaEvent.subject = parsedLog.args.creator;
         break;
@@ -112,7 +117,10 @@ export class ArenaEvent {
         arenaEvent.update = {
           lastEID: arenaEvent.eid,
           rootLabel: parsedLog.args.rootLabel,
-          inputChoice: parsedLog.args.inputChoice,
+          // We trim the location input in TranscriptEntryChoice (above), so we
+          // need to account for that here when we get the inputChoice - it is
+          // _not_ adjusted at the contracts level.
+          inputChoice: Number(parsedLog.args.inputChoice) - LocationChoices.CHOICE_INPUTS,
           data: parsedLog.args.data,
         };
         break;
