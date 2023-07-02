@@ -10,7 +10,7 @@ options:
 
   diamond-deploy:
     usage: "defaults to npx diamond-deploy to use the version installed for this package development tree"
-    default: "npx diamond-deploy"
+    default: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
     environment: "ARENASTATE_DIAMOND_DEPLOY_CMD"
 
   rpc:
