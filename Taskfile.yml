@@ -66,6 +66,9 @@ tasks:
     desc: generate the deployable list of facets
     cmds:
       - |
+        pwd
+        ls -la .
+        find node_modules
         ls -la node_modules/@polysensus/diamond-deploy/dist/
         {{.DEPLOYCLI}} \
           list \
