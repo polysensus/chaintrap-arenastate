@@ -75,7 +75,6 @@ jobs:
           grep chaintrap-contracts package-lock.json
           npm install
 
-          grep version node_modules/@polysensus/diamond-deploy/package.json
           grep version node_modules/@polysensus/chaintrap-contracts/package.json
           find node_modules/@polysensus/chaintrap-contracts/abi
 
@@ -105,7 +104,7 @@ jobs:
           if [[ ! $(git log -1 --pretty=%B) =~ '^release:v' ]]; then
             export FORCE=--force
           fi
-          npm publish $FORCE
+          npm publish $FORCE --access public
 
       # this didn't work, despite looking like jest/junit format the reporter
       # crashed when looking at the time property
