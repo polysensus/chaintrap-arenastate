@@ -8,7 +8,7 @@ vars:
   FACETS_EXCLUDE: node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json
   CHAINTRAP_CONTRACTS_ABI_DIR: node_modules/@polysensus/chaintrap-contracts/abi
   DIAMOND_DEPLOY_JSON: .local/dev/diamond-deploy.json
-  DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.cjs"
+  DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
 
 dotenv: [".env"]
 
