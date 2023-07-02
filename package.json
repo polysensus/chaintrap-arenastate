@@ -46,7 +46,7 @@
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@openzeppelin/merkle-tree": "^1.0.4",
     "@polysensus/chaintrap-contracts": "file:../chaintrap-contracts",
-    "@polysensus/diamond-deploy": "file:../diamond-deploy",
+    "@polysensus/diamond-deploy": "^0.2.4",
     "@rollup/plugin-commonjs": "^23.0.3",
     "@rollup/plugin-json": "^5.0.2",
     "@rollup/plugin-node-resolve": "^15.0.1",

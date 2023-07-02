@@ -68,8 +68,7 @@ tasks:
       - |
         pwd
         ls -la .
-        find node_modules
-        ls -la node_modules/@polysensus/diamond-deploy/dist/
+        find node_modules/@polysensus/
         {{.DEPLOYCLI}} \
           list \
           -I facet -i {{.CHAINTRAP_CONTRACTS_ABI_DIR}} \
