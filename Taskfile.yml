@@ -66,9 +66,7 @@ tasks:
     desc: generate the deployable list of facets
     cmds:
       - |
-        pwd
-        ls -la .
-        find node_modules/@polysensus/
+        mkdir -p .local/dev
         {{.DEPLOYCLI}} \
           list \
           -I facet -i {{.CHAINTRAP_CONTRACTS_ABI_DIR}} \
