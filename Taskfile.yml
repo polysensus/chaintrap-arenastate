@@ -66,6 +66,7 @@ tasks:
     desc: generate the deployable list of facets
     cmds:
       - |
+        ls -la node_modules/@polysensus/diamond-deploy/dist/
         {{.DEPLOYCLI}} \
           list \
           -I facet -i {{.CHAINTRAP_CONTRACTS_ABI_DIR}} \
