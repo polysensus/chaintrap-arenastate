@@ -7,14 +7,14 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "creategame2",
+      "name": "creategame",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
         "--map",
         "${workspaceFolder}/data/maps/map02.json",
-        "creategame2",
+        "creategame",
         "--map-name",
         "map02",
         "--name",
@@ -31,14 +31,12 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "joingame2",
+      "name": "joingame",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
-        "joingame2",
-        "--id",
-        "0x0400000000000000000000000000000001",
+        "joingame",
         "--nickname",
         "player1"
       ]
@@ -47,7 +45,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "startgame2",
+      "name": "startgame",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
@@ -56,13 +54,25 @@
         "${workspaceFolder}/data/maps/map02.json",
         "--map-name",
         "map02",
-        "startgame2",
-        "--id",
-        "0x0400000000000000000000000000000001",
+        "startgame",
         "--starts",
         "1"
       ]
     },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "commitchoice",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "envFile": "${workspaceFolder}/.env.test",
+      "args": [
+        "commitchoice",
+        "3", "0" // map02 location 1
+      ]
+    },
+
     {
       "type": "node",
       "request": "launch",

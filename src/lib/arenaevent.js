@@ -188,6 +188,22 @@ export async function findGames(arena) {
   return arena.queryFilter(filter);
 }
 
+/**
+ * find gids on the contract, optionally return a specific `which` gid. set which = -1 to get the most recent.
+ * @param {*} eventParser 
+ * @param {undefined|number} which 
+ */
+export async function findGids(eventParser, which = undefined) {
+  const logs = await findGames(eventParser.contract);
+  if (logs.length === 0)
+    throw new Error(`no games found on contract`);
+  if (typeof which === 'undefined')
+    return logs.map((log) => eventParser.parse(log).gid);
+  if (which === -1)
+    which = logs.length - 1;
+  return eventParser.parse(logs[which]).gid;
+}
+
 export async function findRootLabels(arena, gid) {
   const filter = transcriptEventFilter(
     arena,

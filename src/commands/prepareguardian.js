@@ -9,7 +9,7 @@ import { Guardian } from "../lib/guardian.js";
 const out = console.log;
 let vout = () => {};
 
-export async function prepareGuardianArena(program, options) {
+export async function prepareArena(program, options) {
   if (program.opts().verbose) vout = out;
   const arenaAddress = program.opts().arena;
   if (!arenaAddress)

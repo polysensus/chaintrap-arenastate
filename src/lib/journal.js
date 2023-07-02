@@ -6,6 +6,7 @@ import { TransactionHorizon } from "./chainkit/transactionhorizon.js";
 import { findGameEvents, findRootLabels } from "./arenaevent.js";
 import { getLogger } from "./log.js";
 import { TRANSCRIPT_EVENT_NAMES, transcriptEventSig } from "./arenaabi.js";
+import { conditionInput } from "./maptrie/objects.js";
 
 const log = getLogger("journal");
 /**
@@ -93,7 +94,7 @@ export class Journal {
       ...this.options,
       ...options,
     });
-    this.staticRoots[gidHex] = staticRoot;
+    this.staticRoots[gidHex] = ethers.utils.formatBytes32String(staticRoot);
 
     // Now that the roster instance exists, it is safe to start listening
     const callback = this._handle.bind(this);
@@ -108,7 +109,22 @@ export class Journal {
     }
   }
 
-  async staticRoot(gid, options) {
+  locationChoiceArgs(gid, start, exit) {
+    return {
+      rootLabel: this.staticRootLabel(gid),
+      input: [start, exit].map(conditionInput),
+      data: "0x"
+    }
+  }
+
+  staticRootLabel(gid) {
+    const rootLabel = this.staticRoots[gid.toHexString()];
+    if (!rootLabel)
+      throw new Error(`not root label for ${gid.toHexString()}, transcript not open`);
+    return rootLabel;
+  }
+
+  async findStaticRoot(gid, options) {
     let rootLabel = options?.rootLabel;
 
     const roots = {};
@@ -145,7 +161,7 @@ export class Journal {
         `this journal is configured to track ${this.options.maxTranscripts} transcripts at most.`
       );
     for (const gid of gids) {
-      const staticRoot = await this.staticRoot(gid, options);
+      const staticRoot = await this.findStaticRoot(gid, options);
       this.openTranscript(gid, staticRoot, options);
     }
 

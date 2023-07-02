@@ -278,11 +278,3 @@ export class TransactRequest {
     return this.collect(r);
   }
 }
-
-/**
- *
- * @param {{required:string[], accepted:string[]}} logs - required and expected logs to collect from the receipt
- * @param {*} arenaMethod - a method on the arena proxy which returns a transaction
- * @param  {...any} args
- */
-export async function transact(logs, arenaMethod, ...args) {}

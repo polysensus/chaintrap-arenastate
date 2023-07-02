@@ -1,19 +1,19 @@
 import * as msgpack from "@msgpack/msgpack";
-import { ArenaEvent } from "./arenaevent.js";
-import { EventParser } from "./chainkit/eventparser.js";
 import { TransactRequest } from "./chainkit/transactor.js";
+import { Journal } from "./journal.js";
 
 export class Trialist {
-  constructor(arena, options) {
-    this.init(arena, options);
+  constructor(eventParser, options) {
+    this.init(eventParser, options);
   }
 
-  init(arena, options) {
-    if (arena) this.arena = arena;
+  init(eventParser, options) {
+    if (eventParser) this.eventParser = eventParser;
+    this.arena = this.eventParser.contract;
+
     if (options) this.initialOptions = { ...options };
 
-    this.eventParser = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
-    this._currentGame = undefined;
+    this.journal = new Journal(this.eventParser, options);
   }
 
   async joinGame(gid, options) {
@@ -26,7 +26,26 @@ export class Trialist {
       .requireLogs("TranscriptRegistration(uint256,address,bytes)");
 
     const result = await request.transact();
-    this._currentGame = gid;
+    return result;
+  }
+
+  async openTranscript(gid) {
+    const staticRootLabel = (await this.journal.findStaticRoot(gid)).rootLabel;
+    this.journal.openTranscript(gid, staticRootLabel);
+  }
+
+  async commitLocationChoice(gid, side, exit) {
+
+    const args = this.journal.locationChoiceArgs(gid, side, exit);
+
+    const request = new TransactRequest(this.eventParser);
+    request
+      .method(this.arena.transcriptEntryCommit, gid, args)
+      .requireLogs(
+        "TranscriptEntryCommitted(uint256,address,uint256,bytes32,uint256,bytes)"
+      );
+
+    const result = await request.transact();
     return result;
   }
 }

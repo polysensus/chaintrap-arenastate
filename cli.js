@@ -5,9 +5,10 @@ dotenv.config({ path: process.env.DOTENV_FILE ?? ".env" });
 
 import { program, Option } from "commander";
 
-import { addCreategame2 } from "./src/commands/creategame2.js";
-import { addJoingame2 } from "./src/commands/joingame2.js";
-import { addStartgame2 } from "./src/commands/startgame2.js";
+import { addCreategame } from "./src/commands/creategame.js";
+import { addJoingame } from "./src/commands/joingame.js";
+import { addStartgame } from "./src/commands/startgame.js";
+import { addCommitChoice } from "./src/commands/commitchoice.js";
 import { addWatchArena } from "./src/commands/watcharena.js";
 
 program
@@ -63,13 +64,14 @@ program.addOption(
     "--deployacc <deployacc>",
     "derive the arena address from the arena contract deployer wallet"
   ).env("ARENASTATE_DEPLOY_ACCOUNT")
-); // On L1:1810633 Gwei    On L2:14923769 Gwei
+);
 
 // ---
 addWatchArena(program);
-addCreategame2(program);
-addJoingame2(program);
-addStartgame2(program);
+addCreategame(program);
+addJoingame(program);
+addStartgame(program);
+addCommitChoice(program);
 // ---
 
 /*

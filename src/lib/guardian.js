@@ -1,9 +1,9 @@
 import { getMap } from "./map/collection.js";
 import { rootLabel, LogicalTopology } from "./maptrie/logical.js";
-import { ArenaEvent } from "./arenaevent.js";
-import { EventParser } from "./chainkit/eventparser.js";
 import { Minter } from "./minter.js";
 import { TransactRequest } from "./chainkit/transactor.js";
+import { Journal } from "./journal.js";
+import { Trial } from "./trial.js";
 
 export class Guardian {
   constructor(eventParser, options) {
@@ -17,6 +17,9 @@ export class Guardian {
     this.arena = this.eventParser.contract;
 
     this.minter = new Minter(this.arena, this.initialOptions);
+    this.journal = new Journal(this.eventParser, options);
+    this.trials = {};
+
     this.lastMintedGID = undefined;
     this._preparingDungeon = false;
     this._dungeonPrepared = false;
@@ -100,7 +103,29 @@ export class Guardian {
     };
     return result;
   }
-  lastMinted() {
-    return { ...this._lastMinted };
+
+  async openTranscript(gid) {
+    const staticRootLabel = (await this.journal.findStaticRoot(gid)).rootLabel;
+    this.journal.openTranscript(gid, staticRootLabel);
+    this.trials[gid.toHexString()] = new Trial(gid, staticRootLabel, this.preparedDungeon());
+  }
+
+  async startGame(gid, ...starts) {
+    const gidHex = gid.toHexString()
+    const trial = this.trials[gidHex];
+    if (!trial)
+      throw new Error(`transcript for gid ${gidHex} has not been opened`);
+
+    const startArgs = trial.createStartGameArgs(starts);
+    const request = new TransactRequest(this.eventParser);
+    request
+      .method(this.arena.startTranscript, gid, startArgs)
+      .requireLogs(
+        "TranscriptStarted(uint256)",
+        "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
+      );
+
+    const result = await request.transact();
+    return result;
   }
 }

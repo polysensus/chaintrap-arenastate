@@ -2,14 +2,14 @@ import { Option } from "commander";
 import fetch from "node-fetch";
 import { ethers } from "ethers";
 
-import { prepareGuardian, prepareGuardianArena } from "./prepareguardian.js";
+import { prepareGuardian, prepareArena } from "./prepareguardian.js";
 import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
 import { ABIName } from "../lib/abiconst.js";
 
-export function addCreategame2(program) {
+export function addCreategame(program) {
   program
-    .command("creategame2")
+    .command("creategame")
     .description("create a new game")
     .option("--max-participants <max>", "maximum number of participants", 5)
     .option(
@@ -99,15 +99,15 @@ is selected`,
         "the url for the nftstorage service"
       ).env("ARENASTATE_NFTSTORAGE_URL")
     )
-    .action((options) => creategame2(program, options));
+    .action((options) => creategame(program, options));
 }
 
 const out = console.log;
 let vout = () => {};
 
-async function creategame2(program, options) {
+async function creategame(program, options) {
   if (program.opts().verbose) vout = out;
-  const arena = await prepareGuardianArena(program, options);
+  const arena = await prepareArena(program, options);
   const eventParser = new EventParser(arena, ArenaEvent.fromParsedEvent);
   const guardian = await prepareGuardian(eventParser, program, options);
   // TODO: load furniture
