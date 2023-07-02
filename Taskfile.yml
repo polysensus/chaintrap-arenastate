@@ -65,7 +65,8 @@ tasks:
     desc: generate the deployable list of facets
     cmds:
       - |
-        npx diamond-deploy list \
+        node node_modules/.bin/diamond-deploy \
+          list \
           -I facet -i {{.CHAINTRAP_CONTRACTS_ABI_DIR}} \
           --exclude {{.FACETS_EXCLUDE}} \
           -n Diamond DiamondNew \
