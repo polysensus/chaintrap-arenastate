@@ -125,7 +125,7 @@ describe("StateRoster# load", async function () {
       expect(state.registered).to.be.true;
       expect(state.profile?.nickname).to.equal("alice");
       expect(state.rootLabel).to.equal(rootLabel);
-      expect(state.inputChoice === 0); // it gets adjusted to index the state.choices (which drop the location input off the front)
+      expect(state.inputChoice === 0); // it gets adjusted to index the state.choices (which drop the location input off the front of the original inputs)
       let b = conditionInputs([[1, 0]])[0];
       expect(state.location.length).to.equal(1);
       expect(deconditionInput(state.location[0])).to.equal(1);
