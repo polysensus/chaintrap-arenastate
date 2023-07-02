@@ -23,7 +23,7 @@ export class TransactionHorizon {
   }
 
   logId(log) {
-    return `${log.transactionHash}${log.transactionIndex}:${log.logIndex}`
+    return `${log.transactionHash}${log.transactionIndex}:${log.logIndex}`;
   }
 
   /**
@@ -31,9 +31,13 @@ export class TransactionHorizon {
    * @param {EventLike} e
    * @returns
    */
-  haveEvent(e) { return this.haveLogId(this.logId(e.log)); }
+  haveEvent(e) {
+    return this.haveLogId(this.logId(e.log));
+  }
 
-  haveLogId(id) { return typeof this._recentTx[id] !== "undefined"; }
+  haveLogId(id) {
+    return typeof this._recentTx[id] !== "undefined";
+  }
 
   /**
    * @template {{blockNumber, transactionHash}} EventLike

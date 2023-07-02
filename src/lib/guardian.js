@@ -106,18 +106,26 @@ export class Guardian {
 
   async startListening(gid, options) {
     const staticRootLabel = (await this.journal.findStaticRoot(gid)).rootLabel;
-    this.trials[gid.toHexString()] = new Trial(gid, staticRootLabel, this.preparedDungeon());
+    this.trials[gid.toHexString()] = new Trial(
+      gid,
+      staticRootLabel,
+      this.preparedDungeon()
+    );
     return await this.journal.startListening([gid], options);
   }
 
   async openTranscript(gid) {
     const staticRootLabel = (await this.journal.findStaticRoot(gid)).rootLabel;
     this.journal.openTranscript(gid, staticRootLabel);
-    this.trials[gid.toHexString()] = new Trial(gid, staticRootLabel, this.preparedDungeon());
+    this.trials[gid.toHexString()] = new Trial(
+      gid,
+      staticRootLabel,
+      this.preparedDungeon()
+    );
   }
 
   async startGame(gid, ...starts) {
-    const gidHex = gid.toHexString()
+    const gidHex = gid.toHexString();
     const trial = this.trials[gidHex];
     if (!trial)
       throw new Error(`transcript for gid ${gidHex} has not been opened`);
@@ -136,21 +144,25 @@ export class Guardian {
   }
 
   async resolvePending(gid) {
-    const gidHex = gid.toHexString()
+    const gidHex = gid.toHexString();
     const trial = this.trials[gidHex];
     if (!trial)
       throw new Error(`transcript for gid ${gidHex} has not been opened`);
 
     const resolved = [];
 
-    for (const {trialist} of this.journal.pendingOutcomes(gid)) {
+    for (const { trialist } of this.journal.pendingOutcomes(gid)) {
       // const delta = trialist.delta({collect:true});
       const locationId = parseInt(trialist.state.location[0], 16);
       const choice = trialist.state.choices[trialist.state.inputChoice];
-      const resolveArgs = trial.createResolveOutcomeArgs(trialist.state.address, locationId, choice);
+      const resolveArgs = trial.createResolveOutcomeArgs(
+        trialist.state.address,
+        locationId,
+        choice
+      );
 
       const request = new TransactRequest(this.eventParser);
-      request 
+      request
         .method(this.arena.transcriptEntryResolve, gid, resolveArgs)
         .requireLogs(
           "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)",

@@ -13,9 +13,8 @@ export const TrialistEvents = Object.fromEntries([
 function maxKey(o) {
   let max = -1;
   for (let k of Object.keys(o)) {
-    k = Number(k)
-    if (k > max)
-      max = k
+    k = Number(k);
+    if (k > max) max = k;
   }
   return max === -1 ? undefined : max;
 }
@@ -93,14 +92,11 @@ export class TrialistState {
 
   pendingOutcome(eid) {
     // get the greatest committed eid
-    if (typeof eid === 'undefined')
-      eid = this.last();
+    if (typeof eid === "undefined") eid = this.last();
     // if it hasn't been committed, its definitely not pending.
-    if (!this.eventsByABI[ABIName.TranscriptEntryCommitted][eid])
-      return false;
+    if (!this.eventsByABI[ABIName.TranscriptEntryCommitted][eid]) return false;
     // If its committed and the outcome isn't recorded, then its definitely pending
-    if (!this.eventsByABI[ABIName.TranscriptEntryOutcome][eid])
-      return true
+    if (!this.eventsByABI[ABIName.TranscriptEntryOutcome][eid]) return true;
 
     // definitely not pending.
     return false;

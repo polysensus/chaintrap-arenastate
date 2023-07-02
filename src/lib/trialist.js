@@ -35,7 +35,6 @@ export class Trialist {
   }
 
   async commitLocationChoice(gid, side, exit) {
-
     const args = this.journal.locationChoiceArgs(gid, side, exit);
 
     const request = new TransactRequest(this.eventParser);

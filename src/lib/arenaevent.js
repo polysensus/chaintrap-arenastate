@@ -76,7 +76,7 @@ export class ArenaEvent {
       update: {},
     };
     switch (parsedLog.name) {
-      case "TransferSingle": 
+      case "TransferSingle":
         break;
       case "URI":
         arenaEvent.gid = parsedLog.args.tokenId;
@@ -120,7 +120,8 @@ export class ArenaEvent {
           // We trim the location input in TranscriptEntryChoice (above), so we
           // need to account for that here when we get the inputChoice - it is
           // _not_ adjusted at the contracts level.
-          inputChoice: Number(parsedLog.args.inputChoice) - LocationChoices.CHOICE_INPUTS,
+          inputChoice:
+            Number(parsedLog.args.inputChoice) - LocationChoices.CHOICE_INPUTS,
           data: parsedLog.args.data,
         };
         break;
@@ -198,17 +199,15 @@ export async function findGames(arena) {
 
 /**
  * find gids on the contract, optionally return a specific `which` gid. set which = -1 to get the most recent.
- * @param {*} eventParser 
- * @param {undefined|number} which 
+ * @param {*} eventParser
+ * @param {undefined|number} which
  */
 export async function findGids(eventParser, which = undefined) {
   const logs = await findGames(eventParser.contract);
-  if (logs.length === 0)
-    throw new Error(`no games found on contract`);
-  if (typeof which === 'undefined')
+  if (logs.length === 0) throw new Error(`no games found on contract`);
+  if (typeof which === "undefined")
     return logs.map((log) => eventParser.parse(log).gid);
-  if (which === -1)
-    which = logs.length - 1;
+  if (which === -1) which = logs.length - 1;
   return eventParser.parse(logs[which]).gid;
 }
 

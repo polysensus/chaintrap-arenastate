@@ -72,10 +72,9 @@ export class StateRoster {
     for (const addr of Object.keys(this.trialists)) {
       const trialist = this.trialists[addr];
       const eid = trialist.last();
-      if (!trialist.pendingOutcome(eid))
-        continue
-      
-      yield {participant:addr, trialist};
+      if (!trialist.pendingOutcome(eid)) continue;
+
+      yield { participant: addr, trialist };
     }
   }
 }

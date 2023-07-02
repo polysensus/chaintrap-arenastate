@@ -113,14 +113,16 @@ export class Journal {
     return {
       rootLabel: this.staticRootLabel(gid),
       input: [start, exit].map(conditionInput),
-      data: "0x"
-    }
+      data: "0x",
+    };
   }
 
   staticRootLabel(gid) {
     const rootLabel = this.staticRoots[gid.toHexString()];
     if (!rootLabel)
-      throw new Error(`not root label for ${gid.toHexString()}, transcript not open`);
+      throw new Error(
+        `not root label for ${gid.toHexString()}, transcript not open`
+      );
     return rootLabel;
   }
 
@@ -153,13 +155,11 @@ export class Journal {
    * @param  {...ethers.BigNumber} gids to watch
    */
   async startListening(candidateGids, options) {
-
     // filter out any we are already watching
     const gids = [];
     for (const gid of candidateGids) {
-      if (this.transcripts[gid.toHexString()])
-        continue;
-      gids.push(gid)
+      if (this.transcripts[gid.toHexString()]) continue;
+      gids.push(gid);
     }
 
     if (
@@ -191,6 +191,6 @@ export class Journal {
   }
 
   pendingOutcomes(gid) {
-    return this.transcripts[gid.toHexString()].pendingOutcomes()
+    return this.transcripts[gid.toHexString()].pendingOutcomes();
   }
 }

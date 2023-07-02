@@ -13,11 +13,12 @@ export function addCommitChoice(program) {
     .option("--id <id>", "the game token id")
     .argument("side", "the location side to chose")
     .argument("exit", "the exit on the chosen side to take")
-    .action((side, exit, options) => commitchoice(program, options, side, exit));
+    .action((side, exit, options) =>
+      commitchoice(program, options, side, exit)
+    );
 }
 
 async function commitchoice(program, options, side, exit) {
-
   const arena = await programConnectArena(program, options);
   const eventParser = new EventParser(arena, ArenaEvent.fromParsedEvent);
 
@@ -31,6 +32,6 @@ async function commitchoice(program, options, side, exit) {
   // super critical just confusing.
 
   await trialist.commitLocationChoice(gid, parseInt(side), parseInt(exit));
-  const sideName = {0:"north", 1: "west", 2: "south", 3: "east"}[side];
+  const sideName = { 0: "north", 1: "west", 2: "south", 3: "east" }[side];
   console.log(`committed to exit ${exit} on the ${sideName} side`);
 }
