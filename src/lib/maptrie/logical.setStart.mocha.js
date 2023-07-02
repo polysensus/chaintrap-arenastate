@@ -26,19 +26,22 @@ describe("LogicalTopology setStart tests", function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
-    const trial = new Trial({ topology: topo });
-    trial.topology.commit();
+    const trie = topo.commit();
 
     // mint without publishing nft metadata
-    let r = await this.mintGame({
-      topology: trial.topology,
-      trie: trial.topology.trie,
-    });
+    let r = await this.mintGame({ topology: topo, trie: trie });
+
+    const trial = new Trial(ethers.BigNumber.from(1), this.minter.options.mapRootLabel, {
+      map: undefined,
+      topology: topo,
+      trie
+    })
+
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
     let transactor = new Transactor(arenaEvents);
 
-    const startArgs = trial.createStartGameArgs([0], this.minter.minter.initArgs.rootLabels[0]);
+    const startArgs = trial.createStartGameArgs([0]);
     transactor
       .method(
         this.user1Arena.registerTrialist,

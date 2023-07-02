@@ -31,12 +31,12 @@ export class Trial {
    * @constructor
    * @param {object} map
    */
-  constructor(gid, staticRootLabel, dungeon, options) {
+  constructor(gid, staticRootLabel, dungeon, options = undefined) {
 
   
     this.options = { ...options };
     this.gid = gid;
-    this.staticRootLabel = staticRootLabel;
+    this.staticRootLabel = ethers.utils.formatBytes32String(staticRootLabel)
     this.map = dungeon.map;
     this.topology = dungeon.topology;
     this.staticTrie = dungeon.trie;
@@ -75,7 +75,7 @@ export class Trial {
     return {
       choices: startChoices,
       data,
-      rootLabel: ethers.utils.formatBytes32String(this.staticRootLabel),
+      rootLabel: this.staticRootLabel,
       proofs,
     };
   }
@@ -128,7 +128,7 @@ export class Trial {
     stack.push({
       inputRefs: [],
       proofRefs: [],
-      rootLabel: this.rootLabel,
+      rootLabel: this.staticRootLabel,
       proof,
     });
     logit("STACK(0) LOCATION", prepared, stack[stack.length - 1]);
@@ -148,7 +148,7 @@ export class Trial {
     stack.push({
       inputRefs: [0], // mark the first input as an indirect reference to a prior stack entries proof input
       proofRefs: [],
-      rootLabel: this.rootLabel,
+      rootLabel: this.staticRootLabel,
       proof,
     });
     logit("STACK(1) EXIT", prepared, stack[stack.length - 1]);
@@ -166,7 +166,7 @@ export class Trial {
     stack.push({
       inputRefs: [],
       proofRefs: [],
-      rootLabel: this.rootLabel,
+      rootLabel: this.staticRootLabel,
       proof,
     });
     logit("STACK(2) INGRESS LOCATION", prepared, stack[stack.length - 1]);
@@ -191,7 +191,7 @@ export class Trial {
     stack.push({
       inputRefs: [0], // mark the first input as an indirect reference to a prior stack entries proof input
       proofRefs: [],
-      rootLabel: this.rootLabel,
+      rootLabel: this.staticRootLabel,
       proof,
     });
     logit("STACK(3) INGRESS EXIT", prepared, stack[stack.length - 1]);
@@ -217,7 +217,7 @@ export class Trial {
     stack.push({
       inputRefs: [],
       proofRefs: [0, 1],
-      rootLabel: this.rootLabel,
+      rootLabel: this.staticRootLabel,
       proof,
     });
     logit("STACK(4) LINK", prepared, stack[stack.length - 1]);

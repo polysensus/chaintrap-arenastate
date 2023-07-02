@@ -33,16 +33,20 @@ describe("Trial createResolveOutcomeArgs tests", function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
-    const trial = new Trial({ topology: topo });
-    trial.topology.commit();
+    const trie = topo.commit();
 
     // mint without publishing nft metadata
-    let r = await this.mintGame({ topology: topo, trie: trial.topology.trie });
+    let r = await this.mintGame({ topology: topo, trie: trie });
 
     const startLocationId = 0;
 
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
+    const trial = new Trial(gid, this.minter.options.mapRootLabel, {
+      map: undefined,
+      topology: topo,
+      trie
+    });
 
     // TODO: sort out once createCommitArgs is implemented on trial
     let inputIndex = trial.topology.locationChoices[
@@ -52,8 +56,7 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     let choice = inputs[inputIndex];
 
     const startArgs = trial.createStartGameArgs(
-      [startLocationId],
-      this.minter.minter.initArgs.rootLabels[0]
+      [startLocationId]
     );
 
     let transactor = new Transactor(arenaEvents);
