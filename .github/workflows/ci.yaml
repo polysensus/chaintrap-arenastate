@@ -71,6 +71,8 @@ jobs:
           popd
           pushd chaintrap-arenastate
 
+          task bootstrap
+
           grep chaintrap-contracts package.json
           grep chaintrap-contracts package-lock.json
           npm install
