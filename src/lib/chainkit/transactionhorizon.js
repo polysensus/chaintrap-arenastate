@@ -1,13 +1,13 @@
+import { isUndefined } from "../idioms.js";
+import { getLogger } from "../log.js";
+const log = getLogger("TransactionHorizon");
+const fmt = (msg) => `TransactionHorizon:${msg}`;
+
 /**
  * Provides a way to filter transactions that have recently been encountered.
  * Ethers js can't guarantee not to give duplicates.
  */
-import { isUndefined } from "../idioms.js";
-import { getLogger } from "../log.js";
-const log = getLogger("TxMemo");
-const fmt = (msg) => `TxMemo:${msg}`;
-
-export class TxMemo {
+export class TransactionHorizon {
   constructor(horizon = 100) {
     this._blockHorizon = horizon;
     this.reset();
@@ -36,7 +36,7 @@ export class TxMemo {
    * @param {EventLike} e
    * @returns
    */
-  eventTxMemo(e) {
+  known(e) {
     if (this.haveEvent(e)) {
       log.debug(fmt(`<<<<<< Have memo for ${e.transactionHash}`));
       return true;

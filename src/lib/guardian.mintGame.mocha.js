@@ -6,6 +6,8 @@ const hexlify = ethers.utils.hexlify;
 
 import * as msgpack from "@msgpack/msgpack";
 import { Guardian } from "./guardian.js";
+import { ArenaEvent } from "./arenaevent.js";
+import { EventParser } from "./chainkit/eventparser.js";
 
 //
 import maps from "../../data/maps/map02.json" assert { type: "json" };
@@ -15,7 +17,8 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     if (!this.gameOptions) {
       this.skip();
     }
-    const guardian = new Guardian(this.guardianArena, this.gameOptions);
+    const eventParser = new EventParser(this.guardianArena, ArenaEvent.fromParsedEvent);
+    const guardian = new Guardian(eventParser, this.gameOptions);
     guardian.prepareDungeon(maps, { mapName: "map02" });
     guardian.finalizeDungeon();
     await guardian.mintGame();

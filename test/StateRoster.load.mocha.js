@@ -54,7 +54,7 @@ describe("StateRoster# load", async function () {
 
     const startArgs = trial.createStartGameArgs(
       [startLocationId],
-      this.minter.minter
+      this.minter.minter.initArgs.rootLabels[0]
     );
 
     let transactor = new Transactor(arenaEvents);
@@ -99,7 +99,7 @@ describe("StateRoster# load", async function () {
 
     const roster = new StateRoster(gid, {});
     // const changes = new RosterStateChange();
-    // const txmemo = new TxMemo();
+    // const txmemo = new TransactionHorizon();
 
     for (const log of await findGameEvents(this.arena, gid)) {
       const event = arenaEvents.parse(log);
@@ -113,7 +113,7 @@ describe("StateRoster# load", async function () {
       roster.applyEvent(event);
     }
 
-    const p = roster.players[user1Address];
+    const p = roster.trialists[user1Address];
     const current = p.current();
     const delta = p.delta();
     const outcome = p.outcome();

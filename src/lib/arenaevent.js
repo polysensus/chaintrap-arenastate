@@ -3,6 +3,9 @@ const arrayify = ethers.utils.arrayify;
 import * as msgpack from "@msgpack/msgpack";
 
 import { ABIName } from "./abiconst.js";
+import {
+  transcriptEventFilter, transcriptEventSig
+ } from "./arenaabi.js";
 
 import { EventParser } from "./chainkit/eventparser.js";
 
@@ -18,14 +21,14 @@ import { LocationChoices } from "./maptrie/locationchoices.js";
 export function getGameCreated(receipt, eventParser) {
   return eventParser.receiptLog(
     receipt,
-    "TranscriptCreated(uint256,address,uint256)"
+    transcriptEventSig(ABIName.TranscriptCreated)
   );
 }
 
 export function getSetMerkleRoot(receipt, eventParser) {
   return eventParser.receiptLog(
     receipt,
-    "TranscriptMerkleRootSet(uint256,bytes32,bytes32)"
+    transcriptEventSig(ABIName.TranscriptMerkleRootSet)
   );
 }
 
@@ -168,9 +171,7 @@ export function gameEventFilter(arena, gid) {
 }
 
 export async function findGameCreated(arena, gid) {
-  const facet = arena.getFacet("ArenaFacet");
-  const filter =
-    facet.filters["TranscriptCreated(uint256,address,uint256)"](gid);
+  const filter = transcriptEventFilter(arena, ABIName.TranscriptCreated, gid);
   const found = await arena.queryFilter(filter);
 
   if (found.length == 0) {
@@ -185,8 +186,12 @@ export async function findGameCreated(arena, gid) {
 }
 
 export async function findGames(arena) {
-  const facet = arena.getFacet("ArenaFacet");
-  const filter = facet.filters["TranscriptCreated(uint256,address,uint256)"]();
+  const filter = transcriptEventFilter(arena, ABIName.TranscriptCreated);
+  return arena.queryFilter(filter);
+}
+
+export async function findRootLabels(arena, gid) {
+  const filter = transcriptEventFilter(arena, ABIName.TranscriptMerkleRootSet, gid);
   return arena.queryFilter(filter);
 }
 

@@ -31,29 +31,19 @@ export class Trial {
    * @constructor
    * @param {object} map
    */
-  constructor(options) {
+  constructor(gid, staticRootLabel, dungeon, options) {
+
+  
     this.options = { ...options };
+    this.gid = gid;
+    this.staticRootLabel = staticRootLabel;
+    this.map = dungeon.map;
+    this.topology = dungeon.topology;
+    this.staticTrie = dungeon.trie;
 
-    this.map = undefined;
-    this.scenes = undefined;
-
-    if (options.map) {
-      this.map = map;
-      this.scenes = new SceneCatalog();
-      this.scenes.load(map);
-      this.topology = new LogicalTopology();
-      this.topology.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
-      this.topology.extendLocations(map.model.rooms);
-    } else {
-      this.topology = options.topology;
-    }
-    if (!options.topology)
-      throw new Error(`a pre built topology or a map must be provided`);
-
-    this.staticTrie = this.topology.commit();
-    this.arena = undefined;
     this.gid = undefined;
-    this.rootLabel = undefined;
+    this.arena = undefined;
+    this.scenes = undefined;
   }
 
   /**
@@ -68,14 +58,8 @@ export class Trial {
    * @param {[...number]} starts
    * @returns {{choices, data}}
    */
-  createStartGameArgs(starts, minter) {
+  createStartGameArgs(starts) {
     // one of each for each trialist.
-
-    this.rootLabel = minter?.initArgs?.rootLabels[0];
-    if (!this.rootLabel)
-      throw new Error(
-        `the game minter is required and its initArgs must have the rootLabels`
-      );
 
     const startChoices = [];
     const proofs = [];
@@ -89,10 +73,10 @@ export class Trial {
     }
 
     return {
-      rootLabel: this.rootLabel,
       choices: startChoices,
-      proofs,
       data,
+      rootLabel: ethers.utils.formatBytes32String(this.staticRootLabel),
+      proofs,
     };
   }
 

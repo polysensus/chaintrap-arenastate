@@ -13,8 +13,15 @@ import { getGameCreated } from "./arenaevent.js";
 import { ArenaEvent } from "./arenaevent.js";
 import { EventParser } from "./chainkit/eventparser.js";
 import { Transactor } from "./chainkit/transactor.js";
+import { numberToGid } from "./gid.js";
 
 describe("Trial createResolveOutcomeArgs tests", function () {
+  it("Should create a gid", function () {
+    const gid = numberToGid(1);
+    const x = gid.toHexString();
+    expect(gid.toHexString()).to.equal("0x0400000000000000000000000000000001");
+  });
+
   it("Should resolve a location exit choice", async function () {
     if (!this.gameOptions || !this.mintGame) {
       this.skip();
@@ -46,7 +53,7 @@ describe("Trial createResolveOutcomeArgs tests", function () {
 
     const startArgs = trial.createStartGameArgs(
       [startLocationId],
-      this.minter.minter
+      this.minter.minter.initArgs.rootLabels[0]
     );
 
     let transactor = new Transactor(arenaEvents);

@@ -1,90 +1,102 @@
-import { TxMemo } from "./txmemo.js";
-import { EventParser, logFromEthersCallbackArgs } from "./eventparser.js";
+import { logFromEthersCallbackArgs } from "./eventparser.js";
 import { getLogger } from "../log.js";
 
 const log = getLogger("dispatcher");
 
-const defaultMemoBlockHorizon = 30;
-
 export class Dispatcher {
-  constructor(contract, opts) {
-    this.contract = contract;
-    this.parser = opts?.parser ?? new EventParser(contract);
+  constructor(eventParser, opts) {
+    this.parser = eventParser;
+    //  assume the parser is never re-bound to another contract instance.
+    //  otherwise its not possible to clean up the listeners reliably
+    this.contract = this.parser.contract;
 
-    this.txmemo = opts?.txmemo ?? new TxMemo(defaultMemoBlockHorizon);
-    this.listeners = [];
-    this.active = [];
+    this.listeners = {}
+    this.active = {}
   }
 
-  addHandler(handler, signature, ...args) {
-    const filter = this.getFilter(signature, ...args);
-    return this.addFilterHandler(filter, handler, ...args);
+  createHandler(callback, signature, ...args) {
+
+    const filter = this.contract.getFilter(signature, ...args);
+    return {
+      filter,
+      signature,
+      callback
+    };
   }
 
-  addFilterHandler(filter, handler) {
-    const listener = this.wrapHandler(handler);
-    this.listeners.push([filter, listener, filter, handler]);
+  /**
+   * @param {{callback,filter,signature,listener}} handler a handler created by calling {@link createHandler}
+   * @param {any} key arbitrary id which defaults to the handler callback
+   * object, it is provided as context to the callback if it is != callback
+   * @returns 
+   */
+  addHandler(handler, key = undefined) {
+
+    const id = key ?? handler.callback;
+
+    handler.listener = this.wrapCallback(handler.callback, key);
+
+    this.listeners[id] = handler;
+    return id;
   }
 
-  stopListening() {
-    while (this.active.length > 0) {
-      const [event, listener, signature] = this.active.pop();
-      this.contract.off(event, listener);
-      log.debug(
-        `Stopped listening for ${signature}, with ${JSON.stringify(event)}`
-      );
+  removeHandler(id) {
+    this.stopListening(id);
+    delete this.listeners[id];
+  }
+
+  /**
+   * remove the identified ethers listening callback, or remove them all if no id is provided.
+   * 
+   * @param {any} id of a specific handler, by default all current active listeners are stopped
+   */
+  stopListening(id = undefined) {
+
+    const entries = id ? [id] : Object.keys(this.active);
+
+    for (const id of entries) {
+      if (!this.active[id])
+        continue
+      const {filter, listener} = this.active[id];
+      this.contract.off(filter, listener);
+
+      delete this.active[id];
     }
   }
 
-  startListening() {
-    this.stopListening();
+  /**
+   * start listening for the identified ethers listener, or start them all if no
+   * specific listener is identified.
+   * @param {any} id of a specific handler, by default all current non active listeners are started.
+   */
+  startListening(id = undefined) {
 
-    for (const [event, listener, signature] of this.listeners) {
-      this.contract.on(event, listener);
-      this.active.push([event, listener, signature]);
-      log.debug(`Listening for ${signature}, with ${JSON.stringify(event)}`);
+    const entries = id ? [id] : Object.keys(this.listeners);
+
+    for (const id of entries) {
+      if (id in this.active)
+        continue;  
+      
+      const handler = this.listeners[id];
+      this.contract.on(handler.filter, handler.listener);
+      this.active[id] = handler;
     }
   }
 
-  wrapHandler(handler) {
-    const wrapped = async (...args) => {
-      const log = logFromEthersCallbackArgs(args);
+  wrapCallback(callback, key) {
+    const wrapped = async (...listenerArgs) => {
+      const log = logFromEthersCallbackArgs(listenerArgs);
       if (!log) return;
 
       const ev = this.parser.parse(log);
       if (!ev) return;
-      log.debug({ name: ev.name, args: Object.keys(ev.args).join(", ") });
-      return handler(ev);
+
+      const args = []
+      if (key !== callback)
+        args.push(key);
+
+      return callback(ev, ...args);
     };
     return wrapped;
-  }
-
-  removeAll() {
-    this.stopListening();
-    this.listeners = [];
-    this.active = [];
-  }
-
-  removeHandler(handler) {
-    for (let i = 0; i < this.listeners.length; i++) {
-      const [f, l, s, h] = this.listeners[i];
-      if (h !== handler) continue;
-      this.listeners.splice(i, 1);
-      log.debug(`removed handler for ${s}`);
-
-      for (let j = 0; j < this.active.length; j++) {
-        const [f, al, s] = this.active[j];
-        if (l !== al) continue;
-        this.contract.off(f, al);
-        this.active.splice(j, 1);
-        log.debug(`stopped handler for ${s}`);
-        break;
-      }
-      break;
-    }
-  }
-
-  getFilter(signature, ...args) {
-    return this.contract.getFilter(signature, ...args);
   }
 }

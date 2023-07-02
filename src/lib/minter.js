@@ -2,8 +2,6 @@ import ethers from "ethers";
 import fetch from "node-fetch";
 import { readBinaryData, readJsonData } from "./data.js";
 
-import { getMap } from "./map/collection.js";
-import { LogicalTopology } from "./maptrie/logical.js";
 import { GameMint } from "./mint/gamemint.js";
 
 export class Minter {
@@ -22,12 +20,6 @@ export class Minter {
     this.arena = undefined;
     this.serviceOptions = undefined;
     this.minter = undefined;
-    this.collection = undefined;
-    this.map = undefined;
-    this.topology = undefined;
-    this.trie = undefined;
-    this._mapLoaded = false;
-    this._topologyCommitted = false;
   }
 
   applyOptions(options) {
@@ -48,35 +40,16 @@ export class Minter {
     this.minter.configureMaptoolOptions(this.options);
   }
 
-  /**
-   * @param {any} collection
-   * @param {{mapName?}} options
-   */
-  loadMap(collection, options) {
-    this.collection = collection;
-    this.map = getMap(this.collection, options?.mapName).map;
-    this.topology = LogicalTopology.fromCollectionJSON(this.collection);
-    this._mapLoaded = true;
-  }
+  async mint(options) {
 
-  commitTopology() {
-    this.trie = this.topology.commit();
-    this._topologyCommitted = true;
-  }
-
-  async mint() {
-    if (!this._mapLoaded) throw new Error(`map must be loaded before minting`);
-    if (!this._topologyCommitted)
-      throw new Error(`topology must be committed before minting`);
+    const {topology, map, trie} = options;
+    if (!(topology && trie))
+      throw new Error(`topology, map and trie are required options for mint`);
 
     this.minter.configureMapOptions({
-      ...this.options,
-      topology: this.topology,
-      map: this.map,
-      trie: this.trie,
-    });
+      ...this.options, topology, map, trie });
 
-    if (this.map && !this.options.noMETADATA) {
+    if (map && !this.options.noMETADATA) {
       await this.minter.prepareGameImage();
       await this.minter.publishMetadata();
     } else {

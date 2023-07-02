@@ -15,47 +15,37 @@ export const log = getLogger("StateRoster");
 export const fmtev = (e) =>
   `gid: ${e.args.gid}, eid: ${e.args.eid}, ${e.event} bn: ${e.blockNumber}, topics: ${e.topics}, tx: ${e.transactionHash}`;
 
-export async function prepareRoster(arena, options = {}) {
-  log.debug(`Arena: ${arena.address} ${options.gid}, ${options}`);
-
-  let { fromBlock } = options;
-  let { gid } = options;
-
-  if (typeof gid === "undefined" || gid < 0) {
-    gid = await arena.lastGame();
-  }
-
-  if (!fromBlock) fromBlock = await getGameCreatedBlock(arena, gid);
-  const roster = new StateRoster(gid, options);
-  const snap = roster.snapshot();
-  return [snap, roster];
-}
 
 export async function loadRoster(arena, gid, options) {
-  const [snap, roster] = await prepareRoster(arena, gid, options);
+  log.debug(`Arena: ${arena.address} ${gid}, ${options}`);
 
-  const events = await findGameEvents(arena, gid, options?.fromBlock);
-  const gameStates = roster.load(events);
-  return [snap, roster, gameStates];
+  const fromBlock = options.fromBlock ?? await getGameCreatedBlock(arena, gid)
+
+  const events = await findGameEvents(arena, gid, fromBlock);
+  const roster = new StateRoster(gid, options);
+  for (const event of events)
+    roster.applyEvent(event);
+  return roster;
 }
 
 /**
- * This class manages a roster of player states for the game.
+ * This class manages a roster of participants states for the game.
  *
- * The roster is initially populated by processing all events for a game toked (gid).
- * Subsequently, the roster is updated as each event arrives for that gid.
- * There is no consideration for batched arrival processing once the roster is loaded.
+ * The roster is initially populated by processing all events for a game toked
+ * (gid).  Subsequently, the roster is updated as each event arrives for that
+ * gid.  There is no consideration for batched arrival processing once the
+ * roster is loaded.
  */
 export class StateRoster {
   constructor(gid, options = {}) {
     /**@readonly */
     this.gid = gid;
     /**@readonly */
-    this.players = {};
+    this.trialists = {};
   }
 
-  get playerCount() {
-    return Object.keys(this.players).length;
+  get count() {
+    return Object.keys(this.trialists).length;
   }
 
   // --- application of single events
@@ -64,22 +54,17 @@ export class StateRoster {
 
     switch (event.name) {
       case ABIName.TranscriptRegistration:
-        this.players[event.subject] = new TrialistState();
+        this.trialists[event.subject] = new TrialistState();
         break;
     }
     if (!TrialistState.handlesEvent(event.name)) return;
-    this.players[event.subject].applyEvent(event);
+    this.trialists[event.subject].applyEvent(event);
   }
 
   // --- getters and query methods for managed state
-  getPlayer(addr) {
-    return this.players[ethers.utils.getAddress(addr)];
-  }
-
-  playerState(player) {
-    if (!this.players[ethers.utils.getAddress(player)]?.registered) {
+  trialist(addr) {
+    if (!this.trialists[ethers.utils.getAddress(addr)]?.registered)
       return undefined;
-    }
-    return this.players[player];
+    return this.trialists[addr];
   }
 }

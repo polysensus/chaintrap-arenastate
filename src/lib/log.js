@@ -2,7 +2,7 @@ import log from "loglevel";
 
 // const enabled = undefined
 const disabled = {
-  TxMemo: true,
+  TransactionHorizon: true,
   // , StateRoster: true
 };
 const enabled = undefined;

@@ -34,7 +34,7 @@
     "arenastate"
   ],
   "author": "robin@polysensus.com",
-  "license": "UNLICENSED",
+  "license": "APACHE-2",
   "bugs": {
     "url": "https://github.com/polysensus/chaintrap-arenastate/issues"
   },

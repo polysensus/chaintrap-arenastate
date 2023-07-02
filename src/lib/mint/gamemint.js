@@ -232,7 +232,8 @@ export class GameMint {
         "a constructed trie, which should encode the topology, is required"
       );
     if (!options.topology) throw new Error("a map topology is required");
-    if (!options.mapRootLabel) throw new Error("a map root label is required");
+    if (!options.mapRootLabel)
+      throw new Error("a map root label is required or a map object from which to derive one");
     // if (!options.map) throw new Error("a map is required");
 
     // Note: allowing for an undefined map is a concession to testability

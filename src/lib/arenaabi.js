@@ -20,7 +20,76 @@ export const erc1155ArenaFacetABI = erc1155ArenaFacetSol.abi;
 
 import { createERC2535Proxy } from "@polysensus/chaintrap-contracts";
 
+import {ABIName} from "./abiconst.js";
+
+
 let _defaultSelectErrors; // lazy create
+
+let _transcriptEventSigs; // lazy create
+
+export const TRANSCRIPT_EVENT_NAMES = [
+  ABIName.TranscriptMerkleRootSet,
+  ABIName.TranscriptCreated,
+  ABIName.TranscriptRegistration,
+  ABIName.TranscriptStarted,
+  ABIName.TranscriptEntryChoices,
+  ABIName.TranscriptEntryCommitted,
+  ABIName.TranscriptEntryOutcome,
+  ABIName.TranscriptCompleted
+];
+
+export function transcriptEventSig(name) {
+  const abi = transcriptEventABIs()[name];
+  if (!abi)
+    throw new Error(`transcript event name ${name} not found in abi`);
+  return abi.sig;
+}
+
+export function transcriptEventFilter(arena, name, ...args) {
+  const abi = transcriptEventABIs()[name];
+  if (!abi)
+    throw new Error(`transcript event name ${name} not found in abi`);
+
+  const filter = arena.getFacet(abi.facetName)?.filters?.[abi.sig];
+  if (!filter)
+    throw new Error(`filter not found for event sig ${abi.sig}`);
+  return filter(...args);
+}
+
+
+export function transcriptEventABIs() {
+  if (_transcriptEventSigs)
+    return _transcriptEventSigs;
+
+  
+  const events = {}
+
+  for (const [abi, facetName] of [
+    [arenaFacetABI, "ArenaFacet"],
+    [erc1155ArenaFacetABI, "ERC1155ArenaFacet"]
+  ]) {
+    abi.reduce((events, current) => {
+      if (current.type !== "event") return events;
+      if (!current.name.startsWith("Transcript")) return events;
+
+      if (current.name in events)
+        throw new Error(`transcript event signatures are assumed to be not overloaded`);
+
+      const fragment = ethers.utils.EventFragment.from(current);
+      const sig = fragment.format();
+      const sel = ethers.utils.hexDataSlice(
+        ethers.utils.id(fragment.format()),
+        0,
+        4
+      );
+      events[current.name] = {fragment, sig, sel, facetName};
+      return events;
+    }, events);
+  }
+  _transcriptEventSigs = events;
+  return _transcriptEventSigs;
+}
+
 
 export function defaultSelectErrors() {
   if (_defaultSelectErrors) return _defaultSelectErrors;

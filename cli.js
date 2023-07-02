@@ -23,7 +23,8 @@ program
     "derive the arena address from the hardhat deploy formatted json file"
   )
   .option("-b, --abi <abifile>")
-  .option("-m, --map <mapfile>");
+  .option("-m, --map <mapfile>")
+  .option("--map-name <name>");
 
 // Now we are using ERC 2535, the arena address is stable on all chains
 program.addOption(

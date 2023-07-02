@@ -2,9 +2,11 @@ import { Option } from "commander";
 import fetch from "node-fetch";
 import { ethers } from "ethers";
 
-import { readJson } from "./fsutil.js";
-import { programConnectArena } from "./connect.js";
-import { Guardian } from "../lib/guardian.js";
+import { prepareGuardian, prepareGuardianArena } from "./prepareguardian.js";
+import { ArenaEvent } from "../lib/arenaevent.js";
+import { EventParser } from "../lib/chainkit/eventparser.js";
+import { ABIName } from "../lib/abiconst.js";
+
 
 export function addCreategame2(program) {
   program
@@ -106,32 +108,10 @@ let vout = () => {};
 
 async function creategame2(program, options) {
   if (program.opts().verbose) vout = out;
-  const mapfile = program.opts().map;
-  if (!mapfile) {
-    out(
-      "a map file must be provided, use chaintrap-maptool to generate one or use one of its default examples"
-    );
-    return;
-  }
-  const arenaAddress = program.opts().arena;
-  if (!arenaAddress)
-    throw new Error("The arena address must be supplied for this command");
-
-  const arena = await programConnectArena(program, options);
-  const iface = arena.getFacetInterface("ERC1155ArenaFacet");
-
-  const collection = readJson(mapfile);
-
-  const mintOptions = {
-    ...program.opts(),
-    ...options,
-  };
-
-  if (mintOptions.gameIconFilename && isFile(mintOptions.gameIconFilename)) {
-    mintOptions.gameIconBytes = readBinary(mintOptions.gameIconFilename);
-  }
-  const guardian = new Guardian(arena, mintOptions);
-  guardian.prepareDungeon(collection, { mapName: mintOptions.mapName });
+  const arena = await prepareGuardianArena(program, options);
+  const eventParser = new EventParser(arena, ArenaEvent.fromParsedEvent);
+  const guardian = await prepareGuardian(eventParser, program, options);
+  // TODO: load furniture
   guardian.finalizeDungeon();
   const result = await guardian.mintGame({ fetch });
 
@@ -147,11 +127,11 @@ async function creategame2(program, options) {
       case "URI":
         o.uri = parsed.args.tokenURI;
         break;
-      case "TranscriptMerkleRootSet":
+      case ABIName.TranscriptMerkleRootSet:
         o.roots[ethers.utils.parseBytes32String(parsed.args.label)] =
           ethers.utils.hexlify(parsed.args.root);
         break;
-      case "TranscriptCreated":
+      case ABIName.TranscriptCreated:
         o.registrationLimit = parsed.args.registrationLimit.toNumber();
         break;
     }

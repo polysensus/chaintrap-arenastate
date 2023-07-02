@@ -6,7 +6,6 @@ export class ABIName {
   static TranscriptMerkleRootSet = "TranscriptMerkleRootSet";
   static TranscriptEntryChoices = "TranscriptEntryChoices";
   static TranscriptEntryCommitted = "TranscriptEntryCommitted";
-  static ArgumentProven = "ArgumentProven";
   static TranscriptEntryOutcome = "TranscriptEntryOutcome";
 }
 

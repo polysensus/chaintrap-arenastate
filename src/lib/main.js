@@ -28,5 +28,5 @@ export * from "./chainkit/provider.js";
 export { etherrmsg } from "./idioms.js";
 export { TrialistState } from "./trialiststate.js";
 export { StateRoster, loadRoster } from "./stateroster.js";
-export { TxMemo } from "./chainkit/txmemo.js";
+export { TransactionHorizon } from "./chainkit/transactionhorizon.js";
 export { MapModel } from "./map/model.js";

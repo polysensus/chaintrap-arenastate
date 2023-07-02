@@ -13,6 +13,21 @@ import { ObjectType } from "./objecttypes.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
 import { Location } from "./location.js";
 
+export function rootLabel(map, mapName) {
+  if (!(map || mapName))
+    throw new Error("a map root label is required or a map object from which to derive one");
+  let rootLabel = `chaintrap:static`
+
+  let defaultName = 'un-named';
+  if (map) {
+    const beta = map.vrf_inputs?.proof?.beta;
+    if (beta)
+      defaultName = beta.slice(0, 8)
+  }
+  rootLabel = mapName ? `${rootLabel}:${mapName}` : `${rootLabel}:${defaultName}`;
+  return rootLabel;
+}
+
 /**
  * LogicalTopology encodes a map as a merkle trie. Providing for contract
  * assertable existence proofs for locations and the logical connections between

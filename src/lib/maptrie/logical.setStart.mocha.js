@@ -38,7 +38,7 @@ describe("LogicalTopology setStart tests", function () {
     const gid = getGameCreated(r, arenaEvents).gid;
     let transactor = new Transactor(arenaEvents);
 
-    const startArgs = trial.createStartGameArgs([0], this.minter.minter);
+    const startArgs = trial.createStartGameArgs([0], this.minter.minter.initArgs.rootLabels[0]);
     transactor
       .method(
         this.user1Arena.registerTrialist,
