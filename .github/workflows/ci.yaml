@@ -17,13 +17,6 @@ jobs:
           APP_PEM: ${{ secrets.CICD_APP_PEM }}
           APP_ID: ${{ secrets.CICD_APP_ID }}
 
-      - name: Checkout the diamond-deploy repository
-        uses: actions/checkout@v3
-        with:
-          repository: polysensus/diamond-deploy
-          submodules: recursive
-          path: diamond-deploy
-
       - name: Checkout the contracts repository
         uses: actions/checkout@v3
         with:
@@ -43,6 +36,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.15.0
+          scope: "@polysensus"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -70,16 +65,11 @@ jobs:
 
         run: |
 
-          pushd diamond-deploy
-          npm install
-          popd
           pushd chaintrap-contracts
           npm install
           task build
           popd
           pushd chaintrap-arenastate
-          echo "" > .npmrc
-          echo "@polysensus:registry=https://npm.pkg.github.com:_authToken=$GITHUB_TOKEN" >> .npmrc
 
           grep chaintrap-contracts package.json
           grep chaintrap-contracts package-lock.json
@@ -105,11 +95,9 @@ jobs:
       - name: publish npm package
         working-directory: chaintrap-arenastate
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH }}
         if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         run: |
-          echo "" > .npmrc
-          echo "@polysensus:registry=https://npm.pkg.github.com:_authToken=$GITHUB_TOKEN" >> .npmrc
 
           # github has scale issues when there are a large (> 20 ) npm packages in
           # a repo, so force for fixes seems like the right thing for now.
@@ -118,16 +106,6 @@ jobs:
             export FORCE=--force
           fi
           npm publish $FORCE
-
-      - name: package cleanup
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: actions/delete-package-versions@v4
-        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
-        with:
-          package-name: "chaintrap-arenastate"
-          package-type: "npm"
-          min-versions-to-keep: 3
 
       # this didn't work, despite looking like jest/junit format the reporter
       # crashed when looking at the time property
