@@ -7,10 +7,11 @@ import { isFile } from "../src/commands/fsutil.js";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { deployArenaFixture } from "./support/deployarena.js";
 import {
-  envConnect,
+  envConnect, hreConnect,
   HH_OWNER_ACCOUNT_INDEX,
   HH_GUARDIAN_ACCOUNT_INDEX,
   HH_USER1_ACCOUNT_INDEX,
+  HH_USER2_ACCOUNT_INDEX,
 } from "./support/connect.js";
 
 import {
@@ -52,7 +53,7 @@ export const mochaHooks = {
     );
     if (isFile(dotenvFile)) {
       console.log(
-        `mocha-root-hook.js# test env config not found at ${dotenvFile}`
+        `mocha-root-hook.js# test env config found at ${dotenvFile}`
       );
       dotenv.config({ path: dotenvFile });
     } else dotenv.config();
@@ -64,16 +65,21 @@ export const mochaHooks = {
 
   async beforeEach() {
     if (typeof process.env.ARENASTATE_ARENA === "undefined") {
-      this.proxyAddress = (await loadFixture(deployArenaFixture))[0];
-      this.ownerArena = hreConnect(proxyAddress, {
+      const proxyAddress = (await loadFixture(deployArenaFixture))[0];
+      this.ownerArena = await hreConnect(proxyAddress, {
         account: HH_OWNER_ACCOUNT_INDEX,
       });
-      this.guardianArena = hreConnect(proxyAddress, {
+      this.guardianArena = await hreConnect(proxyAddress, {
         account: HH_GUARDIAN_ACCOUNT_INDEX,
       });
-      this.user1Arena = hreConnect(proxyAddress, {
+      this.user1Arena = await hreConnect(proxyAddress, {
         account: HH_USER1_ACCOUNT_INDEX,
       });
+      this.user2Arena = await hreConnect(proxyAddress, {
+        account: HH_USER2_ACCOUNT_INDEX,
+      });
+      this.arena = await hreConnect(proxyAddress, {});
+
     } else {
       const proxyAddress = process.env.ARENASTATE_ARENA;
       this.ownerArena = envConnect(proxyAddress, {
@@ -102,5 +108,6 @@ export const mochaHooks = {
     this.minter = new Minter(this.guardianArena, this.gameOptions);
     // note all of this is because fixture functions require a name, they can't be anonymous
     this.mintGame = this.minter.mint.bind(this.minter);
+    console.log('beforeEach done')
   },
 };

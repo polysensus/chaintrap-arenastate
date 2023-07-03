@@ -21,6 +21,7 @@ export const HH_DEPLOYER_ACCOUNT_INDEX = 0;
 export const HH_OWNER_ACCOUNT_INDEX = 1;
 export const HH_GUARDIAN_ACCOUNT_INDEX = 10;
 export const HH_USER1_ACCOUNT_INDEX = 11;
+export const HH_USER2_ACCOUNT_INDEX = 12;
 
 /**
  * Connect an arena signer using an indexed hardhat (hre) account. See the HH_*
@@ -30,12 +31,11 @@ export const HH_USER1_ACCOUNT_INDEX = 11;
  * @param {{account:Number}} options
  * @returns
  */
-export function hreConnect(arenaAddress, options) {
-  const signers = hre.getSigners();
-  let accountIndex = options.account;
-  if (typeof accountIndex === "undefined")
-    accountIndex = HH_USER1_ACCOUNT_INDEX;
-  return arenaConnect(arenaAddress, signers[accountIndex]);
+export async function hreConnect(arenaAddress, options) {
+  const signers = await hre.ethers.getSigners();
+  if (typeof options?.account === "undefined")
+    return arenaConnect(arenaAddress, hre.ethers.provider); 
+  return arenaConnect(arenaAddress, signers[options.account]);
 }
 
 export function envConnectProvider(options) {

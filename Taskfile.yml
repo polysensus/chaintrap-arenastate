@@ -42,9 +42,23 @@ tasks:
       - task: build:js
       - task: build:diamond-deploy
 
-  test:preflight:
+  test:prepare:cd:
     desc: start hardhat and deploy contracts for test:integ
     cmds:
+      - |
+        cat .env.example.test.cd | envsubst > .env.test
+        cat .env.test | grep _KEY
+
+  test:prepare:
+    desc: default preflight for local development
+    cmds:
+      - task: test:preflight:local
+
+  test:prepare:local:
+    desc: start hardhat and deploy contracts for test:integ
+    cmds:
+      - |
+        cp -v .env.test.local .env.test
       - task: dev:hh:restart
       - task: deploy:hh-new
       - |
