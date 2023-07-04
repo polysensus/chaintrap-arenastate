@@ -24,7 +24,8 @@ export class TrialistState {
     return TrialistEvents[name];
   }
 
-  constructor() {
+  constructor(address) {
+    this.address = address;
     this.propDelta = new PropDelta(
       [
         "registered",
@@ -107,6 +108,8 @@ export class TrialistState {
   // --- update methods
   applyEvent(event, options = {}) {
     const eventID = `${event.name}:${event.log.transactionHash}`;
+    if (event.subject !== this.address)
+      throw Error(`event subject address inconsistent got ${event.subject}, expected ${this.address}`);
 
     // eid will be zero in startTranscript
     const eid = Number(event.eid ?? 0);

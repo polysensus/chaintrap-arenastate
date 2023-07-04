@@ -34,6 +34,10 @@ export class Trialist {
     this.journal.openTranscript(gid, staticRootLabel);
   }
 
+  async startListening(gid, options) {
+    return await this.journal.startListening([gid], options)
+  }
+
   async commitLocationChoice(gid, side, exit) {
     const args = this.journal.locationChoiceArgs(gid, side, exit);
 

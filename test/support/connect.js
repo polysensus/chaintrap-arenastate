@@ -13,7 +13,7 @@ export function envConnect(arenaAddress, options) {
 
   arenaAddress = arenaAddress ?? process.env.ARENASTATE_ARENA;
 
-  const signer = urlConnect(url, { key, polling });
+  const signer = urlConnect(url, { key, polling, pollingInterval: options?.pollingInterval });
   return arenaConnect(arenaAddress, signer);
 }
 

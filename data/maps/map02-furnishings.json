@@ -9,7 +9,7 @@
       "labels": ["victory_condition"],
       "type": "finish_exit",
       "data": {
-        "location": 1,
+        "location": 8,
         "side": 0,
         "exit": 0
       },

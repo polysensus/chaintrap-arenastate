@@ -115,8 +115,9 @@ export class Guardian {
       gid: created.gid,
       creator: created.parsedLog.args.creator,
       registrationLimit: created.parsedLog.args.registrationLimit,
+      result
     };
-    return result;
+    return this._lastMinted;
   }
 
   async startListening(gid, options) {
@@ -166,7 +167,7 @@ export class Guardian {
 
     const resolved = [];
 
-    for (const { trialist } of this.journal.pendingOutcomes(gid)) {
+    for (const trialist of this.journal.pendingOutcomes(gid)) {
       // const delta = trialist.delta({collect:true});
       const locationId = parseInt(trialist.state.location[0], 16);
       const choice = trialist.state.choices[trialist.state.inputChoice];

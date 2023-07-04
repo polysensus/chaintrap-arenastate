@@ -54,7 +54,7 @@ export class StateRoster {
 
     switch (event.name) {
       case ABIName.TranscriptRegistration:
-        this.trialists[event.subject] = new TrialistState();
+        this.trialists[event.subject] = new TrialistState(event.subject);
         break;
     }
     if (!TrialistState.handlesEvent(event.name)) return;
@@ -74,7 +74,10 @@ export class StateRoster {
       const eid = trialist.last();
       if (!trialist.pendingOutcome(eid)) continue;
 
-      yield { participant: addr, trialist };
+      if (addr != trialist.address)
+        throw new Error(`trialist address inconsistency ${trialist.address} vs expected ${addr}`);
+
+      yield trialist;
     }
   }
 }

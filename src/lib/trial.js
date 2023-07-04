@@ -94,10 +94,10 @@ export class Trial {
   }
 
   createResolveOutcomeArgs(trialist, locationId, choice) {
-    if (locationId === this.topology.finishId) {
+    if (locationId === this.topology.finishLocationId) {
       const [side, exit] = choice.map((i) => deconditionInput(i));
-      const exitId = this.exitId(locationId, side, exit);
-      if (exitId === this.finishExitId)
+      const exitId = this.topology.exitId(locationId, side, exit);
+      if (exitId === this.topology.finishExitId)
         return this.createResolveOutcomeFinishArgs(
           trialist,
           locationId,
@@ -178,6 +178,7 @@ export class Trial {
         leaves,
       },
       data: "0x",
+      choiceLeafIndex: 0 // XXX: this refers to the current choice, this is just temporary till game completion is in place on the contracts
     };
   }
 
