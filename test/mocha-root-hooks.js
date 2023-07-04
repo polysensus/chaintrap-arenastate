@@ -7,7 +7,8 @@ import { isFile } from "../src/commands/fsutil.js";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { deployArenaFixture } from "./support/deployarena.js";
 import {
-  envConnect, hreConnect,
+  envConnect,
+  hreConnect,
   HH_OWNER_ACCOUNT_INDEX,
   HH_GUARDIAN_ACCOUNT_INDEX,
   HH_USER1_ACCOUNT_INDEX,
@@ -27,7 +28,7 @@ import {
   get as getMaptoolOpts,
 } from "../src/lib/envopts/maptool.js";
 
-import { Minter } from "./support/minter.js";
+import { Minter } from "../src/lib/minter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,9 +53,7 @@ export const mochaHooks = {
       process.env.DOTENV_FILE ?? ".env.test"
     );
     if (isFile(dotenvFile)) {
-      console.log(
-        `mocha-root-hook.js# test env config found at ${dotenvFile}`
-      );
+      console.log(`mocha-root-hook.js# test env config found at ${dotenvFile}`);
       dotenv.config({ path: dotenvFile });
     } else dotenv.config();
 
@@ -79,7 +78,6 @@ export const mochaHooks = {
         account: HH_USER2_ACCOUNT_INDEX,
       });
       this.arena = await hreConnect(proxyAddress, {});
-
     } else {
       const proxyAddress = process.env.ARENASTATE_ARENA;
       this.ownerArena = envConnect(proxyAddress, {
@@ -108,6 +106,6 @@ export const mochaHooks = {
     this.minter = new Minter(this.guardianArena, this.gameOptions);
     // note all of this is because fixture functions require a name, they can't be anonymous
     this.mintGame = this.minter.mint.bind(this.minter);
-    console.log('beforeEach done')
+    console.log("beforeEach done");
   },
 };

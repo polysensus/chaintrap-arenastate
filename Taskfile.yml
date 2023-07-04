@@ -52,7 +52,7 @@ tasks:
   test:prepare:
     desc: default preflight for local development
     cmds:
-      - task: test:preflight:local
+      - task: test:prepare:local
 
   test:prepare:local:
     desc: start hardhat and deploy contracts for test:integ

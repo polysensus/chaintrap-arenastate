@@ -14,6 +14,8 @@ import { ArenaEvent } from "../arenaevent.js";
 import { EventParser } from "../chainkit/eventparser.js";
 import { Transactor } from "../chainkit/transactor.js";
 import { Trial } from "../trial.js";
+import { Furniture } from "../map/furniture.js";
+import { ObjectType } from "../maptrie/objecttypes.js";
 
 const { map02 } = maps;
 
@@ -26,9 +28,27 @@ describe("LogicalTopology setStart tests", function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
+    const furniture = new Furniture({
+      map: { name: "test", beta: "0x" },
+      items: [
+        {
+          unique_name: "finish_exit",
+          labels: ["victory_condition"],
+          type: "finish_exit",
+          data: { location: 1, side: 3, exit: 0 },
+        },
+      ],
+    });
+    topo.placeFinish(furniture.byName("finish_exit"));
+
     const trie = topo.commit();
 
     // mint without publishing nft metadata
+    this.minter.applyOptions({
+      choiceInputTypes: [ObjectType.LocationChoices],
+      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
+      victoryTransitionTypes: [ObjectType.Finish],
+    });
     let r = await this.mintGame({ topology: topo, trie: trie });
 
     const trial = new Trial(

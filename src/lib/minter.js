@@ -41,6 +41,8 @@ export class Minter {
   }
 
   async mint(options) {
+    if (!this.options) throw new Error(`applyOptions before minting`);
+
     const { topology, map, trie } = options;
     if (!(topology && trie))
       throw new Error(`topology, map and trie are required options for mint`);

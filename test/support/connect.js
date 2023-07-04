@@ -34,7 +34,7 @@ export const HH_USER2_ACCOUNT_INDEX = 12;
 export async function hreConnect(arenaAddress, options) {
   const signers = await hre.ethers.getSigners();
   if (typeof options?.account === "undefined")
-    return arenaConnect(arenaAddress, hre.ethers.provider); 
+    return arenaConnect(arenaAddress, hre.ethers.provider);
   return arenaConnect(arenaAddress, signers[options.account]);
 }
 

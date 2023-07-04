@@ -9,6 +9,8 @@ import { LogicalTopology } from "./logical.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
 //
 import maps from "../../../data/maps/map02.json" assert { type: "json" };
+import furnishings from "../../../data/maps/map02-furnishings.json" assert { type: "json" };
+
 import {
   LeafObject,
   leafHash,
@@ -18,6 +20,7 @@ import {
 import { ObjectType } from "./objecttypes.js";
 import { LocationExit } from "./locationexit.js";
 import { LocationLink } from "./locationlink.js";
+import { Furniture } from "../map/furniture.js";
 
 const { map02 } = maps;
 
@@ -26,6 +29,8 @@ describe("LogicalTopology tests", function () {
     const topo = new LogicalTopology();
     topo.extendJoins(map02.model.corridors); // rooms 0,1 sides EAST, WEST
     topo.extendLocations(map02.model.rooms);
+    const furniture = new Furniture(furnishings);
+    topo.placeFinish(furniture.byName("finish_exit"));
     const trie = topo.commit();
 
     for (const [i, v] of trie.entries()) {

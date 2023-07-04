@@ -1,11 +1,8 @@
-/**
- * Encodes the association of a location with its exit menu choices (scene)
- */
-
 import { conditionInput } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
 
 /**
+ * Encodes the connection between to locations via their respective exits
  * Prepares [LINK, [[REF(#Ea)], [REF(#Eb)]]]
  */
 export class LocationLink {
