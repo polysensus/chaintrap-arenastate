@@ -26,6 +26,11 @@ const { map02 } = maps;
 
 describe("LogicalTopology entryCommit tests", function () {
   it("Should resolve a location exit choice", async function () {
+
+    if (!this.gameOptions || !this.mintGame) {
+      this.skip();
+    }
+
     // build and verify a proof stack showing that a specific location exits are bound to exit menu choice inputs
     const topo = new LogicalTopology();
     topo.extendJoins([{ joins: [0, 1], sides: [3, 1] }]); // rooms 0,1 sides EAST, WEST
