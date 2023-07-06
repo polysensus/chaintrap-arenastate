@@ -1,0 +1,26 @@
+{
+  "map": {
+    "name": "map02",
+    "beta": "0x22ff48596d1d15a6f6d9175ddf978fc67909b4ba92421fa6eaceef1ebcf80c2476418d896ad039aeb8f2c0bb6f86b9a7af09c90ac1ae9789a96337fbaa132c09"
+  },
+  "items": [
+    {
+      "unique_name": "finish_exit",
+      "labels": ["victory_condition"],
+      "type": "finish_exit",
+      "data": {
+        "location": 8,
+        "side": 0,
+        "exit": 0
+      },
+      "meta": {
+        "notes": [
+          "adds a finish exit to location 1. note that location 1 does not *have* an exit on this side in the model data",
+          "there can only be one finish exit, so the id is also its type",
+          "items with no id are not added to the index",
+          "an id is set by the loader automatically reflecting the position in the items array"
+        ]
+      }
+    }
+  ]
+}

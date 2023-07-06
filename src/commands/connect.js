@@ -21,13 +21,15 @@ export function programConnect(program, polling = false, key = null) {
 }
 
 export function urlConnect(url, opts) {
-  let { key, polling } = opts;
+  let { key, polling, pollingInterval } = opts;
 
   let provider;
   if (!polling) {
     provider = new ethers.providers.StaticJsonRpcProvider(url);
   } else {
     provider = new ethers.providers.JsonRpcProvider(url);
+    if (typeof pollingInterval !== 'undefined')
+      provider.pollingInterval = pollingInterval;
   }
 
   let signer = readKey(key);

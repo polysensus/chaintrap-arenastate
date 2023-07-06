@@ -112,7 +112,7 @@ async function creategame(program, options) {
   const guardian = await prepareGuardian(eventParser, program, options);
   // TODO: load furniture
   guardian.finalizeDungeon();
-  const result = await guardian.mintGame({ fetch });
+  const result = (await guardian.mintGame({ fetch })).result;
 
   const o = { roots: {} };
 

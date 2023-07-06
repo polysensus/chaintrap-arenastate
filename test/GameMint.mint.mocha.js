@@ -8,8 +8,12 @@ import { getMap } from "../src/lib/map/collection.js";
 
 import { LogicalTopology } from "../src/lib/maptrie/logical.js";
 import { GameMint } from "../src/lib/mint/gamemint.js";
+import { ObjectType } from "../src/lib/maptrie/objecttypes.js";
 
 import collection from "../data/maps/map02.json" assert { type: "json" };
+import furnishings from "../data/maps/map02-furnishings.json" assert { type: "json" };
+
+import { Furniture } from "../src/lib/map/furniture.js";
 
 // Note: see test/hook.js to see how the various this.xxxArena's are configured
 
@@ -32,6 +36,8 @@ describe("GameMint.mint tests", async function () {
     const iface = arena.getFacetInterface("ERC1155ArenaFacet");
 
     const topo = LogicalTopology.fromCollectionJSON(collection);
+    const furniture = new Furniture(furnishings);
+    topo.placeFinish(furniture.byName("finish_exit"));
     const trie = topo.commit();
 
     const minter = new GameMint();
@@ -53,6 +59,9 @@ describe("GameMint.mint tests", async function () {
       mapRootLabel,
       topology: topo,
       trie,
+      choiceInputTypes: [ObjectType.LocationChoices],
+      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
+      victoryTransitionTypes: [ObjectType.Finish],
     });
     await minter.prepareGameImage();
     const metadataUrl = await minter.publishMetadata();

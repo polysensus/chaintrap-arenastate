@@ -14,6 +14,8 @@ import { EventParser } from "../src/lib/chainkit/eventparser.js";
 import { ArenaEvent, findGameEvents } from "../src/lib/arenaevent.js";
 import { Transactor } from "../src/lib/chainkit/transactor.js";
 import { StateRoster } from "../src/lib/stateroster.js";
+import { Furniture } from "../src/lib/map/furniture.js";
+import { ObjectType } from "../src/lib/maptrie/objecttypes.js";
 
 import { Trial } from "../src/lib/trial.js";
 
@@ -30,9 +32,28 @@ describe("StateRoster# load", async function () {
       { sides: [[], [], [], [0]], flags: {} },
       { sides: [[], [0], [], []], flags: {} },
     ]);
+
+    const furniture = new Furniture({
+      map: { name: "test", beta: "0x" },
+      items: [
+        {
+          unique_name: "finish_exit",
+          labels: ["victory_condition"],
+          type: "finish_exit",
+          data: { location: 1, side: 3, exit: 0 },
+        },
+      ],
+    });
+    topo.placeFinish(furniture.byName("finish_exit"));
+
     const trie = topo.commit();
 
     // mint without publishing nft metadata
+    this.minter.applyOptions({
+      choiceInputTypes: [ObjectType.LocationChoices],
+      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
+      victoryTransitionTypes: [ObjectType.Finish],
+    });
     let r = await this.mintGame({ topology: topo, trie: trie });
 
     const startLocationId = 0;

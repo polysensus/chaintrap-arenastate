@@ -1,9 +1,13 @@
 import { getMap } from "./map/collection.js";
+import { Furniture } from "./map/furniture.js";
 import { rootLabel, LogicalTopology } from "./maptrie/logical.js";
 import { Minter } from "./minter.js";
 import { TransactRequest } from "./chainkit/transactor.js";
 import { Journal } from "./journal.js";
 import { Trial } from "./trial.js";
+import { ObjectType } from "./maptrie/objecttypes.js";
+
+const FINISH_EXIT_NAME = "finish_exit";
 
 export class Guardian {
   constructor(eventParser, options) {
@@ -59,6 +63,12 @@ export class Guardian {
     };
   }
 
+  furnishDungeon(furnishings) {
+    this.furnishings = new Furniture(furnishings);
+    const finish = this.furnishings.byName(FINISH_EXIT_NAME);
+    this.topology.placeFinish(finish);
+  }
+
   finalizeDungeon() {
     if (!this._preparingDungeon) throw new Error(`nothing to finalize`);
     this._preparingDungeon = false; // if the commit fails, you need to start all over
@@ -77,7 +87,12 @@ export class Guardian {
     if (!options.mapRootLabel)
       options.mapRootLabel = rootLabel(this.map, options.mapName);
 
-    this.minter.applyOptions({ ...options });
+    this.minter.applyOptions({
+      ...options,
+      choiceInputTypes: [ObjectType.LocationChoices],
+      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
+      victoryTransitionTypes: [ObjectType.Finish],
+    });
     const r = await this.minter.mint({
       topology: this.topology,
       map: this.map,
@@ -100,8 +115,9 @@ export class Guardian {
       gid: created.gid,
       creator: created.parsedLog.args.creator,
       registrationLimit: created.parsedLog.args.registrationLimit,
+      result
     };
-    return result;
+    return this._lastMinted;
   }
 
   async startListening(gid, options) {
@@ -151,7 +167,7 @@ export class Guardian {
 
     const resolved = [];
 
-    for (const { trialist } of this.journal.pendingOutcomes(gid)) {
+    for (const trialist of this.journal.pendingOutcomes(gid)) {
       // const delta = trialist.delta({collect:true});
       const locationId = parseInt(trialist.state.location[0], 16);
       const choice = trialist.state.choices[trialist.state.inputChoice];

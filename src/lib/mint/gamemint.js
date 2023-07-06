@@ -7,6 +7,8 @@ import {
 
 import { NFTStorage } from "nft.storage";
 
+import { conditionInput } from "../maptrie/objects.js";
+
 const defaultMaxParticipants = 5;
 
 /**
@@ -236,6 +238,27 @@ export class GameMint {
       throw new Error(
         "a map root label is required or a map object from which to derive one"
       );
+    if (!options.choiceInputTypes || options.choiceInputTypes.length == 0)
+      throw new Error(
+        `dungeon choice input types must be committed when the game is created`
+      );
+
+    const transitionTypes = {};
+    for (const ty of options?.transitionTypes ?? []) transitionTypes[ty] = true;
+    if (Object.keys(transitionTypes).length < 2)
+      throw new Error(
+        `at least two transition types are required for a completable game`
+      );
+    if ((options.victoryTransitionTypes ?? []).length < 1)
+      throw new Error(
+        `at least one victory transition types is required for a completable game`
+      );
+    for (const ty of options.victoryTransitionTypes)
+      if (!(ty in transitionTypes))
+        throw new Error(
+          `all victory transition types must also be listed in transitionTypes`
+        );
+
     // if (!options.map) throw new Error("a map is required");
 
     // Note: allowing for an undefined map is a concession to testability
@@ -274,6 +297,12 @@ export class GameMint {
       ethers.utils.formatBytes32String(options.mapRootLabel),
     ];
     this.initArgs.roots = [options.trie.root];
+    this.initArgs.choiceInputTypes =
+      options.choiceInputTypes.map(conditionInput);
+    this.initArgs.transitionTypes = options.transitionTypes.map(conditionInput);
+    this.initArgs.victoryTransitionTypes =
+      options.victoryTransitionTypes.map(conditionInput);
+    this.initArgs.haltParticipantTransitionTypes = [];
 
     delete this._pendingOptions["map"];
   }

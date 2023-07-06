@@ -7,10 +7,6 @@ const abiCoder = ethers.utils.defaultAbiCoder;
 
 import * as msgpack from "@msgpack/msgpack";
 
-import { Access } from "./access.js";
-import { Link } from "./link.js";
-import { LocationChoices } from "./locationchoices.js";
-import { LocationLink } from "./locationlink.js";
 import { ObjectType } from "./objecttypes.js";
 
 /**
@@ -124,6 +120,8 @@ export class ObjectCodec {
     [ObjectType.Exit, (leaf, options) => leaf.prepare(options)],
     [ObjectType.LocationChoices, (leaf, options) => leaf.prepare(options)],
     [ObjectType.Link2, (leaf, options) => leaf.prepare(options)],
+    [ObjectType.Finish, (leaf, options) => leaf.prepare(options)],
+    [ObjectType.FinishLink, (leaf, options) => leaf.prepare(options)],
   ]);
 
   /**

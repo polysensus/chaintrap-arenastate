@@ -13,7 +13,7 @@ export function envConnect(arenaAddress, options) {
 
   arenaAddress = arenaAddress ?? process.env.ARENASTATE_ARENA;
 
-  const signer = urlConnect(url, { key, polling });
+  const signer = urlConnect(url, { key, polling, pollingInterval: options?.pollingInterval });
   return arenaConnect(arenaAddress, signer);
 }
 
@@ -34,7 +34,7 @@ export const HH_USER2_ACCOUNT_INDEX = 12;
 export async function hreConnect(arenaAddress, options) {
   const signers = await hre.ethers.getSigners();
   if (typeof options?.account === "undefined")
-    return arenaConnect(arenaAddress, hre.ethers.provider); 
+    return arenaConnect(arenaAddress, hre.ethers.provider);
   return arenaConnect(arenaAddress, signers[options.account]);
 }
 

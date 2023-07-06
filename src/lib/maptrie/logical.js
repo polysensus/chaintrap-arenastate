@@ -7,6 +7,7 @@ import { Access } from "./access.js";
 import { Link } from "./link.js";
 import { LocationChoices } from "./locationchoices.js";
 import { LocationExit } from "./locationexit.js";
+import { FinishExit } from "./finishexit.js";
 import { LocationLink } from "./locationlink.js";
 import { ObjectCodec, LeafObject, leafHash } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
@@ -82,6 +83,9 @@ export class LogicalTopology {
     this.locationExitLinksProof = [];
     this.locationExitLinkKeys = {};
     this.locationExitLinkIds = {};
+
+    this.finishLocationId = undefined;
+    this.finishExitId = undefined;
 
     /**
      * @readonly
@@ -166,6 +170,13 @@ export class LogicalTopology {
     }
   }
 
+  // ---
+  // furniture placement methods
+
+  placeFinish(finish) {
+    this.finish = finish;
+  }
+
   /**
    * Commit the whole map topology to a merkle trie, building a cache of entries
    * for use during the game.
@@ -174,8 +185,19 @@ export class LogicalTopology {
   commit() {
     this._resetCommit();
 
+    if (!this.finish)
+      throw new Error(`a finish must be placed before committing the trie`);
+
     for (let locationId = 0; locationId < this.locations.length; locationId++) {
       const sideExits = this.locationExitChoices(locationId); // the flattened list of [[side, exit], ...., [side, exit]]
+
+      if (this.finish.data.location === locationId) {
+        // check the finish does not conflict with a side, exit from the generated map
+        for (const [side, exit] of sideExits)
+          if (this.finish.data.side === side && this.finish.data.exit === exit)
+            throw new Error(`finish placement conflicts with map exit`);
+        sideExits.push([this.finish.data.side, this.finish.data.exit]);
+      }
       const location = new LocationChoices(locationId, sideExits);
 
       let leaf = new LeafObject({
@@ -201,12 +223,25 @@ export class LogicalTopology {
           locationId,
           location.iChoices() + j
         );
-        const locationExit = new LocationExit(locationChoiceRef);
 
-        leaf = new LeafObject({
-          type: LocationExit.ObjectType,
-          leaf: locationExit,
-        });
+        // if we placed the finish exit in this location, build the choices accordingly
+        if (
+          this.finish.data.location === locationId &&
+          j === sideExits.length - 1
+        ) {
+          leaf = new LeafObject({
+            type: FinishExit.ObjectType,
+            leaf: new FinishExit(locationChoiceRef),
+          });
+          this.finishExitId = this.exits.length; // it is added below
+          this.finishLocationId = this.locationChoices.length - 1; // it was added above
+        } else {
+          leaf = new LeafObject({
+            type: LocationExit.ObjectType,
+            leaf: new LocationExit(locationChoiceRef),
+          });
+        }
+
         prepared = this.prepareLeaf(leaf);
         key = leafHash(prepared);
 
@@ -221,6 +256,7 @@ export class LogicalTopology {
     }
 
     for (const link of this.links()) {
+      // Note: there is no link for the finish exit, it is just a choice that completes the trial
       const ida = this.exitId(link.a.location, link.a.side, link.a.exit);
       const idb = this.exitId(link.b.location, link.b.side, link.b.exit);
       const refa = new LogicalRef(LogicalRefType.Proof, ObjectType.Exit, ida);
@@ -241,6 +277,8 @@ export class LogicalTopology {
         `${link.a.location}:${link.a.side}:${link.a.exit}`
       ] = locationExitLinkIndex;
     }
+
+    // now do the furniture
 
     this.trie = StandardMerkleTree.of(
       [
@@ -329,6 +367,7 @@ export class LogicalTopology {
       case ObjectType.LocationChoices:
         return this.locationChoices[id];
       case ObjectType.Exit:
+      case ObjectType.Finish:
         return this.exits[id];
       case ObjectType.Link2:
         return this.locationExitLinks[id];
