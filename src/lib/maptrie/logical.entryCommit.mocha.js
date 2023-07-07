@@ -26,7 +26,6 @@ const { map02 } = maps;
 
 describe("LogicalTopology entryCommit tests", function () {
   it("Should resolve a location exit choice", async function () {
-
     if (!this.gameOptions || !this.mintGame) {
       this.skip();
     }

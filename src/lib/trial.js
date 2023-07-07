@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 // import * as msgpack from "@msgpack/msgpack";
 import { getMap } from "./map/collection.js";
 import { SceneCatalog } from "./map/scenecatalog.js";
-import { LogicalTopology } from "./maptrie/logical.js";
 import {
   LeafObject,
   conditionInputs,
@@ -10,6 +9,7 @@ import {
   leafHash,
 } from "./maptrie/objects.js";
 import { ObjectType } from "./maptrie/objecttypes.js";
+import { TranscriptOutcome } from "./abiconst.js";
 
 const abiCoder = ethers.utils.defaultAbiCoder;
 const hexlify = ethers.utils.hexlify;
@@ -170,7 +170,7 @@ export class Trial {
     logit("STACK(1) FINISH", prepared, stack[stack.length - 1]);
     return {
       participant: trialist,
-      outcome: 3, // Accepted
+      outcome: TranscriptOutcome.Accepted,
       proof: {
         choiceSetType: ObjectType.LocationChoices,
         transitionType: ObjectType.Finish,
@@ -178,7 +178,7 @@ export class Trial {
         leaves,
       },
       data: "0x",
-      choiceLeafIndex: 0 // XXX: this refers to the current choice, this is just temporary till game completion is in place on the contracts
+      choiceLeafIndex: 0, // XXX: this refers to the current choice, this is just temporary till game completion is in place on the contracts
     };
   }
 
@@ -312,10 +312,10 @@ export class Trial {
 
     return {
       participant: trialist,
-      outcome: 3, // Accepted
+      outcome: TranscriptOutcome.Accepted, // Accepted
       proof: {
-        choiceSetType: 9,
-        transitionType: 8,
+        choiceSetType: ObjectType.LocationChoices,
+        transitionType: ObjectType.Link2,
         stack,
         leaves,
       },

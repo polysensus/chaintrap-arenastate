@@ -21,7 +21,6 @@ const { map02 } = maps;
 
 describe("LogicalTopology setStart tests", function () {
   it("Should prove set start", async function () {
-
     if (!this.gameOptions || !this.mintGame) {
       this.skip();
     }

@@ -9,11 +9,9 @@ export class ABIName {
   static TranscriptEntryOutcome = "TranscriptEntryOutcome";
 }
 
-/**
- * Returns true if the event is from the v1 game events interface
- * @param {any} ev ethers parsed event (parsed according to the contract ABI)
- * @returns
- */
-export function isV2GameEvent(ev) {
-  return !!ABIName[ev.name];
+export class TranscriptOutcome {
+  static Invalid = 0;
+  static Pending = 1;
+  static Rejected = 2;
+  static Accepted = 3;
 }

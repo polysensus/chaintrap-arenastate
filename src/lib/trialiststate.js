@@ -53,17 +53,9 @@ export class TrialistState {
 
     /**
      * @readonly
-     * The state after applying the update in the commit for the corresponding
-     * eid. The start state is always eid 0
+     * accumulation of updates for each eid
      */
-    this.outcomeStates = {};
-    /**
-     * @readonly
-     * The delta from the previously committed state to the most recently
-     * committed state. The previously committed state for the first commit is
-     * the state when TranscriptEntryChoices from startTranscript is applied.
-     */
-    this.outcomeDelta = {};
+    this._entryDelta = {};
 
     /**
      * @readonly
@@ -109,7 +101,9 @@ export class TrialistState {
   applyEvent(event, options = {}) {
     const eventID = `${event.name}:${event.log.transactionHash}`;
     if (event.subject !== this.address)
-      throw Error(`event subject address inconsistent got ${event.subject}, expected ${this.address}`);
+      throw Error(
+        `event subject address inconsistent got ${event.subject}, expected ${this.address}`
+      );
 
     // eid will be zero in startTranscript
     const eid = Number(event.eid ?? 0);
@@ -135,34 +129,7 @@ export class TrialistState {
       Object.assign(this.state, delta);
       // delta accumulates forever until collected. It is the delta since the last collection.
       Object.assign(this._delta, delta);
-    }
-
-    switch (event.name) {
-      case ABIName.TranscriptEntryOutcome: {
-        const lastOutcomeEID = this.last({
-          abiName: ABIName.TranscriptEntryOutcome,
-          n: 1,
-        });
-        const lastOutcomeState = this.outcomeStates[lastOutcomeEID];
-
-        // Also, automatically provide delta's for each outcome event (Accepted, Rejected or otherwise)
-        this.outcomeDelta[eid] = this.propDelta.delta(
-          lastOutcomeState,
-          this.state
-        );
-        this.outcomeStates[eid] = { ...this.state };
-        break;
-      }
-
-      case ABIName.TranscriptEntryChoices: {
-        if (eid !== 0) break;
-
-        // Deal with startTranscript, which emits TranscriptEntryChoices to set the starting
-        // scene. This delta will include the player registration and profile
-        this.outcomeDelta[eid] = { ...this.state };
-        this.outcomeStates[eid] = { ...this.state };
-        break;
-      }
+      this._entryDelta[eid] = { ...delta };
     }
 
     this.eventsByABI[event.name][eid] = event;
@@ -181,17 +148,11 @@ export class TrialistState {
     return { ...this.state };
   }
 
-  outcome(options) {
-    const which =
-      options?.eid ?? this.last({ abiName: ABIName.TranscriptEntryOutcome });
-    if (options?.delta) {
-      if (!(which in this.outcomeDelta))
-        throw new Error(`eid ${which} not in outcomeDelta`);
-      return { ...this.outcomeDelta[which] };
-    }
-    if (!(which in this.outcomeStates))
-      throw new Error(`eid ${which} not in outcomeStates`);
-    return { ...this.outcomeStates[which] };
+  entryDelta(options) {
+    const which = options?.eid ?? this.last();
+    if (!(which in this._entryDelta))
+      throw new Error(`eid ${which} not in _entryDelta`);
+    return { ...this._entryDelta[which] };
   }
 
   // --- private update methods

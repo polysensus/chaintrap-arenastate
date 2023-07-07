@@ -139,9 +139,15 @@ describe("StateRoster# load", async function () {
     const p = roster.trialists[user1Address];
     const current = p.current();
     const delta = p.delta();
-    const outcome = p.outcome();
-
-    for (const state of [current, delta, outcome]) {
+    const entryDelta = p.entryDelta();
+    expect(entryDelta.location.length).to.equal(1);
+    expect(deconditionInput(entryDelta.location[0])).to.equal(1);
+    expect(entryDelta.choices[0].length).to.equal(2);
+    let b = conditionInputs([[1, 0]])[0];
+    expect(entryDelta.choices[0][0]).to.equal(b[0]);
+    expect(entryDelta.choices[0][1]).to.equal(b[1]);
+ 
+    for (const state of [current, delta]) {
       expect(state.address).to.equal(user1Address);
       expect(state.registered).to.be.true;
       expect(state.profile?.nickname).to.equal("alice");
