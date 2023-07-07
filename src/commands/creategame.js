@@ -6,6 +6,7 @@ import { prepareGuardian, prepareArena } from "./prepareguardian.js";
 import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
 import { ABIName } from "../lib/abiconst.js";
+import { readJson } from "./fsutil.js";
 
 export function addCreategame(program) {
   program
@@ -110,7 +111,8 @@ async function creategame(program, options) {
   const arena = await prepareArena(program, options);
   const eventParser = new EventParser(arena, ArenaEvent.fromParsedEvent);
   const guardian = await prepareGuardian(eventParser, program, options);
-  // TODO: load furniture
+  const furniture = readJson(program.opts().furniture);
+  guardian.furnishDungeon(furniture);
   guardian.finalizeDungeon();
   const result = (await guardian.mintGame({ fetch })).result;
 

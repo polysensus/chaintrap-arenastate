@@ -4,6 +4,7 @@ import { asGid } from "../lib/gid.js";
 import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
 import { findGids } from "../lib/arenaevent.js";
+import { readJson } from "./fsutil.js";
 
 const out = console.log;
 let vout = () => {};
@@ -23,7 +24,8 @@ async function resolvechoice(program, options) {
   const gid = options.id ? asGid(options.id) : await findGids(eventParser, -1);
 
   const guardian = await prepareGuardian(eventParser, program, options);
-  // TODO: load furniture
+  const furniture = readJson(program.opts().furniture);
+  guardian.furnishDungeon(furniture);
   guardian.finalizeDungeon();
 
   await guardian.startListening(gid);
