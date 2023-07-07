@@ -57,11 +57,26 @@ export const mochaHooks = {
       dotenv.config({ path: dotenvFile });
     } else dotenv.config();
 
-    this.ethersPollingInterval = process.env.ARENASTATE_ETHERS_POLLING_INTERVAL ?? 500;
+    this.ethersPollingInterval =
+      process.env.ARENASTATE_ETHERS_POLLING_INTERVAL ?? 500;
 
     if (haveOpenAI()) this.openaiOptions = getOpenAIOpts();
     if (haveNFTStorage()) this.nftstorageOptions = getNFTStorageOpts();
     if (haveMaptool()) this.maptoolOptions = getMaptoolOpts();
+  },
+
+  async afterEach() {
+    for (const provider of [
+      this.ownerArena.provider,
+      this.guardianArena.provider,
+      this.user1Arena.provider,
+      this.user2Arena.provider,
+      this.arena.provider
+    ]) {
+      if (!provider)
+        continue
+      provider.removeAllListeners();
+    }
   },
 
   async beforeEach() {
@@ -69,38 +84,38 @@ export const mochaHooks = {
       const proxyAddress = (await loadFixture(deployArenaFixture))[0];
       this.ownerArena = await hreConnect(proxyAddress, {
         account: HH_OWNER_ACCOUNT_INDEX,
-        pollingInterval: this.ethersPollingInterval
+        pollingInterval: this.ethersPollingInterval,
       });
       this.guardianArena = await hreConnect(proxyAddress, {
         account: HH_GUARDIAN_ACCOUNT_INDEX,
-        pollingInterval: this.ethersPollingInterval
+        pollingInterval: this.ethersPollingInterval,
       });
       this.user1Arena = await hreConnect(proxyAddress, {
         account: HH_USER1_ACCOUNT_INDEX,
-        pollingInterval: this.ethersPollingInterval
+        pollingInterval: this.ethersPollingInterval,
       });
       this.user2Arena = await hreConnect(proxyAddress, {
         account: HH_USER2_ACCOUNT_INDEX,
-        pollingInterval: this.ethersPollingInterval
+        pollingInterval: this.ethersPollingInterval,
       });
       this.arena = await hreConnect(proxyAddress, {});
     } else {
       const proxyAddress = process.env.ARENASTATE_ARENA;
       this.ownerArena = envConnect(proxyAddress, {
         key: process.env.ARENASTATE_OWNER_KEY,
-        pollingInterval: this.ethersPollingInterval
+        pollingInterval: this.ethersPollingInterval,
       });
       this.guardianArena = envConnect(proxyAddress, {
         key: process.env.ARENASTATE_GUARDIAN_KEY,
-        pollingInterval: this.ethersPollingInterval
+        pollingInterval: this.ethersPollingInterval,
       });
       this.user1Arena = envConnect(proxyAddress, {
         key: process.env.ARENASTATE_USER1_KEY,
-        pollingInterval: this.ethersPollingInterval
+        pollingInterval: this.ethersPollingInterval,
       });
       this.user2Arena = envConnect(proxyAddress, {
         key: process.env.ARENASTATE_USER2_KEY,
-        pollingInterval: this.ethersPollingInterval
+        pollingInterval: this.ethersPollingInterval,
       });
 
       // provider only instance, no signer

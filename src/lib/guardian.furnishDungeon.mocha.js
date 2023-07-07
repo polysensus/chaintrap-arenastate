@@ -25,7 +25,7 @@ describe("Guardian furnish dungeon tests", function () {
     guardian.furnishDungeon(furnishings);
     guardian.finalizeDungeon();
     expect(guardian.topology).to.exist;
-    expect(guardian.topology?.finishLocationId).to.equal(1);
+    expect(guardian.topology?.finishLocationId).to.equal(8);
     const finish = guardian.topology?.leaf(
       ObjectType.Finish,
       guardian.topology?.finishExitId

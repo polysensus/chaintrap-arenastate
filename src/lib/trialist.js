@@ -35,7 +35,7 @@ export class Trialist {
   }
 
   async startListening(gid, options) {
-    return await this.journal.startListening([gid], options)
+    return await this.journal.startListening([gid], options);
   }
 
   async commitLocationChoice(gid, side, exit) {

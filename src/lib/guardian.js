@@ -115,7 +115,7 @@ export class Guardian {
       gid: created.gid,
       creator: created.parsedLog.args.creator,
       registrationLimit: created.parsedLog.args.registrationLimit,
-      result
+      result,
     };
     return this._lastMinted;
   }
@@ -181,9 +181,29 @@ export class Guardian {
       request
         .method(this.arena.transcriptEntryResolve, gid, resolveArgs)
         .requireLogs(
-          "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)",
           "TranscriptEntryOutcome(uint256,address,uint256,address,bytes32,uint8,bytes)"
         );
+
+      switch (resolveArgs.proof.transitionType) {
+        case ObjectType.Finish: {
+          request
+            .requireLogs(
+              "TransferSingle(address,address,address,uint256,uint256)",
+              "TranscriptCompleted(uint256)"
+            );
+          break
+        }
+        case ObjectType.Link2: {
+          request
+            .requireLogs(
+              "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
+            );
+          break
+        }
+        default:
+          throw new Error(`un-expected transitionType`);
+      }
+
       await request.transact();
       resolved.push(trialist.state.address);
     }

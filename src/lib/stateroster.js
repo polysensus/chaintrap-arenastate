@@ -75,7 +75,9 @@ export class StateRoster {
       if (!trialist.pendingOutcome(eid)) continue;
 
       if (addr != trialist.address)
-        throw new Error(`trialist address inconsistency ${trialist.address} vs expected ${addr}`);
+        throw new Error(
+          `trialist address inconsistency ${trialist.address} vs expected ${addr}`
+        );
 
       yield trialist;
     }

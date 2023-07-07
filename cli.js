@@ -26,7 +26,8 @@ program
   )
   .option("-b, --abi <abifile>")
   .option("-m, --map <mapfile>")
-  .option("--map-name <name>");
+  .option("--map-name <name>")
+  .option("--furniture <furniturefile>");
 
 // Now we are using ERC 2535, the arena address is stable on all chains
 program.addOption(

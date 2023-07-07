@@ -14,6 +14,8 @@
       "args": [
         "--map",
         "${workspaceFolder}/data/maps/map02.json",
+        "--furniture",
+        "${workspaceFolder}/data/maps/map02-furnishings.json",
         "creategame",
         "--map-name",
         "map02",
@@ -48,6 +50,9 @@
       "args": [
         "--map",
         "${workspaceFolder}/data/maps/map02.json",
+        "--furniture",
+        "${workspaceFolder}/data/maps/map02-furnishings.json",
+
         "--map-name",
         "map02",
         "startgame",
@@ -80,6 +85,9 @@
       "args": [
         "--map",
         "${workspaceFolder}/data/maps/map02.json",
+        "--furniture",
+        "${workspaceFolder}/data/maps/map02-furnishings.json",
+
         "--map-name",
         "map02",
         "resolvechoice"
