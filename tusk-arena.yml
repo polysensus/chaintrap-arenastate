@@ -19,8 +19,6 @@ options:
     short: "u"
 
   deploy-key:
-    default:
-      command: cat .local/dev/wallets/wallet-deploy.key
     environment: ARENASTATE_DEPLOY_KEY
     short: "d"
 
@@ -44,6 +42,30 @@ options:
   diamond-nonce:
 
 tasks:
+  op-bridge-eth:
+    options:
+      commit:
+        type: boolean
+      l1-url:
+        environment: ARENASTATE_OPTIMISM_L1_URL
+      units:
+        default: "ether"
+    args:
+      key:
+      amount:
+    run:
+      - command:
+          exec: |
+            set -e
+            ${diamond-deploy} \
+              -u "${rpc}" \
+              op-deposit \
+                --l1-url=${l1-url} \
+                --eth-fiat=1453 \
+                --units=${units} \
+                $(${commit} && echo -n '--commit' ) \
+                ${key} ${amount}
+
   diamond-find:
     options:
       diamond-nonce:

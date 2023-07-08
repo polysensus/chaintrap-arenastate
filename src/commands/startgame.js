@@ -13,7 +13,7 @@ export function addStartgame(program) {
   program
     .command("startgame")
     .option("--id <token>", "the game token id")
-    .option("--starts <numbers...>")
+    .option("--starts <numbers>", "comma separated list of start locations. listed in order of player registration")
     .action((options) => startgame(program, options));
 }
 
@@ -30,6 +30,6 @@ async function startgame(program, options) {
   guardian.finalizeDungeon();
 
   await guardian.openTranscript(gid);
-  await guardian.startGame(gid, options.starts.map(parseInt));
+  await guardian.startGame(gid, options.starts.split(",").map(parseInt));
   console.log(`started game ${gid.toHexString()}`);
 }

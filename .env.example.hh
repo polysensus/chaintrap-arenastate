@@ -13,9 +13,9 @@ export ARENASTATE_USER2_KEY=hardhat:12
 export ARENASTATE_USER3_KEY=hardhat:13
 export ARENASTATE_USER4_KEY=hardhat:14
 
-# Note: the 's allow this file to act as an envsubst template for the cd
-export ARENASTATE_NFTSTORAGE_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweEM2NTBBYmZFMDVjRjYxRGIwZDU0QzE2QTMxOEEzZDc3MjVCNWQyNTkiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTY3MjY1Mzg2NDU1NywibmFtZSI6ImNoYWludHJhcC1hcmVuYSJ9.xkJ-RiBWjNE-1s_i3EJ-kdqplZKYV7nvtMaKZIaKHEs
-export ARENASTATE_OPENAI_API_KEY=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
+# Note: the $VAR's allow this file to act as an envsubst template for the cd
+export ARENASTATE_NFTSTORAGE_API_KEY=$ARENASTATE_NFTSTORAGE_API_KEY
+export ARENASTATE_OPENAI_API_KEY=$ARENASTATE_OPENAI_API_KEY
 
 export ARENASTATE_NFTSTORAGE_URL=https://api.nft.storage
 export ARENASTATE_OPENAI_IMAGES_URL=https://api.openai.com/v1/images/generations
