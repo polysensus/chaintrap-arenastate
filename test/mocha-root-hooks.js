@@ -71,10 +71,9 @@ export const mochaHooks = {
       this.guardianArena.provider,
       this.user1Arena.provider,
       this.user2Arena.provider,
-      this.arena.provider
+      this.arena.provider,
     ]) {
-      if (!provider)
-        continue
+      if (!provider) continue;
       provider.removeAllListeners();
     }
   },

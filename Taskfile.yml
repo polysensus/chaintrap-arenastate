@@ -50,6 +50,7 @@ tasks:
         cat .env.test | grep _KEY
 
   test:prepare:
+    dotenv: [".env.test"]
     desc: default preflight for local development
     cmds:
       - task: test:prepare:local
@@ -58,7 +59,6 @@ tasks:
     desc: start hardhat and deploy contracts for test:integ
     cmds:
       - |
-        cp -v .env.test.local .env.test
       - task: dev:hh:restart
       - task: deploy:hh-new
       - |
@@ -88,11 +88,120 @@ tasks:
           -n Diamond DiamondNew \
           --format json | tee {{.DIAMOND_DEPLOY_JSON}}
 
-  deploy:
-    desc: deploy the contracts to caimst and mumbai
+  # ----
+  # hardhat game commands
+  # ----
+  chaintrap:hh:creategame:
+    dotenv: [".env.hh"]
     cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml creategame
+
+  chaintrap:hh:joingame:
+    dotenv: [".env.hh"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml joingame
+
+  chaintrap:hh:startgame:
+    dotenv: [".env.hh"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml startgame
+
+  chaintrap:hh:commitchoice:
+    dotenv: [".env.hh"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml commitchoice -- {{.CLI_ARGS}}
+
+  chaintrap:hh:resolvechoice:
+    dotenv: [".env.hh"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml resolvechoice
+
+  # ---
+  # optimism game commands
+  # ---
+  chaintrap:op:creategame:
+    dotenv: [".env.op"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml creategame
+
+  chaintrap:op:joingame:
+    dotenv: [".env.op"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml joingame
+
+  chaintrap:op:startgame:
+    dotenv: [".env.op"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml startgame
+
+  chaintrap:op:commitchoice:
+    dotenv: [".env.op"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml commitchoice -- {{.CLI_ARGS}}
+
+  chaintrap:op:resolvechoice:
+    dotenv: [".env.op"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml resolvechoice
+
+  # ---
+  # mumbai game commands
+  # ---
+
+  chaintrap:mumbai:creategame:
+    dotenv: [".env.mumbai"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml creategame
+
+  chaintrap:mumbai:joingame:
+    dotenv: [".env.mumbai"]
+    cmds:
+      - |
+        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
+        echo "arena proxy: $ARENASTATE_ARENA"
+        tusk -f tusk-tests.yml joingame
+
+
+  deploy:
+    desc: deploy the contracts to all supported networks
+    cmds:
+      - task: deploy:hh
       - task: deploy:caimst
       - task: deploy:mumbai
+      - task: deploy:opgoerli
 
   deploy:opgoerli:
     dotenv: [".env.opgoerli"]
@@ -112,6 +221,18 @@ tasks:
     cmds:
       - |
         tusk -f tusk-arena.yml diamond-find {{.CLI_ARGS}}
+
+  op:bridge-eth:
+    dotenv: [".env.opgoerli"]
+    desc: |
+      bridge eth from Optimism L1 to L2.
+
+      example use
+
+        task op:bridge-eth -- $(cat .local/dev/wallets/wallet-deploy.key) 0.5 --commit
+    cmds:
+      - |
+        tusk -f tusk-arena.yml op-bridge-eth {{.CLI_ARGS}}
 
   deploy:caimst:
     desc: deploy the contracts to caimst and mumbai
@@ -133,6 +254,7 @@ tasks:
     dotenv: [".env.mumbai"]
     cmds:
       - tusk -f tusk-arena.yml deploy-arena-new --gasprice "2.6"
+
   find:mumbai:
     dotenv: [".env.mumbai"]
     desc: find the arena on mumbai

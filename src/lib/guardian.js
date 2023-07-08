@@ -186,19 +186,17 @@ export class Guardian {
 
       switch (resolveArgs.proof.transitionType) {
         case ObjectType.Finish: {
-          request
-            .requireLogs(
-              "TransferSingle(address,address,address,uint256,uint256)",
-              "TranscriptCompleted(uint256)"
-            );
-          break
+          request.requireLogs(
+            "TransferSingle(address,address,address,uint256,uint256)",
+            "TranscriptCompleted(uint256)"
+          );
+          break;
         }
         case ObjectType.Link2: {
-          request
-            .requireLogs(
-              "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
-            );
-          break
+          request.requireLogs(
+            "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
+          );
+          break;
         }
         default:
           throw new Error(`un-expected transitionType`);

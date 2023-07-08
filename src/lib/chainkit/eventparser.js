@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 
 import { getLogger } from "../log.js";
 
-const log = getLogger("eventparser");
+const logx = getLogger("eventparser");
 
 /**
  * A helper class for finding and processing events emitted from the chaintrap
@@ -68,7 +68,7 @@ export class EventParser {
         // yield gev;
         events.push(event);
       } catch (err) {
-        console.log(err);
+        logx.debug(`failed to parse event, this can be benign (the abi may simply not include it): ${err.toString()}`)
       }
     }
     return events;

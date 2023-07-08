@@ -146,7 +146,7 @@ describe("StateRoster# load", async function () {
     let b = conditionInputs([[1, 0]])[0];
     expect(entryDelta.choices[0][0]).to.equal(b[0]);
     expect(entryDelta.choices[0][1]).to.equal(b[1]);
- 
+
     for (const state of [current, delta]) {
       expect(state.address).to.equal(user1Address);
       expect(state.registered).to.be.true;
