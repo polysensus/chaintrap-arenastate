@@ -88,6 +88,12 @@ At the creation of the game the various proof stack 'transition' types are commi
 
 With no real game specific semantics, the contracts can fairly close the game and transfer ownership of the game session nft to the victorious player.
 
+Some non-obvious points about how the contracts work
+
+1. Each player call to `transcriptEntryCommit` allocates a new numbered transcript entry, an `eid` in the solidity. Because of this, all players will have a unique current `eid` at all times during the session.
+2. When the guardian calls `transcriptEntryResolve`, the contracts require that the `eid` of the subject participant is lower than the `eid`s of all other participants whose commits are currently un-resolved. This means the guardian can't preferentially advance one participant over another.
+3. Currently, there is no disincentive or incentive to encourage the guardian to resolve in a timely manner or at all. This will follow in later work.
+
 We plan to enable some cool things for players how can demonstrate they 'trapped' there fellow trialists in the dungeon by reaching the finish first!
 
 
