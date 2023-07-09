@@ -5,6 +5,7 @@ dotenv.config({ path: process.env.DOTENV_FILE ?? ".env" });
 
 import { program, Option } from "commander";
 
+import { addMaptool } from "./src/commands/maptool.js";
 import { addCreategame } from "./src/commands/creategame.js";
 import { addJoingame } from "./src/commands/joingame.js";
 import { addStartgame } from "./src/commands/startgame.js";
@@ -69,6 +70,7 @@ program.addOption(
 );
 
 // ---
+addMaptool(program);
 addWatchArena(program);
 addCreategame(program);
 addJoingame(program);

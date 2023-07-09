@@ -51,6 +51,7 @@
     "@rollup/plugin-json": "^5.0.2",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@vitest/coverage-c8": "^0.25.3",
+    "argon2": "^0.30.3",
     "cli-spinners": "^2.7.0",
     "deep-equal": "^2.2.1",
     "dotenv": "^16.0.3",
