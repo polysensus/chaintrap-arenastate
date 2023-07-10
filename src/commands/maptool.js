@@ -1,8 +1,11 @@
 import fs from "fs";
+import path from "path";
 import { Option } from "commander";
 
 import { readJson } from "./fsutil.js";
 import { isFile } from "./fsutil.js";
+import { NameGenerator } from "../lib/randomnames.js";
+import { BlobCodex } from "../lib/secretblobs.js";
 
 const out = console.log;
 
@@ -36,16 +39,17 @@ export function addMaptool(program) {
           "The url hosting the map tool, the commit/ and generate/ request paths are relative to this"
         ).env("ARENASTATE_MAPTOOL_URL")
       )
+    .option("--password <password>", "used to securely derive an encryption key for the secret map data")
+    .option("-f, --codex-filename <filename>", "A filename to store the encrypted map data in, otherwise printed to console")
     .option("-p, --parameters <parameters_file>", "a json formatted file containing the generation parameters (the cli options take precedence)")
     .option("--svg <filename>", "get svg render of the map and save it to filename")
     .option("--map-filename <filename>", "save the generated map to this filename")
     .option("--commit-secrets-filename <filename>", "save the VRF secret data to this file (lost forever otherwise)")
-    .option("--password <password>", "used to securely derive an encryption key for the secret map data")
     // Note the small default iteration count here. It is likely we will
     // encourage that maps are revealed after the game. not sure yet. but in any
     // event, the data protected by this key is not considered very sensitive at
     // the moment.
-    .option("--password-guess-resistance", "the number of iterations used in generating the key, lower is faster but more vulnerable to guessing. we are only protecting game maps.", 1000)
+    .option("--password-guess-resistance <number>", "the number of iterations used in generating the key, lower is faster but more vulnerable to guessing. we are only protecting visibility of game maps.", 10000)
 
 
   for (const [name, description, value] of generationOptions) {
@@ -64,9 +68,15 @@ export async function maptool(program, options) {
   if (program.opts().verbose)
     info = console.info;
 
-  let aesKey;
-  if (options.password)
-    aesKey = await deriveAESKey(options.password);
+  let password = options.password;
+  const passwordProvided = password ? true : false;
+  if (!password) {
+    const g = new NameGenerator({fetch});
+    password = (await g.getSurnames(2)).join('-');
+  }
+
+  const codex = new BlobCodex();
+  await codex.derivePasswordKeys([password]);
 
   let params = { }; // generation params
   if (isFile(options.parameters))
@@ -98,8 +108,8 @@ export async function maptool(program, options) {
   const committed = await resp.json();
   if (options.commitSecretsFilename) {
     fs.writeFileSync(options.commitSecretsFilename, JSON.stringify(committed, null, '  '));
-  } else
-    info(JSON.stringify(committed)); // reveals the secret data on stdout if --verbose is set
+  }
+  codex.addItem(codex.dataFromObject(committed), {name:"committed"});
 
   req.body = JSON.stringify({
       public_key: committed.public_key,
@@ -114,13 +124,24 @@ export async function maptool(program, options) {
   const map = await resp.json()
   const mapData = JSON.stringify(map, null, '  ');
   out(mapData);
-  if (options.mapFilename) {
+  if (options.mapFilename)
     fs.writeFileSync(options.mapFilename, mapData);
-  }
+  codex.addItem(codex.dataFromObject(mapData), {name:"map"});
+
   if (options.svg) {
     url = `${url}?svg=true`;
     resp = await fetch(url, req)
     const svg = await resp.text();
     fs.writeFileSync(options.svg, svg);
+    codex.addItem(codex.dataFromObject({filename:path.basename(options.svg), content: svg}), {name:"svg"});
   }
+
+  const data = JSON.stringify(codex.serialize(), null, ' ');
+  if (options.codexFilename)
+    fs.writeFileSync(options.codexFilename, data);
+  else
+    console.log(data);
+
+  if (!passwordProvided)
+    console.error('generated password', password);
 }

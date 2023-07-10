@@ -2,13 +2,17 @@
  * A json file format for storing AES encrypted blobs.
  */
 
+import {ethers} from "ethers";
+const ethersb64decode = ethers.utils.base64.decode;
+const ethersb64encode = ethers.utils.base64.encode;
+
 import {
   createCipher, createDecipher, deriveAESKey,
   DEFAULT_AES_ALG
  } from "./aespbkdf.js";
 
 /**
- * The codec is used to accumulate a collection of individually encrypted items.
+ * The codex is used to accumulate a collection of individually encrypted items.
  * Each item in the collection corresponds to a single piece of input data along
  * with some meta data. The input data and most of the meta data is encoded as
  * an encrypted 'blob' under one or more of the password derived keys.
@@ -32,7 +36,7 @@ import {
  * @param {password} passwords a single AES key is derived for each password
  * and an encrypted blob is created for each key by addBlob
  */
-export class BlobCodec {
+export class BlobCodex {
 
   /**
    * @constructor
@@ -60,7 +64,7 @@ export class BlobCodec {
         iKeyMax = i;
       ikeys.push(i);
       keys.push(key);
-      salts.push(salt);
+      salts.push(ethersb64encode(salt));
     }
 
     const s = {
@@ -81,14 +85,14 @@ export class BlobCodec {
    */
   static async hydrate(s, passwords, options={}) {
 
-    const codec = new BlobCodec(options)
+    const codec = new BlobCodex(options)
     const have = codec.optionsIKeys(passwords, {ikeys: s.ikeys}).reduce((x, i)=>{x[i] = true; return x}, {});
     const want = codec.optionsIKeys(passwords, options);
     for (const i of want)
       if (!have[i])
         throw new Error(`want key index ${i}, but it wasn't found in the serialized data`);
 
-    const salts = want.reduce( (salts, i) => { salts[i] = s.salts[i]; return salts; }, {});
+    const salts = want.reduce( (salts, i) => { salts[i] = ethersb64decode(s.salts[i]); return salts; }, {});
 
     await codec.derivePasswordKeys(passwords, {ikeys: want, salts});
 
@@ -103,8 +107,12 @@ export class BlobCodec {
         if (!key)
           throw new Error(`invalid key index in blob ${i} item ${[item.id, item.name]}`);
 
-        const decipher = createDecipher(key, {iv: blob.params.iv, alg: blob.params.alg, tag: blob.params.tag});
-        let data = decipher.update(blob.blob);
+        const decipher = createDecipher(key, {
+          iv: ethersb64decode(blob.params.iv),
+          alg: blob.params.alg,
+          tag: ethersb64decode(blob.params.tag)
+        });
+        let data = decipher.update(ethersb64decode(blob.blob));
         data = Buffer.concat([data, decipher.final()]);
         blob.value = JSON.parse(data);
       }
@@ -216,9 +224,13 @@ export class BlobCodec {
       blob = Buffer.concat([blob, cipher.final()]);
 
       blobs.push({
-        params: {ikey, iv, alg: this.options.alg, tag: cipher.getAuthTag()},
+        params: {
+          ikey,
+          iv: ethersb64encode(iv),
+          alg: this.options.alg,
+          tag: ethersb64encode(cipher.getAuthTag())},
         meta,
-        blob
+        blob: ethersb64encode(blob)
       });
     }
 

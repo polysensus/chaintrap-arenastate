@@ -4,7 +4,7 @@ import {
   DEFAULT_AES_ALG
  } from "./aespbkdf.js";
 
-import {BlobCodec} from "./secretblobs.js";
+import {BlobCodex} from "./secretblobs.js";
 
 describe("Secret blob tests", function () {
 
@@ -28,17 +28,17 @@ describe("Secret blob tests", function () {
     expect(decodedMessage).to.equal(theMessage);
   });
   it("Should create a blob codec with no options", function () {
-    const codec = new BlobCodec();
+    const codec = new BlobCodex();
     expect(codec.options.alg).to.equal(DEFAULT_AES_ALG);
   });
   it("Should derive one key", async function () {
-    const codec = new BlobCodec();
+    const codec = new BlobCodex();
     expect(codec.options.alg).to.equal(DEFAULT_AES_ALG);
     await codec.derivePasswordKeys(["very secret"]);
     expect(Object.keys(codec.keys).length).to.equal(1);
   });
   it("Should create ciphers for all keys by default", async function () {
-    const codec = new BlobCodec();
+    const codec = new BlobCodex();
     expect(codec.options.alg).to.equal(DEFAULT_AES_ALG);
     await codec.derivePasswordKeys(["very secret", "another secret"]);
     expect(Object.keys(codec.keys).length).to.equal(2);
@@ -48,7 +48,7 @@ describe("Secret blob tests", function () {
   });
 
   it("Should blob under specific indexed key", async function () {
-    const codec = new BlobCodec();
+    const codec = new BlobCodex();
     expect(codec.options.alg).to.equal(DEFAULT_AES_ALG);
     await codec.derivePasswordKeys(["very secret", "another secret"]);
 
@@ -61,7 +61,7 @@ describe("Secret blob tests", function () {
   });
 
   it("Should blob and unblob under one key", async function () {
-    const codec = new BlobCodec();
+    const codec = new BlobCodex();
     expect(codec.options.alg).to.equal(DEFAULT_AES_ALG);
     const password0 = "very secret";
     await codec.derivePasswordKeys([password0]);
@@ -75,13 +75,13 @@ describe("Secret blob tests", function () {
 
     const s = codec.serialize();
 
-    const hydrated = await BlobCodec.hydrate(s, [password0], {ikeys:[0]});
+    const hydrated = await BlobCodex.hydrate(s, [password0], {ikeys:[0]});
     expect (hydrated.items.length).to.equal(codec.items.length);
   });
 
 
   it("Should blob and unblob under specific indexed key", async function () {
-    const codec = new BlobCodec();
+    const codec = new BlobCodex();
     expect(codec.options.alg).to.equal(DEFAULT_AES_ALG);
 
     const password0 = "very secret";
@@ -97,7 +97,7 @@ describe("Secret blob tests", function () {
 
     const s = codec.serialize();
 
-    const hydrated = await BlobCodec.hydrate(s, [password1], {ikeys:[1]});
+    const hydrated = await BlobCodex.hydrate(s, [password1], {ikeys:[1]});
     expect (hydrated.items.length).to.equal(codec.items.length);
     const value = hydrated.items[0].blobs[0].value;
     expect (value.foo).to.equal(1);

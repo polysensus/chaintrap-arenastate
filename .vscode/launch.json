@@ -14,11 +14,10 @@
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
         "maptool",
-        "--password", "very-secret",
-        "--commit-secrets-filename", "map.secrets.json",
-        "--map-filename", "map.json",
+        // "--password", "very-secret",
         "--svg", "map.svg",
-        "--maptool-url", "https://chaintrap.hoy.polysensus.io/chaintrap/maptool/"
+        "--maptool-url", "https://chaintrap.hoy.polysensus.io/chaintrap/maptool/",
+        "--codex-filename", "map.blobs.json"
       ]
     },
 
