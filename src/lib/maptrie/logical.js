@@ -126,6 +126,13 @@ export class LogicalTopology {
     return topo;
   }
 
+  static fromMapJSON(map) {
+    const topo = new LogicalTopology();
+    topo.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
+    topo.extendLocations(map.model.rooms);
+    return topo;
+  }
+
   /**
    * a list of objects describing the geometry of joins between pairs of locations
    * @template {{

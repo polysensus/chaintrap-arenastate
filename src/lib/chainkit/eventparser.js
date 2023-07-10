@@ -68,7 +68,9 @@ export class EventParser {
         // yield gev;
         events.push(event);
       } catch (err) {
-        logx.debug(`failed to parse event, this can be benign (the abi may simply not include it): ${err.toString()}`)
+        logx.debug(
+          `failed to parse event, this can be benign (the abi may simply not include it): ${err.toString()}`
+        );
       }
     }
     return events;

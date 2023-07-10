@@ -1,4 +1,3 @@
-import { getMap } from "./map/collection.js";
 import { Furniture } from "./map/furniture.js";
 import { rootLabel, LogicalTopology } from "./maptrie/logical.js";
 import { Minter } from "./minter.js";
@@ -29,27 +28,18 @@ export class Guardian {
     this._dungeonPrepared = false;
     this._lastMinted = undefined;
 
-    this.collection = undefined;
-    this.map = undefined;
     this.topology = undefined;
     this.trie = undefined;
     this._mapLoaded = false;
     this._topologyCommitted = false;
   }
 
-  /**
-   * @param {any} collection
-   * @param {{mapName?}} options
-   */
-  loadMap(collection, options) {
-    this.collection = collection;
-    this.map = getMap(this.collection, options?.mapName).map;
-    this.topology = LogicalTopology.fromCollectionJSON(this.collection);
-  }
-
-  prepareDungeon(collection, options) {
+  prepareDungeon(map, name, encrypted) {
     this._dungeonPrepared = false;
-    this.loadMap(collection, options);
+    this.map = map;
+    this.mapEncryptedCodex = encrypted; // The map data, AES encrypted via a PBKDF
+    this.mapName = name;
+    this.topology = LogicalTopology.fromMapJSON(map);
     this._mapLoaded = true;
     this._preparingDungeon = true;
   }
@@ -89,6 +79,7 @@ export class Guardian {
 
     this.minter.applyOptions({
       ...options,
+      blobcodex: this.mapEncryptedCodex,
       choiceInputTypes: [ObjectType.LocationChoices],
       transitionTypes: [ObjectType.Link2, ObjectType.Finish],
       victoryTransitionTypes: [ObjectType.Finish],

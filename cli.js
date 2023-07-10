@@ -5,6 +5,7 @@ dotenv.config({ path: process.env.DOTENV_FILE ?? ".env" });
 
 import { program, Option } from "commander";
 
+import { addMaptool } from "./src/commands/maptool.js";
 import { addCreategame } from "./src/commands/creategame.js";
 import { addJoingame } from "./src/commands/joingame.js";
 import { addStartgame } from "./src/commands/startgame.js";
@@ -27,6 +28,16 @@ program
   .option("-b, --abi <abifile>")
   .option("-m, --map <mapfile>")
   .option("--map-name <name>")
+  .option(
+    "--codex-filename <filename>",
+    "read a map and related materials stored in the encrypted blob codex format"
+  )
+  .addOption(
+    new Option(
+      "--codex-password <password>",
+      "set the password on the cli. it us *much* better practice to set via the environment variable. the command line leaks the password in un predictable ways."
+    ).env("ARENASTATE_MAPTOOL_CODEX_PASSWORD")
+  )
   .option("--furniture <furniturefile>");
 
 // Now we are using ERC 2535, the arena address is stable on all chains
@@ -69,6 +80,7 @@ program.addOption(
 );
 
 // ---
+addMaptool(program);
 addWatchArena(program);
 addCreategame(program);
 addJoingame(program);

@@ -7,22 +7,46 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "maptool",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "envFile": "${workspaceFolder}/.env.test",
+      "args": [
+        "maptool",
+        "--svg",
+        "map.svg",
+        "--maptool-url",
+        "https://chaintrap.hoy.polysensus.io/chaintrap/maptool/",
+        "--codex-filename",
+        "map.blobs.json",
+        "--codex-password",
+        "very-secret"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
       "name": "creategame",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
-        "--map",
-        "${workspaceFolder}/data/maps/map02.json",
+        // "--map", "${workspaceFolder}/data/maps/map02.json",
+        "--codex-filename",
+        "map.blobs.json",
+        "--codex-password",
+        "very-secret",
+        "--map-name",
+        "map02",
         "--furniture",
         "${workspaceFolder}/data/maps/map02-furnishings.json",
         "creategame",
-        "--map-name",
-        "map02",
         "--name",
         "A chaintrap game created by developer testing",
         "--description",
         "The description of a chaintrap game created by developer testing",
+        "--codex-publish",
         "--max-participants",
         "3",
         "--openai-image-prompt",
@@ -48,8 +72,10 @@
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
-        "--map",
-        "${workspaceFolder}/data/maps/map02.json",
+        "--codex-filename",
+        "map.blobs.json",
+        "--codex-password",
+        "very-secret",
         "--furniture",
         "${workspaceFolder}/data/maps/map02-furnishings.json",
 
@@ -83,8 +109,11 @@
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
-        "--map",
-        "${workspaceFolder}/data/maps/map02.json",
+        "--codex-filename",
+        "map.blobs.json",
+        "--codex-password",
+        "very-secret",
+
         "--furniture",
         "${workspaceFolder}/data/maps/map02-furnishings.json",
 

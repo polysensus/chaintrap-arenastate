@@ -6,7 +6,7 @@ import { Guardian } from "./guardian.js";
 import { Trialist } from "./trialist.js";
 import { ArenaEvent } from "./arenaevent.js";
 import { EventParser } from "./chainkit/eventparser.js";
-import { ObjectType } from "./maptrie/objecttypes.js";
+import { getMap } from "./map/collection.js";
 
 //
 import maps from "../../data/maps/map02.json" assert { type: "json" };
@@ -33,7 +33,9 @@ describe("Game session tests", function () {
       ...this.gameOptions,
       dispatcher,
     });
-    guardian.prepareDungeon(maps, { mapName: "map02" });
+
+    const { map, name } = getMap(maps, "map02");
+    guardian.prepareDungeon(map, name);
     guardian.furnishDungeon(furnishings);
     guardian.finalizeDungeon();
     const gid = (await guardian.mintGame()).gid;

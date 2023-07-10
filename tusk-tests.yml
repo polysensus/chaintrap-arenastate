@@ -1,0 +1,141 @@
+interpreter: bash -c
+usage: |
+  tusk based tests and mock data generation
+
+  Use the main tusk file to deploy the contracts.
+
+  Consider .env.example.hh before using this tusk file
+
+options:
+  url:
+    environment: ARENASTATE_PROVIDER_URL
+    default: "http://localhost:8545"
+    short: "u"
+  launchdir:
+    default:
+      command: echo $PWD
+
+  codex-password:
+    default: very-secret
+  codex-filename:
+    default: map.blobs.json
+
+  maps-filename:
+    default: data/maps/map02.json
+  map-name:
+    default: map02
+  furniturefile:
+    default: data/maps/map02-furnishings.json
+
+  thistusk:
+    private: true
+    default: "tusk -q -f tusk-tests.yml"
+
+tasks:
+  demo:two-move-victory:
+    usage: "use a well known map and exit placement to illustrate a complete game in two moves"
+    run:
+      - task: creategame
+      - task: joingame
+      # these assume map02 and map02-furnishings are used
+      - task: startgame 0
+      - task: commitchoice 1 0
+      - task: resolvechoice
+      - task: commitchoice 0 0
+      - task: resolvechoice
+      # game gid token will be transfered to ARENASTATE_USER1
+
+  maptool:
+    options:
+      svg:
+        default: map.svg
+      maptool-url:
+        default: https://chaintrap.hoy.polysensus.io/chaintrap/maptool/
+    run:
+      - command:
+          exec: |
+            set -ex
+
+            ./cli.js maptool \
+              --maptool-url https://chaintrap.hoy.polysensus.io/chaintrap/maptool/ \
+              --svg map.svg \
+              --codex-filename ${codex-filename} \
+              --codex-password ${codex-password}
+
+  creategame:
+    options:
+      max-participants:
+        default: 3
+      image-prompt:
+        default: "A stylised icon representing a turn based random dungeon crawler game"
+    run:
+      - command:
+          exec: |
+            set -ex
+
+            ./cli.js \
+              --codex-filename ${codex-filename} \
+              --codex-password ${codex-password} \
+              --map-name map02 \
+              --furniture ${furniturefile} \
+                creategame \
+                  --name "A chaintrap game created by automated testing" \
+                  --description \
+                    "The description of a chaintrap game created by developer testing" \
+                  --max-participants ${max-participants} \
+                  --openai-image-prompt ${image-prompt}
+
+  joingame:
+    options:
+      nickname:
+        default: "ali"
+    run:
+      - command:
+          exec: |
+            set -ex
+
+            ./cli.js \
+            joingame --nickname ${nickname}
+
+  startgame:
+    options:
+      starts:
+        usage: "string of start locations, comma separated list"
+        default: "0"
+    run:
+      - command:
+          exec: |
+            set -e
+
+            ./cli.js \
+              --codex-filename ${codex-filename} \
+              --codex-password ${codex-password} \
+              --map-name map02 \
+              --furniture ${furniturefile} \
+            startgame \
+              --starts "${starts}"
+
+  commitchoice:
+    args:
+      side:
+      exit:
+    run:
+      - command:
+          exec: |
+            set -e
+            ./cli.js \
+            commitchoice \
+              ${side} ${exit}
+
+  resolvechoice:
+    run:
+      - command:
+          exec: |
+            set -e
+
+            ./cli.js \
+              --codex-filename ${codex-filename} \
+              --codex-password ${codex-password} \
+              --map-name map02 \
+              --furniture ${furniturefile} \
+            resolvechoice

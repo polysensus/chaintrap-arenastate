@@ -1,3 +1,9 @@
+/**
+ *
+ * @param {any} collection
+ * @param {string|undefined} name
+ * @returns
+ */
 export function getMap(collection, name = undefined) {
   if (!name) {
     const names = Object.keys(collection);

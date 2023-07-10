@@ -1,13 +1,15 @@
+map.blobs.json
+map.json
+map.secrets.json
+map.svg
 facets-deployed.json
 arenaproxy.addr
 release-notes.md
-commit-message.md
 diamond-deploy.json
 facets.json
 assets
 data/metadata
 tusk-jspkg.yml
-tusk-tests.yml
 dist
 node_modules
 coverage

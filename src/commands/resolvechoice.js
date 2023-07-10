@@ -1,4 +1,4 @@
-import { prepareGuardian, prepareArena } from "./prepareguardian.js";
+import { prepareGuardian, prepareArena, readMap } from "./prepareguardian.js";
 
 import { asGid } from "../lib/gid.js";
 import { ArenaEvent } from "../lib/arenaevent.js";
@@ -24,6 +24,10 @@ async function resolvechoice(program, options) {
   const gid = options.id ? asGid(options.id) : await findGids(eventParser, -1);
 
   const guardian = await prepareGuardian(eventParser, program, options);
+  const { map, name } = await readMap(program, options);
+
+  guardian.prepareDungeon(map, name);
+
   const furniture = readJson(program.opts().furniture);
   guardian.furnishDungeon(furniture);
   guardian.finalizeDungeon();
