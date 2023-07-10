@@ -61,7 +61,7 @@ The types for normal navigation are currently
 
 1. `{LOCATION_CHOICE, [[locationId], [side, exit], ..., [side, exit]]}`
 2. `{EXIT, [[REF(#L, i)]]}`
-3. `{LINK, [[REF(#Ea)], [REF(#Ea)]]}`
+3. `{LINK, [[REF(#Ea)], [REF(#Eb)]]}`
 
 To resolve a choice a proof *stack* is created. The stack allows the leaves matching the provided proofs to be reconstructed on chain, in part from the previously committed player data `[side, exit]` and in part the *leaf encoding* of *earlier* items in the proof stack. Before considering each item in the stack, the proof for the earlier item (and the leaf value) is re-constructed on chain.
 
@@ -72,7 +72,7 @@ So for this resolution the stack actually looks like
 0. `{LOCATION_CHOICE, [[0], [1, 0], [3, 0]]}`
 1. `{EXIT, [[REF(0, 1)]]}` (references the leaf value for stack 0, and input[1], skipping over the locationid)
 2. `{LOCATION_CHOICE, [[8], [2, 0], [3, 0]]}`
-3. `{EXIT, [[REF(2, 2)]]}` (references the leaf value for stack 0, and input[2])
+3. `{EXIT, [[REF(2, 2)]]}` (references the leaf value for stack 2, and input[2])
 4. `{LINK, [[REF(1)], [REF(3)]]}` (references only the leaf values)
 
 The contract proves each slot in turn, reverting if any fail and back referencing earlier results to derive the reference nodes.
