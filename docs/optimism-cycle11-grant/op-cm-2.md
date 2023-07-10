@@ -6,18 +6,18 @@ Baseline reference for the accepted milestones can be found [here](https://gov.o
 
 ## release info for this CMS
 
-* https://github.com/polysensus/chaintrap-arenastate/releases/tag/v0.0.25
-* https://github.com/polysensus/chaintrap-contracts/releases/tag/v0.3.2
+- https://github.com/polysensus/chaintrap-arenastate/releases/tag/v0.0.25
+- https://github.com/polysensus/chaintrap-contracts/releases/tag/v0.3.2
 
 Test runs
 
-* https://github.com/polysensus/chaintrap-contracts/actions/runs/5494993924/jobs/10014101770
-* https://github.com/polysensus/chaintrap-arenastate/actions/runs/5495008249/jobs/10014124773
+- https://github.com/polysensus/chaintrap-contracts/actions/runs/5494993924/jobs/10014101770
+- https://github.com/polysensus/chaintrap-arenastate/actions/runs/5495008249/jobs/10014124773
 
 Automated tests demonstrating these deliverables can be found in.
 
-* https://github.com/polysensus/chaintrap-arenastate/blob/main/src/lib/guardian.furnishDungeon.mocha.js
-* https://github.com/polysensus/chaintrap-arenastate/blob/main/src/lib/trial.twoMoveVictory.mocha.js
+- https://github.com/polysensus/chaintrap-arenastate/blob/main/src/lib/guardian.furnishDungeon.mocha.js
+- https://github.com/polysensus/chaintrap-arenastate/blob/main/src/lib/trial.twoMoveVictory.mocha.js
 
 ## contract address and source verification
 
@@ -41,11 +41,11 @@ We have provided some simple tooling to run test games in [tust-test.yml](./tusk
 
 When the guardian proves the first player has reached the exit the game is halted. This is an irreversible state.
 
-This series of events  on our contract at `0x0c075885e9EBB701997bA3e1B8D291688Dc0bCEE` between block `11692456` and `11694104` show a simple game session. The events can all be browsed here https://goerli-optimism.etherscan.io/address/0x0c075885e9ebb701997ba3e1b8d291688dc0bcee#events
+This series of events on our contract at `0x0c075885e9EBB701997bA3e1B8D291688Dc0bCEE` between block `11692456` and `11694104` show a simple game session. The events can all be browsed here https://goerli-optimism.etherscan.io/address/0x0c075885e9ebb701997ba3e1b8d291688dc0bcee#events
 
 As we verified our contracts for this release quite a lot can be introspected.
 
-At tx `0xc3fe66e39b5c77d0252f6a56e964469229e1733aff939b1483aa2794c7c6b5f2` the guardian calls `createGame` game session is *minted*.
+At tx `0xc3fe66e39b5c77d0252f6a56e964469229e1733aff939b1483aa2794c7c6b5f2` the guardian calls `createGame` game session is _minted_.
 
 The player joins the game by calling `registerTrialist` at tx `0x20214de98b55738ffcda77760698dc9bca6726148a2c0b2b624ca9faee71b1e8`
 
@@ -63,7 +63,7 @@ The types for normal navigation are currently
 2. `{EXIT, [[REF(#L, i)]]}`
 3. `{LINK, [[REF(#Ea)], [REF(#Ea)]]}`
 
-To resolve a choice a proof *stack* is created. The stack allows the leaves matching the provided proofs to be reconstructed on chain, in part from the previously committed player data `[side, exit]` and in part the *leaf encoding* of *earlier* items in the proof stack. Before considering each item in the stack, the proof for the earlier item (and the leaf value) is re-constructed on chain.
+To resolve a choice a proof _stack_ is created. The stack allows the leaves matching the provided proofs to be reconstructed on chain, in part from the previously committed player data `[side, exit]` and in part the _leaf encoding_ of _earlier_ items in the proof stack. Before considering each item in the stack, the proof for the earlier item (and the leaf value) is re-constructed on chain.
 
 This lets us prove relations: That having chosen side 1, exit 0 at location 0, we show there exists an EXIT leaf in the merkle trie which is derived from the leaf value of the location and the specific input choice. And then having shown that, we similarly show EXIT and LOCATION's exist on the 'other end' of the choice. And finally we show there exists a LINK leaf, reconstructed from the egress exit leaf and the ingress leaf. If all of these things exist, we say the location change is fair.
 
@@ -78,7 +78,6 @@ So for this resolution the stack actually looks like
 The contract proves each slot in turn, reverting if any fail and back referencing earlier results to derive the reference nodes.
 
 The gory details can be found in [libproofstack.sol#check](https://github.com/polysensus/chaintrap-contracts/blob/main/lib/libproofstack.sol#L90) and also in [libtranscript.sol#entryReveal](https://github.com/polysensus/chaintrap-contracts/blob/main/lib/libtranscript.sol#L466)
-
 
 In `0x6c43bf179cfe1809d161642ed314860941f549f6e0f15ff8cc7b107e9a380576` the player calls `transcriptEntryCommit` again, with the same effect as before.
 
@@ -96,7 +95,6 @@ Some non-obvious points about how the contracts work
 
 We plan to enable some cool things for players how can demonstrate they 'trapped' there fellow trialists in the dungeon by reaching the finish first!
 
-
 ### D. On victory, the game nft is transferred to the winner
 
 We did not initially plan to do rewards and nft transfer until CMS 5, but transferring the game session nft to the victor was just to tempting to pass up. It gives us a very simple but complete experience.
@@ -104,4 +102,3 @@ We did not initially plan to do rewards and nft transfer until CMS 5, but transf
 The javascript library will not create a game unless a 'finish' is provided.
 
 ### chaintrap integration tests
-

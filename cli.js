@@ -28,6 +28,16 @@ program
   .option("-b, --abi <abifile>")
   .option("-m, --map <mapfile>")
   .option("--map-name <name>")
+  .option(
+    "--codex-filename <filename>",
+    "read a map and related materials stored in the encrypted blob codex format"
+  )
+  .addOption(
+    new Option(
+      "--codex-password <password>",
+      "set the password on the cli. it us *much* better practice to set via the environment variable. the command line leaks the password in un predictable ways."
+    ).env("ARENASTATE_MAPTOOL_CODEX_PASSWORD")
+  )
   .option("--furniture <furniturefile>");
 
 // Now we are using ERC 2535, the arena address is stable on all chains

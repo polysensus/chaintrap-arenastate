@@ -1,4 +1,4 @@
-import { prepareGuardian, prepareArena } from "./prepareguardian.js";
+import { prepareGuardian, readMap, prepareArena } from "./prepareguardian.js";
 
 import { asGid } from "../lib/gid.js";
 import { ArenaEvent } from "../lib/arenaevent.js";
@@ -13,7 +13,10 @@ export function addStartgame(program) {
   program
     .command("startgame")
     .option("--id <token>", "the game token id")
-    .option("--starts <numbers>", "comma separated list of start locations. listed in order of player registration")
+    .option(
+      "--starts <numbers>",
+      "comma separated list of start locations. listed in order of player registration"
+    )
     .action((options) => startgame(program, options));
 }
 
@@ -25,6 +28,10 @@ async function startgame(program, options) {
   const gid = options.id ? asGid(options.id) : await findGids(eventParser, -1);
 
   const guardian = await prepareGuardian(eventParser, program, options);
+
+  const { map, name } = await readMap(program, options);
+  guardian.prepareDungeon(map, name);
+
   const furniture = readJson(program.opts().furniture);
   guardian.furnishDungeon(furniture);
   guardian.finalizeDungeon();

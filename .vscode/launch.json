@@ -4,7 +4,6 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-
     {
       "type": "node",
       "request": "launch",
@@ -14,11 +13,14 @@
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
         "maptool",
-        "--password", "very-secret",
-        "--commit-secrets-filename", "map.secrets.json",
-        "--map-filename", "map.json",
-        "--svg", "map.svg",
-        "--maptool-url", "https://chaintrap.hoy.polysensus.io/chaintrap/maptool/"
+        "--svg",
+        "map.svg",
+        "--maptool-url",
+        "https://chaintrap.hoy.polysensus.io/chaintrap/maptool/",
+        "--codex-filename",
+        "map.blobs.json",
+        "--codex-password",
+        "very-secret"
       ]
     },
 
@@ -30,17 +32,21 @@
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
-        "--map",
-        "${workspaceFolder}/data/maps/map02.json",
+        // "--map", "${workspaceFolder}/data/maps/map02.json",
+        "--codex-filename",
+        "map.blobs.json",
+        "--codex-password",
+        "very-secret",
+        "--map-name",
+        "map02",
         "--furniture",
         "${workspaceFolder}/data/maps/map02-furnishings.json",
         "creategame",
-        "--map-name",
-        "map02",
         "--name",
         "A chaintrap game created by developer testing",
         "--description",
         "The description of a chaintrap game created by developer testing",
+        "--codex-publish",
         "--max-participants",
         "3",
         "--openai-image-prompt",
@@ -66,8 +72,10 @@
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
-        "--map",
-        "${workspaceFolder}/data/maps/map02.json",
+        "--codex-filename",
+        "map.blobs.json",
+        "--codex-password",
+        "very-secret",
         "--furniture",
         "${workspaceFolder}/data/maps/map02-furnishings.json",
 
@@ -101,8 +109,11 @@
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
-        "--map",
-        "${workspaceFolder}/data/maps/map02.json",
+        "--codex-filename",
+        "map.blobs.json",
+        "--codex-password",
+        "very-secret",
+
         "--furniture",
         "${workspaceFolder}/data/maps/map02-furnishings.json",
 

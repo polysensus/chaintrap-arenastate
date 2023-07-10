@@ -2,7 +2,7 @@ import { Option } from "commander";
 import fetch from "node-fetch";
 import { ethers } from "ethers";
 
-import { prepareGuardian, prepareArena } from "./prepareguardian.js";
+import { prepareGuardian, prepareArena, readMap } from "./prepareguardian.js";
 import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
 import { ABIName } from "../lib/abiconst.js";
@@ -14,14 +14,6 @@ export function addCreategame(program) {
     .description("create a new game")
     .option("--max-participants <max>", "maximum number of participants", 5)
     .option(
-      "--map-name <name>",
-      `
-name of a specific map in the map collection file. if the file has a single
-entry, it is used by default. if it has many entries, the lexically first entry
-is selected`,
-      undefined
-    )
-    .option(
       "--map-root-label <name>",
       `
       The merkle root that commits the the game map and dungeon load to the chain is identified by this label.
@@ -32,6 +24,10 @@ is selected`,
       "--name <name>",
       "A name for the ERC1155 metadata",
       "A chaintrap game"
+    )
+    .option(
+      "--codex-publish",
+      "set to save the AES encrypted blob codex with the map data in the nft metadata"
     )
     .option(
       "--description <description>",
@@ -110,7 +106,14 @@ async function creategame(program, options) {
   if (program.opts().verbose) vout = out;
   const arena = await prepareArena(program, options);
   const eventParser = new EventParser(arena, ArenaEvent.fromParsedEvent);
+
   const guardian = await prepareGuardian(eventParser, program, options);
+
+  let { map, name, encrypted } = await readMap(program, options);
+  if (!options.codexPublish) encrypted = undefined; // prevents it being saved on the nft metadata
+
+  guardian.prepareDungeon(map, name, encrypted);
+
   const furniture = readJson(program.opts().furniture);
   guardian.furnishDungeon(furniture);
   guardian.finalizeDungeon();

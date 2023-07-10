@@ -2,17 +2,23 @@
  * A json file format for storing AES encrypted blobs.
  */
 
+import { ethers } from "ethers";
+const ethersb64decode = ethers.utils.base64.decode;
+const ethersb64encode = ethers.utils.base64.encode;
+
 import {
-  createCipher, createDecipher, deriveAESKey,
-  DEFAULT_AES_ALG
- } from "./aespbkdf.js";
+  createCipher,
+  createDecipher,
+  deriveAESKey,
+  DEFAULT_AES_ALG,
+} from "./aespbkdf.js";
 
 /**
- * The codec is used to accumulate a collection of individually encrypted items.
+ * The codex is used to accumulate a collection of individually encrypted items.
  * Each item in the collection corresponds to a single piece of input data along
  * with some meta data. The input data and most of the meta data is encoded as
  * an encrypted 'blob' under one or more of the password derived keys.
- * 
+ *
  * There are expected uses are:
  *  1. The passwords are session tokens and they are securely exchanged (diffie
  *     helman or something) with individual game participants at the start of a
@@ -24,7 +30,7 @@ import {
  *     especially, you should consider setting a custom (and higher) iteration
  *     value as this use typically indicates the data should be secret over the
  *     long term.
- * 
+ *
  * Note that the default attack resistance for the derived keys isn't set
  * very high. This is inconsideration of the data already being partially
  * revealed through normal on chain activity.
@@ -32,15 +38,14 @@ import {
  * @param {password} passwords a single AES key is derived for each password
  * and an encrypted blob is created for each key by addBlob
  */
-export class BlobCodec {
-
+export class BlobCodex {
   /**
    * @constructor
-   * @param {*} mode 
-   * @param {*} options 
+   * @param {*} mode
+   * @param {*} options
    */
-  constructor (options={}) {
-    this.options = {...options}
+  constructor(options = {}) {
+    this.options = { ...options };
     this.keys = {};
     this.options.alg = DEFAULT_AES_ALG; // don't allow anything else
     this.index = {};
@@ -48,63 +53,76 @@ export class BlobCodec {
   }
 
   serialize() {
-
     // object item iteration order is not well defined.
     const ikeys = [];
     const keys = [];
     const salts = [];
     let iKeyMax = 0;
     for (const i of Object.keys(this.keys).map(Number).sort()) {
-      const {key, salt} = this.keys[i];
-      if (i > iKeyMax)
-        iKeyMax = i;
+      const { key, salt } = this.keys[i];
+      if (i > iKeyMax) iKeyMax = i;
       ikeys.push(i);
       keys.push(key);
-      salts.push(salt);
+      salts.push(ethersb64encode(salt));
     }
 
     const s = {
       ikeys,
       salts,
-      index:this.index,
-      items:this.items
-    }
+      index: this.index,
+      items: this.items,
+    };
 
     return s;
   }
 
   /**
-   * 
-   * @param {{salts, index, items, ikeys?}} s 
-   * @param {*} passwords 
-   * @param {*} options 
+   *
+   * @param {{salts, index, items, ikeys?}} s
+   * @param {*} passwords
+   * @param {*} options
    */
-  static async hydrate(s, passwords, options={}) {
-
-    const codec = new BlobCodec(options)
-    const have = codec.optionsIKeys(passwords, {ikeys: s.ikeys}).reduce((x, i)=>{x[i] = true; return x}, {});
+  static async hydrate(s, passwords, options = {}) {
+    const codec = new BlobCodex(options);
+    const have = codec
+      .optionsIKeys(passwords, { ikeys: s.ikeys })
+      .reduce((x, i) => {
+        x[i] = true;
+        return x;
+      }, {});
     const want = codec.optionsIKeys(passwords, options);
     for (const i of want)
       if (!have[i])
-        throw new Error(`want key index ${i}, but it wasn't found in the serialized data`);
+        throw new Error(
+          `want key index ${i}, but it wasn't found in the serialized data`
+        );
 
-    const salts = want.reduce( (salts, i) => { salts[i] = s.salts[i]; return salts; }, {});
+    const salts = want.reduce((salts, i) => {
+      salts[i] = ethersb64decode(s.salts[i]);
+      return salts;
+    }, {});
 
-    await codec.derivePasswordKeys(passwords, {ikeys: want, salts});
+    await codec.derivePasswordKeys(passwords, { ikeys: want, salts });
 
     // const ciphers = codec
     //   .createCiphers(want, options)
     //     .reduce((ciphers, c) => {ciphers[c.ikey] = c; return ciphers}, {});
 
     for (const item of s.items) {
-      for (let i=0; i < item.blobs.length; i++) {
+      for (let i = 0; i < item.blobs.length; i++) {
         const blob = item.blobs[i];
-        const {key} = codec.keys[blob.params.ikey];
+        const { key } = codec.keys[blob.params.ikey];
         if (!key)
-          throw new Error(`invalid key index in blob ${i} item ${[item.id, item.name]}`);
+          throw new Error(
+            `invalid key index in blob ${i} item ${[item.id, item.name]}`
+          );
 
-        const decipher = createDecipher(key, {iv: blob.params.iv, alg: blob.params.alg, tag: blob.params.tag});
-        let data = decipher.update(blob.blob);
+        const decipher = createDecipher(key, {
+          iv: ethersb64decode(blob.params.iv),
+          alg: blob.params.alg,
+          tag: ethersb64decode(blob.params.tag),
+        });
+        let data = decipher.update(ethersb64decode(blob.blob));
         data = Buffer.concat([data, decipher.final()]);
         blob.value = JSON.parse(data);
       }
@@ -112,12 +130,12 @@ export class BlobCodec {
       if (id != item.id)
         throw new Error(`expected id ${id} != item id ${item.id}`);
       codec.items.push(item);
-      const {name, label} = item;
+      const { name, label } = item;
       if (name) {
         const entries = codec.index[name] ?? [];
         entries.push(id);
         codec.index[name] = entries;
-      };
+      }
     }
     return codec;
   }
@@ -126,12 +144,13 @@ export class BlobCodec {
     let ikeys = options?.ikeys;
     if (!ikeys) {
       // this is the identity case, typically the creator of the data will hit this case.
-      ikeys = []
-      for (let i=0; i< passwords.length; i++)
-        ikeys.push(i);
+      ikeys = [];
+      for (let i = 0; i < passwords.length; i++) ikeys.push(i);
     }
     if (ikeys.length < passwords.length)
-      throw new Error(`key indices provided, but not enough. leave for the default behaviour or provide one for each password`);
+      throw new Error(
+        `key indices provided, but not enough. leave for the default behaviour or provide one for each password`
+      );
 
     return ikeys;
   }
@@ -140,57 +159,53 @@ export class BlobCodec {
    * @param {password} passwords a single AES key is derived for each password
    * @param {{ikeys?}} optional mapping of passwords to key indices, used when decrypting.
    */
-  async derivePasswordKeys(passwords, options={}) {
-
+  async derivePasswordKeys(passwords, options = {}) {
     let ikeys = this.optionsIKeys(passwords, options);
 
     const salts = options?.salts;
     if (salts && Object.keys(salts).length != passwords.length)
-      throw new Error('number of salts inconsistent with provided passwords');
+      throw new Error("number of salts inconsistent with provided passwords");
 
-    for (let i=0; i < passwords.length; i++) {
+    for (let i = 0; i < passwords.length; i++) {
+      const deriveOpts = { ...this.options };
+      if (options.iterations) deriveOpts.iterations = options.iterations;
+      if (salts) deriveOpts.salt = salts[ikeys[i]];
 
-      const deriveOpts = {...this.options}
-      if (options.iterations)
-        deriveOpts.iterations = options.iterations;
-      if (salts)
-        deriveOpts.salt = salts[ikeys[i]]
-      
-      const {salt, key} = await deriveAESKey(
-        passwords[i], deriveOpts
-        );
+      const { salt, key } = await deriveAESKey(passwords[i], deriveOpts);
 
-      this.keys[ikeys[i]] = { salt, key }
+      this.keys[ikeys[i]] = { salt, key };
     }
   }
 
   /**
-   * 
-   * @param {*} ikeys 
-   * @param {*} options 
+   *
+   * @param {*} ikeys
+   * @param {*} options
    * @returns {{}}
    */
-  createCiphers(ikeys, options={}) {
+  createCiphers(ikeys, options = {}) {
     if (!this.keys)
-      throw new Error('the key must be derived before calling this method');
+      throw new Error("the key must be derived before calling this method");
 
     // do all the keys by default
-    if (typeof ikeys==='undefined') {
+    if (typeof ikeys === "undefined") {
       ikeys = [];
       Object.keys(this.keys).forEach((v, i) => ikeys.push(i));
     }
 
     // If its a single number, convert to a list
-    if (typeof ikeys === 'number')
-      ikeys = [ikeys];
+    if (typeof ikeys === "number") ikeys = [ikeys];
 
     return ikeys.map((ikey) => {
-      const {key} = this.keys[ikey];
-      if (!key)
-        throw new Error(`bad key index ${ikey}`);
+      const { key } = this.keys[ikey];
+      if (!key) throw new Error(`bad key index ${ikey}`);
       return {
-        ...createCipher(key, {...this.options, ...options, alg: this.options.alg}),
-        ikey
+        ...createCipher(key, {
+          ...this.options,
+          ...options,
+          alg: this.options.alg,
+        }),
+        ikey,
       };
     });
   }
@@ -199,26 +214,29 @@ export class BlobCodec {
     return Buffer.from(JSON.stringify(o));
   }
 
-  addItem(data, meta, ikeys=undefined) {
-
+  addItem(data, meta, ikeys = undefined) {
     if (!this.keys)
-      throw new Error('you must derive a key before calling this method');
+      throw new Error("you must derive a key before calling this method");
 
     const id = this.items.length;
     const blobs = [];
 
     // name and labels are stored in the clear once per item
-    let {name, labels} = meta ?? {};
+    let { name, labels } = meta ?? {};
 
-    for (const {cipher, iv, ikey} of this.createCiphers(ikeys)){
-
+    for (const { cipher, iv, ikey } of this.createCiphers(ikeys)) {
       let blob = cipher.update(data);
       blob = Buffer.concat([blob, cipher.final()]);
 
       blobs.push({
-        params: {ikey, iv, alg: this.options.alg, tag: cipher.getAuthTag()},
+        params: {
+          ikey,
+          iv: ethersb64encode(iv),
+          alg: this.options.alg,
+          tag: ethersb64encode(cipher.getAuthTag()),
+        },
         meta,
-        blob
+        blob: ethersb64encode(blob),
       });
     }
 
@@ -226,8 +244,9 @@ export class BlobCodec {
     // a distinct  iv for each blob.
     const item = {
       id,
-      name, labels,
-      blobs
+      name,
+      labels,
+      blobs,
     };
     this.items.push(item);
 
@@ -235,7 +254,7 @@ export class BlobCodec {
       const entries = this.index[name] ?? [];
       entries.push(id);
       this.index[name] = entries;
-    };
-    return {id, item};
+    }
+    return { id, item };
   }
 }

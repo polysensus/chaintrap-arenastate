@@ -180,6 +180,8 @@ export class GameMint {
     this.metadata.name = options.name;
     this.metadata.description = options.description;
     if (options.externalUrl) this.metadata.external_url = options.externalUrl;
+    if (options.blobcodex)
+      this.properties = { ...this.properties, blobcodex: options.blobcodex };
     delete this._pendingOptions["metadata"];
   }
 
@@ -270,9 +272,12 @@ export class GameMint {
         throw Error(
           "GameMint# invalid topology, missing vrf_inputs.proof.beta"
         );
-      if (!vrf_inputs.proof.public_key)
+
+      // TODO: public_key has moved about a bit, settle on one spot at some point.
+      const public_key = vrf_inputs.proof.public_key ?? vrf_inputs.public_key;
+      if (!public_key)
         throw Error(
-          "GameMint# invalid topology, missing vrf_inputs.proof.public_key"
+          "GameMint# invalid topology, missing vrf_inputs.proof.public_key or vrf_inputs.public_key"
         );
 
       // The map generation params contribute to the alpha but do not compromise

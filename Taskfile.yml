@@ -194,7 +194,6 @@ tasks:
         echo "arena proxy: $ARENASTATE_ARENA"
         tusk -f tusk-tests.yml joingame
 
-
   deploy:
     desc: deploy the contracts to all supported networks
     cmds:
