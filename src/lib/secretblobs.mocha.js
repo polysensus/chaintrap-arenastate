@@ -4,9 +4,9 @@ import {
   createDecipher,
   deriveAESKey,
   DEFAULT_AES_ALG,
-} from "./aespbkdf.js";
+} from "./chainkit/aespbkdf.js";
 
-import { BlobCodex } from "./secretblobs.js";
+import { BlobCodex } from "./chainkit/secretblobs.js";
 
 describe("Secret blob tests", function () {
   it("Should round trip basic data encryption", async function () {

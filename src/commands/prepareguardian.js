@@ -2,7 +2,7 @@ import { readJson } from "./fsutil.js";
 import path from "path";
 import { programConnectArena } from "./connect.js";
 import { Guardian } from "../lib/guardian.js";
-import { BlobCodex } from "../lib/secretblobs.js";
+import { BlobCodex } from "../lib/chainkit/secretblobs.js";
 import { getMap } from "../lib/map/collection.js";
 
 const out = console.log;
