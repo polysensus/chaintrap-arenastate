@@ -4,9 +4,11 @@ import { NFTStorage, File } from "nft.storage";
 
 import { getLogger } from "../log.js";
 
+import { fileObjectFromBinary, createClient } from "../chainkit/nftstorage.js";
 import { generateImageBinary } from "../openai/imageprompt.js";
+import { openaiCompletionsURL, openaiImagesURL } from "../openai/config.js";
 
-const log = getLogger("nftstorage");
+const log = getLogger("nftmetadata");
 
 /**
  * Derive the following from env and the given prefix (which may be empty)
@@ -47,8 +49,6 @@ export function gameMetadataOptionsFromPrivateEnv(env, prefix) {
   return options;
 }
 
-const openaiCompletionsURL = "https://api.openai.com/v1/completions";
-const openaiImagesURL = "https://api.openai.com/v1/images/generations";
 const nftStorageURL = "https://api.nft.storage";
 export const defaultGameIconPrompt =
   "A stylised icon representing a turn based random dungeon crawler game";
@@ -60,41 +60,6 @@ const maptoolCommitURL =
 const maptoolImage = "eu.gcr.io/hoy-dev-1/chaintrap-maptool:main-20";
 const maptoolImageDigest =
   "sha256:9806aaeb3805f077753b7e94eae2ba371fd0a3cc64ade502f6bc5a99a9aba4e9";
-
-export async function xfetchGameIconBinary(path, prompt, options) {
-  if (!options.fetch)
-    throw new Error("you must provide a fetch implementation");
-  if (!options.openaiAPIKey)
-    throw new Error("the openaiAPIKey option is required");
-  const body = {
-    prompt,
-    n: 1,
-    size: defaultImageSize,
-    response_format: "b64_json",
-    ...options.openai_image_options,
-  };
-
-  log.debug("prompt body", body);
-
-  const result = await options.fetch(path, {
-    method: "post",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${options.openaiAPIKey}`,
-    },
-  });
-  const j = await result.json();
-  const b64json = j["data"][0]?.b64_json;
-  if (!b64json) {
-    throw new Error("No data item in response");
-  }
-  return ethers.utils.base64.decode(b64json);
-}
-
-export function nftStorageImageFromBinary(bin, name, type = "image/png") {
-  return new File([bin], name, { type });
-}
 
 export async function storeERC1155GameMetadata(
   public_proof,
@@ -130,7 +95,7 @@ export async function storeERC1155GameMetadata(
       options
     );
   }
-  gameIcon = nftStorageImageFromBinary(
+  gameIcon = fileObjectFromBinary(
     gameIconBytes,
     options.filename ?? "game-icon.png"
   );
@@ -157,10 +122,7 @@ export async function storeERC1155GameMetadata(
     },
   };
 
-  const client = new NFTStorage({
-    token: options.nftstorageAPIKey,
-    endpoint: options.nftstorageURL,
-  });
+  const client = createClient(options);
 
   log.debug("encodeNFT metadata", metadata);
 

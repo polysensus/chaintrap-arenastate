@@ -4,9 +4,10 @@ import {
   createDecipher,
   deriveAESKey,
   DEFAULT_AES_ALG,
-} from "./chainkit/aespbkdf.js";
+} from "./aespbkdf.js";
 
-import { BlobCodex } from "./chainkit/secretblobs.js";
+import { BlobCodex } from "./secretblobs.js";
+import { storeERC1155GameMetadata } from "../mint/nftmetadata.js";
 
 describe("Secret blob tests", function () {
   it("Should round trip basic data encryption", async function () {
@@ -101,5 +102,36 @@ describe("Secret blob tests", function () {
     const value = hydrated.items[0].blobs[0].value;
     expect(value.foo).to.equal(1);
     expect(value.bar).to.equal("the bar");
+  });
+
+  it("Should ommit plaintex from re-serialization", async function () {
+    const codec = new BlobCodex();
+    expect(codec.options.alg).to.equal(DEFAULT_AES_ALG);
+
+    const password0 = "very secret";
+    const password1 = "another secret";
+    await codec.derivePasswordKeys([password0, password1]);
+
+    const data = codec.dataFromObject({ foo: 1, bar: "the bar" });
+
+    const { id, item } = codec.addItem(data, { name: "foobar" }, 1);
+
+    const s = codec.serialize();
+
+    const hydrated = await BlobCodex.hydrate(s, [password1], { ikeys: [1] });
+
+    const s2 = hydrated.serialize();
+
+    // check the plaintext value exists on the original, else this test is meaningless
+    for (const it of hydrated.items) {
+      for (const [i, blob] of Object.entries(it.blobs))
+        expect(blob.value).to.exist;
+    }
+
+    // now check it is gone from the serialization
+    for (const it of s2.items) {
+      for (const [i, blob] of Object.entries(it.blobs))
+        expect(blob.value).to.not.exist;
+    }
   });
 });

@@ -53,13 +53,11 @@ export async function readMapFromBlobCodex(program, options, password) {
   const s = readJson(filename);
 
   // no need to deal with ikeys for now, we only use a single password for the map data.
-  const codec = await BlobCodex.hydrate(s, [password]);
-  const id = codec.index["map"][0];
-  const item = codec.items[id];
+  const codex = await BlobCodex.hydrate(s, [password]);
+  const id = codex.index["map"][0];
+  const item = codex.items[id];
   const map = JSON.parse(item.blobs[0].value);
-  // re-read the file from disc so we know we aren't posting anything unexpectedly in the clear to ipfs
-  const encrypted = readJson(filename);
-  return { map, name: path.basename(filename), encrypted };
+  return { map, name: path.basename(filename), blobcodex: codex };
 }
 
 export async function prepareGuardian(eventParser, program, options) {

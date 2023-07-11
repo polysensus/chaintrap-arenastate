@@ -7,6 +7,10 @@ import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
 import { ABIName } from "../lib/abiconst.js";
 import { readJson } from "./fsutil.js";
+import { defaultGameIconPrompt } from "../lib/mint/nftmetadata.js";
+import { generateImageBinary } from "../lib/openai/imageprompt.js";
+import { openaiImagesURL } from "../lib/openai/config.js";
+import { readBinaryData } from "../lib/data.js";
 
 export function addCreategame(program) {
   program
@@ -26,8 +30,22 @@ export function addCreategame(program) {
       "A chaintrap game"
     )
     .option(
+      "--description",
+      "The nft metadata description",
+      "A single chaintrap game transcript, find polysensus on discord for more info"
+    )
+    .option(
       "--codex-publish",
       "set to save the AES encrypted blob codex with the map data in the nft metadata"
+    )
+    .option(
+      "--icon-generate",
+      "use openai/dall-e to generate an icon for the game session"
+    )
+    .option(
+      "--icon-prompt <prompt>",
+      "The prompt text to send to DALL-E",
+      defaultGameIconPrompt
     )
     .option(
       "--description <description>",
@@ -70,7 +88,9 @@ export function addCreategame(program) {
       new Option(
         "--openai-images-url <url>",
         "url to the openai dall-e image generation endpoint"
-      ).env("ARENASTATE_OPENAI_IMAGES_URL")
+      )
+        .env("ARENASTATE_OPENAI_IMAGES_URL")
+        .default(openaiImagesURL)
     )
     .addOption(
       new Option(
@@ -109,15 +129,31 @@ async function creategame(program, options) {
 
   const guardian = await prepareGuardian(eventParser, program, options);
 
-  let { map, name, encrypted } = await readMap(program, options);
-  if (!options.codexPublish) encrypted = undefined; // prevents it being saved on the nft metadata
+  let { map, name, blobcodex } = await readMap(program, options);
+  if (!options.codexPublish) blobcodex = undefined; // prevents it being saved on the nft metadata
 
-  guardian.prepareDungeon(map, name, encrypted);
+  // everything gets an icon, but don't hit openai unless asked.
+  let gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+  if (options.iconGenerate)
+    gameIconBytes = await generateImageBinary(
+      options.openaiImagesUrl,
+      options.iconPrompt,
+      { openaiApiKey: options.openaiApiKey, fetch }
+    );
+
+  guardian.prepareDungeon(map, name, blobcodex);
 
   const furniture = readJson(program.opts().furniture);
   guardian.furnishDungeon(furniture);
   guardian.finalizeDungeon();
-  const result = (await guardian.mintGame({ fetch })).result;
+  const result = (
+    await guardian.mintGame({
+      name: options.name,
+      description: options.description,
+      gameIconBytes,
+      fetch,
+    })
+  ).result;
 
   const o = { roots: {} };
 

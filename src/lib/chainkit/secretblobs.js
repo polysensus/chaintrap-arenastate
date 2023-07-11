@@ -66,11 +66,22 @@ export class BlobCodex {
       salts.push(ethersb64encode(salt));
     }
 
+    // Now sanitize the blobs to remove the .value (clear text) items. This guards against accidental publishing of the plaintexts.
+
+    const items = [];
+    for (const it of this.items) {
+      const item = structuredClone(it);
+      for (const i of Object.keys(item.blobs)) {
+        delete item.blobs[i].value;
+      }
+      items.push(item);
+    }
+
     const s = {
       ikeys,
       salts,
-      index: this.index,
-      items: this.items,
+      index: structuredClone(this.index),
+      items: items,
     };
 
     return s;

@@ -46,6 +46,7 @@
         "A chaintrap game created by developer testing",
         "--description",
         "The description of a chaintrap game created by developer testing",
+        "--icon-generate",
         "--codex-publish",
         "--max-participants",
         "3",

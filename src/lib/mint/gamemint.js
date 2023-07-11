@@ -1,12 +1,9 @@
 import { ethers } from "ethers";
 
-import {
-  nftStorageImageFromBinary,
-} from "./nftmetadata.js";
+import { blobcodexMetadataProperty } from "../chainkit/secretblobsipfs.js";
+import { fileObjectFromBinary } from "../chainkit/nftstorage.js";
 
-import {
-  generateIconBinary
-} from "../openai/imageprompt.js";
+import { generateIconBinary } from "../openai/imageprompt.js";
 
 import { NFTStorage } from "nft.storage";
 
@@ -106,7 +103,7 @@ export class GameMint {
       );
 
     if (this.options.gameIconBytes) {
-      this.gameIcon = nftStorageImageFromBinary(
+      this.gameIcon = fileObjectFromBinary(
         this.options.gameIconBytes,
         this.options.nftstorageGameIconFilename ?? "game-icon.png",
         "image/png"
@@ -115,7 +112,7 @@ export class GameMint {
     }
 
     const bytes = await generateIconBinary(this.options);
-    this.gameIcon = nftStorageImageFromBinary(
+    this.gameIcon = fileObjectFromBinary(
       bytes,
       this.options.nftstorageGameIconFilename,
       "image/png"
@@ -184,7 +181,10 @@ export class GameMint {
     this.metadata.description = options.description;
     if (options.externalUrl) this.metadata.external_url = options.externalUrl;
     if (options.blobcodex)
-      this.properties = { ...this.properties, blobcodex: options.blobcodex };
+      this.properties = {
+        ...this.properties,
+        blobcodex: blobcodexMetadataProperty(options.blobcodex, options),
+      };
     delete this._pendingOptions["metadata"];
   }
 
