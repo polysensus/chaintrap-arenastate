@@ -1,9 +1,12 @@
 import { ethers } from "ethers";
 
 import {
-  generateGameIconBinary,
   nftStorageImageFromBinary,
 } from "./nftmetadata.js";
+
+import {
+  generateIconBinary
+} from "../openai/imageprompt.js";
 
 import { NFTStorage } from "nft.storage";
 
@@ -111,7 +114,7 @@ export class GameMint {
       return;
     }
 
-    const bytes = await generateGameIconBinary(this.options);
+    const bytes = await generateIconBinary(this.options);
     this.gameIcon = nftStorageImageFromBinary(
       bytes,
       this.options.nftstorageGameIconFilename,

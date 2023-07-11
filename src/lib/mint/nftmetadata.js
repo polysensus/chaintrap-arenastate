@@ -4,6 +4,8 @@ import { NFTStorage, File } from "nft.storage";
 
 import { getLogger } from "../log.js";
 
+import { generateImageBinary } from "../openai/imageprompt.js";
+
 const log = getLogger("nftstorage");
 
 /**
@@ -59,33 +61,7 @@ const maptoolImage = "eu.gcr.io/hoy-dev-1/chaintrap-maptool:main-20";
 const maptoolImageDigest =
   "sha256:9806aaeb3805f077753b7e94eae2ba371fd0a3cc64ade502f6bc5a99a9aba4e9";
 
-export async function generateGameIconBinary(options) {
-  const body = {
-    prompt: options.openaiImagePrompt,
-    n: 1,
-    size: "256x256",
-    response_format: "b64_json",
-  };
-  const path = options.openaiImagesUrl;
-  delete body["path"];
-
-  const result = await fetch(path, {
-    method: "post",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${options.openaiApiKey}`,
-    },
-  });
-  const j = await result.json();
-  const b64json = j["data"][0]?.b64_json;
-  if (!b64json) {
-    throw new Error("No data item in response");
-  }
-  return ethers.utils.base64.decode(b64json);
-}
-
-export async function fetchGameIconBinary(path, prompt, options) {
+export async function xfetchGameIconBinary(path, prompt, options) {
   if (!options.fetch)
     throw new Error("you must provide a fetch implementation");
   if (!options.openaiAPIKey)
@@ -148,7 +124,7 @@ export async function storeERC1155GameMetadata(
 
   let gameIconBytes = options.gameIconBytes;
   if (!gameIconBytes) {
-    gameIconBytes = await fetchGameIconBinary(
+    gameIconBytes = await generateImageBinary(
       options.openaiImagesURL,
       options.prompt ?? defaultGameIconPrompt,
       options
