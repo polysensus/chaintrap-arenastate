@@ -10,6 +10,9 @@ import { EventParser } from "./chainkit/eventparser.js";
 import { undefinedIfZeroBytesLike } from "./chainkit/ethutil.js";
 
 import { LocationChoices } from "./maptrie/locationchoices.js";
+import { IPFSScheme } from "./chainkit/nftstorage.js";
+
+export const ERC1155URISignature = "URI(string,uint256)";
 
 /**
  *
@@ -190,6 +193,22 @@ export async function findGameCreated(arena, gid) {
   }
 
   return found[0];
+}
+
+export async function findGameMetadata(arena, gid) {
+  const createdLog = await findGameCreated(arena, gid);
+  const r = await createdLog.getTransactionReceipt();
+  for (const log of r.logs) {
+    const iface = arena.getEventInterface(log);
+    const parsedLog = iface.parseLog(log);
+    if (parsedLog.signature !== ERC1155URISignature) continue;
+
+    const uri = parsedLog.args.value;
+    if (!uri.startsWith(IPFSScheme))
+      throw new Error(`metadata url is not a valid ipfs reference`);
+    return uri;
+  }
+  throw new Error(`metadata url not set when the game was created`);
 }
 
 export async function findGames(arena) {

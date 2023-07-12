@@ -9,7 +9,11 @@ import { NFTStorage } from "nft.storage";
 
 import { conditionInput } from "../maptrie/objects.js";
 
+export const defaultGameIconPrompt =
+  "A stylised icon representing a turn based random dungeon crawler game";
+
 const defaultMaxParticipants = 5;
+export const trialSetupPropertyFilename = "trial-setup.json";
 
 /**
  * Support class for minting games. Minting a game is accomplished by creating a
@@ -57,7 +61,7 @@ const defaultMaxParticipants = 5;
  *  mapRootLabel: string
  * }} MapOptions
  */
-export class GameMint {
+export class GameMetadataCreator {
   /**
    * @constructor
    */
@@ -180,10 +184,13 @@ export class GameMint {
     this.metadata.name = options.name;
     this.metadata.description = options.description;
     if (options.externalUrl) this.metadata.external_url = options.externalUrl;
-    if (options.blobcodex)
+    if (options.trialSetupCodex)
       this.properties = {
         ...this.properties,
-        blobcodex: blobcodexMetadataProperty(options.blobcodex, options),
+        trialsetup: blobcodexMetadataProperty(options.trialSetupCodex, {
+          ...options,
+          filename: trialSetupPropertyFilename,
+        }),
       };
     delete this._pendingOptions["metadata"];
   }

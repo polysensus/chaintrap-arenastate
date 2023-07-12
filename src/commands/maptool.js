@@ -47,6 +47,10 @@ export function addMaptool(program) {
       "used to securely derive an encryption key for the secret map data"
     )
     .option(
+      "--codex-generate-password",
+      "if --codex-password is not set AND this flag is set, a password is generated. otherwise the map is saved CLEAR TEXT in the codex"
+    )
+    .option(
       "-f, --codex-filename <filename>",
       "A filename to store the encrypted map data in, otherwise printed to console"
     )
@@ -82,11 +86,12 @@ export async function maptool(program, options) {
   let info = () => {};
   if (program.opts().verbose) info = console.info;
 
-  let password = options.codexPassword;
-  const passwordProvided = password ? true : false;
-  if (!password) {
+  let password = options.codexPassword ?? null;
+  let passwordGenerated = password ? true : false;
+  if (password === null && options.codexGeneratePassword) {
     const g = new NameGenerator({ fetch });
     password = (await g.getSurnames(2)).join("-");
+    passwordGenerated = true;
   }
 
   const codex = new BlobCodex();
@@ -124,7 +129,11 @@ export async function maptool(program, options) {
       JSON.stringify(committed, null, "  ")
     );
   }
-  codex.addItem(codex.dataFromObject(committed), { name: "committed" });
+  codex.addItem(codex.dataFromObject(committed), {
+    name: "committed",
+    content_type: "application/json",
+    encrypted: password !== null,
+  });
 
   req.body = JSON.stringify({
     public_key: committed.public_key,
@@ -140,7 +149,11 @@ export async function maptool(program, options) {
   const mapData = JSON.stringify(map, null, "  ");
   out(mapData);
   if (options.mapFilename) fs.writeFileSync(options.mapFilename, mapData);
-  codex.addItem(codex.dataFromObject(mapData), { name: "map" });
+  codex.addItem(codex.dataFromObject(map), {
+    name: "map",
+    content_type: "application/json",
+    encrypted: password !== null,
+  });
 
   if (options.svg) {
     url = `${url}?svg=true`;
@@ -152,7 +165,7 @@ export async function maptool(program, options) {
         filename: path.basename(options.svg),
         content: svg,
       }),
-      { name: "svg" }
+      { name: "svg", content_type: "image/svg+xml" }
     );
   }
 
@@ -160,5 +173,5 @@ export async function maptool(program, options) {
   if (options.codexFilename) fs.writeFileSync(options.codexFilename, data);
   else console.log(data);
 
-  if (!passwordProvided) console.error("generated password", password);
+  if (!passwordGenerated) console.error("generated password", password);
 }

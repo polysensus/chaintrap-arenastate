@@ -6,7 +6,19 @@ import { Journal } from "./journal.js";
 import { Trial } from "./trial.js";
 import { ObjectType } from "./maptrie/objecttypes.js";
 
-const FINISH_EXIT_NAME = "finish_exit";
+export const FINISH_EXIT_NAME = "finish_exit";
+
+// Everything we put in the secretblobs blobcodex on the game nft metadata.
+export const CODEX_MAP_INDEX = "map";
+export const CODEX_FURNITURE_INDEX = "furniture";
+export const CODEX_SVG_INDEX = "svg";
+export const CODEX_COMMITTED_INDEX = "committed";
+export const CODEX_INDEXED_ITEMS = [
+  CODEX_MAP_INDEX,
+  CODEX_FURNITURE_INDEX,
+  CODEX_COMMITTED_INDEX,
+  CODEX_SVG_INDEX,
+];
 
 export class Guardian {
   constructor(eventParser, options) {
@@ -34,11 +46,22 @@ export class Guardian {
     this._topologyCommitted = false;
   }
 
-  prepareDungeon(map, name, encrypted) {
+  setupTrial(codex, options = {}) {
+    this.trialSetupCodex = codex; // The map data, AES encrypted via a PBKDF
+
+    // the map and furniture are added as well known singletons in the trial setup codices.
+    const map = JSON.parse(codex.getIndexedItem(CODEX_MAP_INDEX, options));
+    const furnishings = JSON.parse(
+      codex.getIndexedItem(CODEX_FURNITURE_INDEX, options)
+    );
+    this.prepareDungeon(map);
+    this.furnishDungeon(furnishings);
+    this.finalizeDungeon();
+  }
+
+  prepareDungeon(map) {
     this._dungeonPrepared = false;
     this.map = map;
-    this.mapEncryptedCodex = encrypted; // The map data, AES encrypted via a PBKDF
-    this.mapName = name;
     this.topology = LogicalTopology.fromMapJSON(map);
     this._mapLoaded = true;
     this._preparingDungeon = true;
@@ -74,12 +97,11 @@ export class Guardian {
     if (!this._dungeonPrepared) throw new Error("dungeon not prepared");
 
     options = { ...options };
-    if (!options.mapRootLabel)
-      options.mapRootLabel = rootLabel(this.map, options.mapName);
+    if (!options.mapRootLabel) options.mapRootLabel = rootLabel(this.map);
 
     this.minter.applyOptions({
       ...options,
-      blobcodex: this.mapEncryptedCodex,
+      trialSetupCodex: options.codexPublish ? this.trialSetupCodex : undefined,
       choiceInputTypes: [ObjectType.LocationChoices],
       transitionTypes: [ObjectType.Link2, ObjectType.Finish],
       victoryTransitionTypes: [ObjectType.Finish],

@@ -6,7 +6,23 @@ import { getLogger } from "../log.js";
 
 const log = getLogger("nftstorage");
 
+export const IPFSScheme = "ipfs://";
 export const nftStorageURL = "https://api.nft.storage";
+export const nftstorageIPFSGatewayURL = "https://ipfs.io/";
+
+export function ipfsGatewayURL(ipfs, options = {}) {
+  if (!ipfs.startsWith(IPFSScheme))
+    throw new Error(`ipfs url must have the ${IPFSScheme} scheme`);
+
+  let gatewayURL =
+    options.nftstorageGatewayUrl ??
+    options.ipfsGatewayUrl ??
+    nftstorageIPFSGatewayURL;
+  if (!gatewayURL.endsWith("/")) gatewayURL = gatewayURL + "/";
+
+  gatewayURL = `${gatewayURL}ipfs/${ipfs.slice(IPFSScheme.length)}`;
+  return gatewayURL;
+}
 
 /**
  * Create an nftstorage.File object wrapping a binary blob

@@ -30,6 +30,7 @@
     "eventparser",
     "fmtev",
     "fsutil",
+    "gamecreator",
     "gameevents",
     "gameicon",
     "gamelog",
@@ -72,6 +73,7 @@
     "transcriptevents",
     "Trialist",
     "trialists",
+    "trialsetup",
     "txmemo",
     "vout",
     "watcharena"

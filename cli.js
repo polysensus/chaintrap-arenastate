@@ -89,17 +89,10 @@ addCommitChoice(program);
 addResolveChoice(program);
 // ---
 
-/*
-program
-  .command("completegame")
-  .description("complete the game")
-  .option("-g, --gid <gid>")
-  .action((options) => completegame(program, options));
-*/
-
 try {
   program.parse();
 } catch (err) {
+  if (err.code === "commander.helpDisplayed") process.exit(1);
   console.log(err);
   process.exit(1);
 }

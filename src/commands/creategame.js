@@ -2,12 +2,15 @@ import { Option } from "commander";
 import fetch from "node-fetch";
 import { ethers } from "ethers";
 
-import { prepareGuardian, prepareArena, readMap } from "./prepareguardian.js";
+import {
+  prepareGuardian,
+  prepareArena,
+  fetchCodex,
+} from "./prepareguardian.js";
 import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
 import { ABIName } from "../lib/abiconst.js";
-import { readJson } from "./fsutil.js";
-import { defaultGameIconPrompt } from "../lib/mint/nftmetadata.js";
+import { defaultGameIconPrompt } from "../lib/erc1155metadata/gamecreator.js";
 import { generateImageBinary } from "../lib/openai/imageprompt.js";
 import { openaiImagesURL } from "../lib/openai/config.js";
 import { readBinaryData } from "../lib/data.js";
@@ -124,13 +127,13 @@ let vout = () => {};
 
 async function creategame(program, options) {
   if (program.opts().verbose) vout = out;
+
   const arena = await prepareArena(program, options);
   const eventParser = new EventParser(arena, ArenaEvent.fromParsedEvent);
 
   const guardian = await prepareGuardian(eventParser, program, options);
 
-  let { map, name, blobcodex } = await readMap(program, options);
-  if (!options.codexPublish) blobcodex = undefined; // prevents it being saved on the nft metadata
+  const { codex } = await fetchCodex(program, options);
 
   // everything gets an icon, but don't hit openai unless asked.
   let gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
@@ -141,13 +144,10 @@ async function creategame(program, options) {
       { openaiApiKey: options.openaiApiKey, fetch }
     );
 
-  guardian.prepareDungeon(map, name, blobcodex);
-
-  const furniture = readJson(program.opts().furniture);
-  guardian.furnishDungeon(furniture);
-  guardian.finalizeDungeon();
+  guardian.setupTrial(codex, { ikey: 0 });
   const result = (
     await guardian.mintGame({
+      codexPublish: options.codexPublish,
       name: options.name,
       description: options.description,
       gameIconBytes,

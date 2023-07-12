@@ -73,15 +73,11 @@
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
-        "--codex-filename",
-        "map.blobs.json",
+        // "--codex-filename", "map.blobs.json",
         "--codex-password",
         "very-secret",
-        "--furniture",
-        "${workspaceFolder}/data/maps/map02-furnishings.json",
-
-        "--map-name",
-        "map02",
+        // "--furniture", "${workspaceFolder}/data/maps/map02-furnishings.json",
+        // "--map-name", "map02",
         "startgame",
         "--starts",
         "1"
@@ -97,7 +93,7 @@
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
         "commitchoice",
-        "3",
+        "1",
         "0" // map02 location 1
       ]
     },
@@ -110,16 +106,11 @@
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
-        "--codex-filename",
-        "map.blobs.json",
         "--codex-password",
         "very-secret",
-
-        "--furniture",
-        "${workspaceFolder}/data/maps/map02-furnishings.json",
-
-        "--map-name",
-        "map02",
+        // "--codex-filename", "map.blobs.json",
+        // "--furniture", "${workspaceFolder}/data/maps/map02-furnishings.json",
+        // "--map-name", "map02",
         "resolvechoice"
       ]
     },
