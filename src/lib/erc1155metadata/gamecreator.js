@@ -1,15 +1,19 @@
 import { ethers } from "ethers";
 
-import {
-  generateGameIconBinary,
-  nftStorageImageFromBinary,
-} from "./nftmetadata.js";
+import { blobcodexMetadataProperty } from "../chainkit/secretblobsipfs.js";
+import { fileObjectFromBinary } from "../chainkit/nftstorage.js";
+
+import { generateIconBinary } from "../openai/imageprompt.js";
 
 import { NFTStorage } from "nft.storage";
 
 import { conditionInput } from "../maptrie/objects.js";
 
+export const defaultGameIconPrompt =
+  "A stylised icon representing a turn based random dungeon crawler game";
+
 const defaultMaxParticipants = 5;
+export const trialSetupPropertyFilename = "trial-setup.json";
 
 /**
  * Support class for minting games. Minting a game is accomplished by creating a
@@ -57,7 +61,7 @@ const defaultMaxParticipants = 5;
  *  mapRootLabel: string
  * }} MapOptions
  */
-export class GameMint {
+export class GameMetadataCreator {
   /**
    * @constructor
    */
@@ -103,7 +107,7 @@ export class GameMint {
       );
 
     if (this.options.gameIconBytes) {
-      this.gameIcon = nftStorageImageFromBinary(
+      this.gameIcon = fileObjectFromBinary(
         this.options.gameIconBytes,
         this.options.nftstorageGameIconFilename ?? "game-icon.png",
         "image/png"
@@ -111,8 +115,8 @@ export class GameMint {
       return;
     }
 
-    const bytes = await generateGameIconBinary(this.options);
-    this.gameIcon = nftStorageImageFromBinary(
+    const bytes = await generateIconBinary(this.options);
+    this.gameIcon = fileObjectFromBinary(
       bytes,
       this.options.nftstorageGameIconFilename,
       "image/png"
@@ -180,8 +184,14 @@ export class GameMint {
     this.metadata.name = options.name;
     this.metadata.description = options.description;
     if (options.externalUrl) this.metadata.external_url = options.externalUrl;
-    if (options.blobcodex)
-      this.properties = { ...this.properties, blobcodex: options.blobcodex };
+    if (options.trialSetupCodex)
+      this.properties = {
+        ...this.properties,
+        trialsetup: blobcodexMetadataProperty(options.trialSetupCodex, {
+          ...options,
+          filename: trialSetupPropertyFilename,
+        }),
+      };
     delete this._pendingOptions["metadata"];
   }
 

@@ -30,12 +30,26 @@ erDiagram
 
     User 1 -- 1+ Guardian: is
     User 1 .. 0+ Map: creates
+    User 1 .. 0+ Furnishings: creates
     Guardian 1 -- 1 Journal: updates
     Journal 1 -- 1 StateRoster: has
     Journal 1..1+ Outcome: consumes
     Guardian 1 -- 1 Trial: operates
     StateRoster 1--1+ TrialistState : contains
-    Trial 1--1 Map: uses
+    Trial 1--1 Trial-Setup: uses
+    Trial-Setup 1 .. 1 Map: has
+    Trial-Setup 1 .. 1 Furnishings: has
+    Guardian 1 .. 0+ Trial-Setup: mints
+
+```
+
+## User / Dungeon / Trial
+
+```mermaid
+erDiagram
+    User 1 .. 0+ Trial-Setup: creates
+    Trial-Setup 1 .. 1 Map: has
+    Trial-Setup 1 .. 1 Furnishings: has
 
 ```
 

@@ -14,22 +14,15 @@ import { ObjectType } from "./objecttypes.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
 import { Location } from "./location.js";
 
-export function rootLabel(map, mapName) {
-  if (!(map || mapName))
+export function rootLabel(map) {
+  if (!map)
     throw new Error(
       "a map root label is required or a map object from which to derive one"
     );
   let rootLabel = `chaintrap:static`;
 
-  let defaultName = "un-named";
-  if (map) {
-    const beta = map.vrf_inputs?.proof?.beta;
-    if (beta) defaultName = beta.slice(0, 8);
-  }
-  rootLabel = mapName
-    ? `${rootLabel}:${mapName}`
-    : `${rootLabel}:${defaultName}`;
-  return rootLabel;
+  const beta = map.vrf_inputs?.proof?.beta.slice(0, 8);
+  return beta ? `${rootLabel}:${beta}` : rootLabel;
 }
 
 /**

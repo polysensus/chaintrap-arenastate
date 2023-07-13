@@ -1,10 +1,11 @@
-import { prepareGuardian, prepareArena, readMap } from "./prepareguardian.js";
+import {
+  prepareGuardian,
+  prepareArena,
+  fetchCodex,
+} from "./prepareguardian.js";
 
-import { asGid } from "../lib/gid.js";
 import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
-import { findGids } from "../lib/arenaevent.js";
-import { readJson } from "./fsutil.js";
 
 const out = console.log;
 let vout = () => {};
@@ -21,16 +22,11 @@ async function resolvechoice(program, options) {
 
   const arena = await prepareArena(program, options);
   const eventParser = new EventParser(arena, ArenaEvent.fromParsedEvent);
-  const gid = options.id ? asGid(options.id) : await findGids(eventParser, -1);
 
   const guardian = await prepareGuardian(eventParser, program, options);
-  const { map, name } = await readMap(program, options);
+  const { gid, codex } = await fetchCodex(program, { ...options, eventParser });
 
-  guardian.prepareDungeon(map, name);
-
-  const furniture = readJson(program.opts().furniture);
-  guardian.furnishDungeon(furniture);
-  guardian.finalizeDungeon();
+  guardian.setupTrial(codex, { ikey: 0 });
 
   await guardian.startListening(gid);
   const resolved = await guardian.resolvePending(gid);

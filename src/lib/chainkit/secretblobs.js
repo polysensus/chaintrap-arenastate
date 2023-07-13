@@ -13,6 +13,8 @@ import {
   DEFAULT_AES_ALG,
 } from "./aespbkdf.js";
 
+export const NULL_KEY = "<cleartext>";
+
 /**
  * The codex is used to accumulate a collection of individually encrypted items.
  * Each item in the collection corresponds to a single piece of input data along
@@ -50,6 +52,7 @@ export class BlobCodex {
     this.options.alg = DEFAULT_AES_ALG; // don't allow anything else
     this.index = {};
     this.items = [];
+    this._itemsClearText = {};
   }
 
   serialize() {
@@ -59,18 +62,19 @@ export class BlobCodex {
     const salts = [];
     let iKeyMax = 0;
     for (const i of Object.keys(this.keys).map(Number).sort()) {
-      const { key, salt } = this.keys[i];
+      let { key, salt } = this.keys[i];
       if (i > iKeyMax) iKeyMax = i;
       ikeys.push(i);
       keys.push(key);
-      salts.push(ethersb64encode(salt));
+      if (salt !== null) salt = ethersb64encode(salt);
+      salts.push(salt);
     }
 
     const s = {
       ikeys,
       salts,
-      index: this.index,
-      items: this.items,
+      index: structuredClone(this.index),
+      items: structuredClone(this.items),
     };
 
     return s;
@@ -83,14 +87,14 @@ export class BlobCodex {
    * @param {*} options
    */
   static async hydrate(s, passwords, options = {}) {
-    const codec = new BlobCodex(options);
-    const have = codec
+    const codex = new BlobCodex(options);
+    const have = codex
       .optionsIKeys(passwords, { ikeys: s.ikeys })
       .reduce((x, i) => {
         x[i] = true;
         return x;
       }, {});
-    const want = codec.optionsIKeys(passwords, options);
+    const want = codex.optionsIKeys(passwords, options);
     for (const i of want)
       if (!have[i])
         throw new Error(
@@ -98,46 +102,31 @@ export class BlobCodex {
         );
 
     const salts = want.reduce((salts, i) => {
-      salts[i] = ethersb64decode(s.salts[i]);
+      salts[i] = s.salts[i] !== null ? ethersb64decode(s.salts[i]) : null;
       return salts;
     }, {});
 
-    await codec.derivePasswordKeys(passwords, { ikeys: want, salts });
-
-    // const ciphers = codec
-    //   .createCiphers(want, options)
-    //     .reduce((ciphers, c) => {ciphers[c.ikey] = c; return ciphers}, {});
+    await codex.derivePasswordKeys(passwords, { ikeys: want, salts });
 
     for (const item of s.items) {
-      for (let i = 0; i < item.blobs.length; i++) {
-        const blob = item.blobs[i];
-        const { key } = codec.keys[blob.params.ikey];
-        if (!key)
-          throw new Error(
-            `invalid key index in blob ${i} item ${[item.id, item.name]}`
-          );
-
-        const decipher = createDecipher(key, {
-          iv: ethersb64decode(blob.params.iv),
-          alg: blob.params.alg,
-          tag: ethersb64decode(blob.params.tag),
-        });
-        let data = decipher.update(ethersb64decode(blob.blob));
-        data = Buffer.concat([data, decipher.final()]);
-        blob.value = JSON.parse(data);
-      }
-      const id = Object.keys(codec.items).length;
+      const id = Object.keys(codex.items).length;
       if (id != item.id)
         throw new Error(`expected id ${id} != item id ${item.id}`);
-      codec.items.push(item);
-      const { name, label } = item;
+      codex.items.push(item);
+      const { name } = item;
       if (name) {
-        const entries = codec.index[name] ?? [];
+        const entries = codex.index[name] ?? [];
         entries.push(id);
-        codec.index[name] = entries;
+        codex.index[name] = entries;
+      }
+      if (options.decrypt) {
+        // all blobs are identical content so we only ever need to de-crypt one
+        // of them.  the only reason we support multiple ikeys for hydrate is so
+        // that we can re-encrypt under the same keys as before.
+        codex.getItem(id, want[0]);
       }
     }
-    return codec;
+    return codex;
   }
 
   optionsIKeys(passwords, options) {
@@ -167,7 +156,12 @@ export class BlobCodex {
       throw new Error("number of salts inconsistent with provided passwords");
 
     for (let i = 0; i < passwords.length; i++) {
+      if (passwords[i] === null) {
+        this.keys[ikeys[i]] = { salt: null, key: null };
+        continue;
+      }
       const deriveOpts = { ...this.options };
+
       if (options.iterations) deriveOpts.iterations = options.iterations;
       if (salts) deriveOpts.salt = salts[ikeys[i]];
 
@@ -198,6 +192,8 @@ export class BlobCodex {
 
     return ikeys.map((ikey) => {
       const { key } = this.keys[ikey];
+      if (key === null) return { cipher: null, ikey };
+
       if (!key) throw new Error(`bad key index ${ikey}`);
       return {
         ...createCipher(key, {
@@ -214,6 +210,71 @@ export class BlobCodex {
     return Buffer.from(JSON.stringify(o));
   }
 
+  objectFromData(data) {
+    return JSON.parse(data);
+  }
+
+  hasIndexedItem(name) {
+    return name in this.index;
+  }
+
+  /**
+   *
+   * @param {*} id
+   * @param {{ikey?,which?}} options
+   */
+  getIndexedItem(name, options = {}) {
+    const ids = this.index[name];
+    if (!ids) throw new Error(`name ${name} is not in the index`);
+
+    let { ikey, which } = options;
+    if (typeof which === "undefined") which = 0;
+
+    return this.getItem(ids[which], ikey);
+  }
+
+  getItem(id, ikey = undefined) {
+    let data = this._itemsClearText[id];
+    if (data) return data;
+    if (typeof ikey === "undefined")
+      throw new Error(
+        `a key index is required if the clear text is not in the cache`
+      );
+
+    const item = this.items[id];
+
+    for (const blob of item.blobs) {
+      if (blob.params.ikey !== ikey) continue;
+
+      const { key } = this.keys[blob.params.ikey];
+
+      let data;
+      if (key === null) {
+        data = Buffer.from(ethersb64decode(blob.blob));
+      } else {
+        if (!key)
+          throw new Error(
+            `invalid key index in blob ${i} item ${[item.id, item.name]}`
+          );
+
+        const decipher = createDecipher(key, {
+          iv: ethersb64decode(blob.params.iv),
+          alg: blob.params.alg,
+          tag: ethersb64decode(blob.params.tag),
+        });
+        data = decipher.update(ethersb64decode(blob.blob));
+        data = Buffer.concat([data, decipher.final()]);
+      }
+
+      // NOTICE: the format *requires* that each blob for an item is *exactly*
+      // the same content. An item has multiple blobs to permit encrypting under
+      // different keys in order to support selective reveal.
+      this._itemsClearText[id] = data;
+      return data;
+    }
+    return undefined;
+  }
+
   addItem(data, meta, ikeys = undefined) {
     if (!this.keys)
       throw new Error("you must derive a key before calling this method");
@@ -221,10 +282,20 @@ export class BlobCodex {
     const id = this.items.length;
     const blobs = [];
 
-    // name and labels are stored in the clear once per item
     let { name, labels } = meta ?? {};
 
     for (const { cipher, iv, ikey } of this.createCiphers(ikeys)) {
+      if (cipher === null) {
+        // then storing in plain text. so having any keys at all is only useful
+        // if the blobs are being distributed and stored independently of the
+        // blobcodex.
+        blobs.push({
+          params: { ikey },
+          blob: ethersb64encode(data),
+        });
+        continue;
+      }
+
       let blob = cipher.update(data);
       blob = Buffer.concat([blob, cipher.final()]);
 
@@ -235,7 +306,6 @@ export class BlobCodex {
           alg: this.options.alg,
           tag: ethersb64encode(cipher.getAuthTag()),
         },
-        meta,
         blob: ethersb64encode(blob),
       });
     }
@@ -246,9 +316,11 @@ export class BlobCodex {
       id,
       name,
       labels,
+      meta,
       blobs,
     };
     this.items.push(item);
+    this._itemsClearText[id] = data;
 
     if (name) {
       const entries = this.index[name] ?? [];

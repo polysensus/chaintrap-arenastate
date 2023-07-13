@@ -2,7 +2,7 @@ import ethers from "ethers";
 import fetch from "node-fetch";
 import { readBinaryData, readJsonData } from "./data.js";
 
-import { GameMint } from "./mint/gamemint.js";
+import { GameMetadataCreator } from "./erc1155metadata/gamecreator.js";
 
 export class Minter {
   /**
@@ -26,14 +26,15 @@ export class Minter {
     this.options = { ...this.serviceOptions, ...options };
     if (!options?.gameIconBytes)
       this.options.gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
-    if (!options?.name) this.options.name = "minter.js:Minter# test game";
+    if (!options?.name) this.options.name = "A chaintrap game transcript";
     if (!options?.description)
-      this.options.description = "minter.js:Minter# test game";
+      this.options.description =
+        "A chaintrap game, find polysensus on discord for more info";
     if (!options?.fetch) this.options.fetch = fetch;
     if (!options?.mapRootLabel)
       this.options.mapRootLabel = "chaintrap-dungeon:static";
 
-    this.minter = new GameMint();
+    this.minter = new GameMetadataCreator();
     this.minter.configureMetadataOptions(this.options);
     this.minter.configureNFTStorageOptions(this.options);
     this.minter.configureGameIconOptions(this.options);

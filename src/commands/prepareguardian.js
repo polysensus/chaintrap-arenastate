@@ -1,9 +1,12 @@
 import { readJson } from "./fsutil.js";
 import path from "path";
 import { programConnectArena } from "./connect.js";
-import { Guardian } from "../lib/guardian.js";
-import { BlobCodex } from "../lib/secretblobs.js";
-import { getMap } from "../lib/map/collection.js";
+import { asGid } from "../lib/gid.js";
+import { findGameMetadata, findGids } from "../lib/arenaevent.js";
+import { GameMetadataReader } from "../lib/erc1155metadata/gamereader.js";
+import { Guardian, CODEX_FURNITURE_INDEX } from "../lib/guardian.js";
+import { BlobCodex } from "../lib/chainkit/secretblobs.js";
+import { ipfsGatewayURL } from "../lib/chainkit/nftstorage.js";
 
 const out = console.log;
 let vout = () => {};
@@ -18,24 +21,77 @@ export async function prepareArena(program, options) {
   return arena;
 }
 
-export async function readMap(program, options) {
-  if (program.opts().codexFilename || options.codexFilename)
-    return readMapFromBlobCodex(program, options);
-  return readMapFromCollection(program, options);
-}
+export async function fetchCodex(program, options) {
+  const eventParser = options?.eventParser;
+  const arena = eventParser?.contract ?? options.arena;
 
-export async function readMapFromCollection(program, options) {
-  const mapfile = program.opts().map;
-  if (!mapfile) {
-    throw new Error(
-      "a map file must be provided, use chaintrap-maptool to generate one or use one of its default examples"
-    );
+  const furnitureFilename = program.opts().furniture;
+  let tokenId = program.opts()?.id ?? options.id;
+  let metadataUrl =
+    program.opts()?.codexMetadataUrl ?? options.codexMetadataUrl;
+  const codexFromDisc = program.opts()?.codexFromDisc ?? options.codexFromDisc;
+  const codexFilename = program.opts()?.codexFilename ?? options.codexFilename;
+  const mapFilename = program.opts()?.map;
+
+  const password =
+    program.opts().codexPassword ?? options.codexPassword ?? null;
+
+  const reader = new GameMetadataReader({ fetch, readJson, furnitureFilename });
+
+  // fetch via explicitly provided metadata url ?
+  if (metadataUrl && !codexFromDisc)
+    return {
+      codex: await reader.fetchTrialSetupCodex(metadataUrl, password, options),
+    };
+
+  // By default, find the latest game gid. Either using the supplied token id or
+  // falling back to searching the contract events.
+  let gid;
+  if (!codexFromDisc) {
+    if (tokenId) gid = asGid(tokenId);
+    else if (eventParser) gid = await findGids(eventParser, -1);
   }
-  const collection = readJson(mapfile);
 
-  const mapName = { ...program.opts(), ...options }.mapName;
-  const { map, name } = getMap(collection, { mapName });
-  return { map, name };
+  // If we found a gid or were given a token *and* we are not forcing a read from disc
+  if (gid && !codexFromDisc) {
+    if (!eventParser)
+      throw new Error(
+        `arena contract is required to find the metadata url from the token id`
+      );
+
+    const metadataUrl = await findGameMetadata(arena, gid);
+    return {
+      gid,
+      metadataUrl,
+      codex: await reader.fetchTrialSetupCodex(metadataUrl, password, options),
+    };
+  }
+
+  // if we get here we either forced reading from disc or we didn't have the
+  // options necessary to attempt fetching from ipfs.
+
+  if (codexFilename)
+    return {
+      gid,
+      codexFilename,
+      codex: await reader.readTrialSetupCodex(codexFilename, password, options),
+    };
+
+  // lastly try the pre-codex collection of maps + external furniture file
+  if (!mapFilename)
+    throw new Error(
+      `please set appropriate options for reading or fetching the trial setup data`
+    );
+
+  return {
+    gid,
+    mapFilename,
+    codex: await reader.trialSetupFromCollectionCodex(
+      mapFilename,
+      password,
+      options
+    ),
+  };
 }
 
 export async function readMapFromBlobCodex(program, options, password) {
@@ -46,20 +102,15 @@ export async function readMapFromBlobCodex(program, options, password) {
     );
   }
 
-  password = password ?? program.opts().codexPassword ?? options.codexPassword;
-  if (typeof password === "undefined")
-    throw new Error(`a password must be supplied`);
+  // Note: null passwords are specifically supported so that the codex can contain plain text blobs
+  password =
+    password ?? program.opts().codexPassword ?? options.codexPassword ?? null;
 
   const s = readJson(filename);
 
   // no need to deal with ikeys for now, we only use a single password for the map data.
-  const codec = await BlobCodex.hydrate(s, [password]);
-  const id = codec.index["map"][0];
-  const item = codec.items[id];
-  const map = JSON.parse(item.blobs[0].value);
-  // re-read the file from disc so we know we aren't posting anything unexpectedly in the clear to ipfs
-  const encrypted = readJson(filename);
-  return { map, name: path.basename(filename), encrypted };
+  const codex = await BlobCodex.hydrate(s, [password]);
+  return codex;
 }
 
 export async function prepareGuardian(eventParser, program, options) {

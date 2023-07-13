@@ -7,7 +7,7 @@ import { readBinaryData } from "./support/data.js";
 import { getMap } from "../src/lib/map/collection.js";
 
 import { LogicalTopology } from "../src/lib/maptrie/logical.js";
-import { GameMint } from "../src/lib/mint/gamemint.js";
+import { GameMetadataCreator } from "../src/lib/erc1155metadata/gamecreator.js";
 import { ObjectType } from "../src/lib/maptrie/objecttypes.js";
 
 import collection from "../data/maps/map02.json" assert { type: "json" };
@@ -40,7 +40,7 @@ describe("GameMint.mint tests", async function () {
     topo.placeFinish(furniture.byName("finish_exit"));
     const trie = topo.commit();
 
-    const minter = new GameMint();
+    const minter = new GameMetadataCreator();
     const mdOptions = {
       ...this.mdOptions,
       fetch,
