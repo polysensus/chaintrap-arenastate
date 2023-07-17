@@ -1,7 +1,6 @@
 import { ethers } from "ethers";
 
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
-import { getMap } from "../map/collection.js";
 import { Join } from "./join.js";
 import { Access } from "./access.js";
 import { Link } from "./link.js";
@@ -104,19 +103,6 @@ export class LogicalTopology {
 
     this._trie = undefined;
     this._committed = false;
-  }
-
-  /**
-   *
-   * @param {object} mapCollection
-   * @param {string|undefined} entryName
-   */
-  static fromCollectionJSON(mapCollection, entryName = undefined) {
-    const { map, name } = getMap(mapCollection, entryName);
-    const topo = new LogicalTopology();
-    topo.extendJoins(map.model.corridors); // rooms 0,1 sides EAST, WEST
-    topo.extendLocations(map.model.rooms);
-    return topo;
   }
 
   static fromMapJSON(map) {

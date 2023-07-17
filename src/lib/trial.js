@@ -1,7 +1,5 @@
 import { ethers } from "ethers";
 // import * as msgpack from "@msgpack/msgpack";
-import { getMap } from "./map/collection.js";
-import { SceneCatalog } from "./map/scenecatalog.js";
 import {
   LeafObject,
   conditionInputs,
@@ -14,20 +12,7 @@ import { TranscriptOutcome } from "./abiconst.js";
 const abiCoder = ethers.utils.defaultAbiCoder;
 const hexlify = ethers.utils.hexlify;
 
-/**
- * A realm holds all of the physical artifacts associated with the game and the
- * merkle tries used to prove action outcomes and so on.
- * @typedef {import("./maptrie/logical.js").LocationTopology} LocationTopology
- * @typedef {import("./map/scenecatalog.js").SceneCatalog} SceneCatalog
- * @typedef {import("@openzeppelin/merkle-tree").StandardMerkleTree} StandardMerkleTree
- */
 export class Trial {
-  static fromCollectionJSON(maps, options) {
-    const { map, name } = getMap(maps, options?.mapName);
-    options = { ...options, mapName: name, map };
-    return new Trial(options);
-  }
-
   /**
    * @constructor
    * @param {object} map

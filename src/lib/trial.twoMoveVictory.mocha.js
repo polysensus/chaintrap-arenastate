@@ -6,7 +6,6 @@ import { Guardian } from "./guardian.js";
 import { Trialist } from "./trialist.js";
 import { ArenaEvent } from "./arenaevent.js";
 import { EventParser } from "./chainkit/eventparser.js";
-import { getMap } from "./map/collection.js";
 
 //
 import maps from "../../data/maps/map02.json" assert { type: "json" };
@@ -34,8 +33,7 @@ describe("Game session tests", function () {
       dispatcher,
     });
 
-    const { map, name } = getMap(maps, "map02");
-    guardian.prepareDungeon(map, name);
+    guardian.prepareDungeon(maps["map02"]);
     guardian.furnishDungeon(furnishings);
     guardian.finalizeDungeon();
     const gid = (await guardian.mintGame()).gid;

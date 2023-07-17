@@ -4,7 +4,6 @@ import { expect } from "chai";
 import fetch from "node-fetch";
 
 import { readBinaryData } from "./support/data.js";
-import { getMap } from "../src/lib/map/collection.js";
 
 import { LogicalTopology } from "../src/lib/maptrie/logical.js";
 import { GameMetadataCreator } from "../src/lib/erc1155metadata/gamecreator.js";
@@ -35,7 +34,7 @@ describe("GameMint.mint tests", async function () {
     const arena = this.guardianArena;
     const iface = arena.getFacetInterface("ERC1155ArenaFacet");
 
-    const topo = LogicalTopology.fromCollectionJSON(collection);
+    const topo = LogicalTopology.fromMapJSON(collection["map02"]);
     const furniture = new Furniture(furnishings);
     topo.placeFinish(furniture.byName("finish_exit"));
     const trie = topo.commit();
@@ -49,13 +48,12 @@ describe("GameMint.mint tests", async function () {
       description: "test# should mint a game description",
     };
     const mapRootLabel = "chaintrap-dungeon:static";
-    const { map } = getMap(collection);
     minter.configureMetadataOptions(mdOptions);
     minter.configureNFTStorageOptions(mdOptions);
     minter.configureGameIconOptions(mdOptions);
     minter.configureMaptoolOptions(mdOptions);
     minter.configureMapOptions({
-      map,
+      map: collection["map02"],
       mapRootLabel,
       topology: topo,
       trie,

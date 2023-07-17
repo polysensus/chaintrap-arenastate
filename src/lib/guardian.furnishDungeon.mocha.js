@@ -6,7 +6,6 @@ import { Guardian } from "./guardian.js";
 import { ArenaEvent } from "./arenaevent.js";
 import { EventParser } from "./chainkit/eventparser.js";
 import { ObjectType } from "./maptrie/objecttypes.js";
-import { getMap } from "./map/collection.js";
 
 //
 import maps from "../../data/maps/map02.json" assert { type: "json" };
@@ -23,8 +22,7 @@ describe("Guardian furnish dungeon tests", function () {
     );
     const guardian = new Guardian(eventParser, this.gameOptions);
 
-    const { map, name } = getMap(maps, "map02");
-    guardian.prepareDungeon(map, name);
+    guardian.prepareDungeon(maps["map02"]);
     guardian.furnishDungeon(furnishings);
     guardian.finalizeDungeon();
     expect(guardian.topology).to.exist;
