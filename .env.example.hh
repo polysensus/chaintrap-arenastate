@@ -2,6 +2,7 @@
 # pipeline secrets
 
 export ARENASTATE_LOGLEVEL=DEBUG
+export ARENASTATE_PROVIDER_URL="http://localhost:8545"
 
 # hardhat - in process, leaving the test setup to deploy the contracts
 # DONT export ARENASTATE_ARENA - absence is the switch to make it in process

@@ -124,6 +124,9 @@ tasks:
           exec: |
             set -e
 
+            echo "deploy-key: ${deploy-key}"
+            exit 0
+
             ${diamond-deploy} list \
               -I facet -n Diamond DiamondNew \
               -i node_modules/@polysensus/chaintrap-contracts/abi \

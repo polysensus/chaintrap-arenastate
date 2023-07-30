@@ -1,6 +1,5 @@
 ---
 version: "3"
-silent: true
 
 vars:
   CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
@@ -9,8 +8,6 @@ vars:
   CHAINTRAP_CONTRACTS_ABI_DIR: node_modules/@polysensus/chaintrap-contracts/abi
   DIAMOND_DEPLOY_JSON: .local/dev/diamond-deploy.json
   DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
-
-dotenv: [".env"]
 
 tasks:
   bootstrap:
@@ -197,29 +194,16 @@ tasks:
   deploy:
     desc: deploy the contracts to all supported networks
     cmds:
-      - task: deploy:hh
-      - task: deploy:caimst
+      - task: deploy:new
+        vars:
+          PROVIDER_ID: "hh"
+      - task: deploy:new
+        vars:
+          PROVIDER_ID: "caimst"
       - task: deploy:mumbai
-      - task: deploy:opgoerli
-
-  deploy:opgoerli:
-    dotenv: [".env.opgoerli"]
-    desc: deploy the contracts to optimism goerli (testnet)
-    cmds:
-      - tusk -f tusk-arena.yml deploy-arena {{.CLI_ARGS}}
-      # - tusk -f tusk-arena.yml deploy-arena --gasprice "2.6" {{.CLI_ARGS}}
-  deploy:opgoerli-new:
-    desc: deploy the contracts to polygon mumbai testnet
-    dotenv: [".env.opgoerli"]
-    cmds:
-      # - tusk -f tusk-arena.yml deploy-arena-new --gasprice "2.6"
-      - tusk -f tusk-arena.yml deploy-arena-new {{.CLI_ARGS}}
-  find:opgoerli:
-    dotenv: [".env.opgoerli"]
-    desc: find the arena on mumbai
-    cmds:
-      - |
-        tusk -f tusk-arena.yml diamond-find {{.CLI_ARGS}}
+      - task: deploy
+        vars:
+          PROVIDER_ID: opgoerli
 
   op:bridge-eth:
     dotenv: [".env.opgoerli"]
@@ -233,26 +217,21 @@ tasks:
       - |
         tusk -f tusk-arena.yml op-bridge-eth {{.CLI_ARGS}}
 
-  deploy:caimst:
-    desc: deploy the contracts to caimst and mumbai
-    cmds:
-      - tusk -f tusk-arena.yml deploy-caimst
-  deploy:caimst-new:
-    desc: deploy the contracts to caimst and mumbai
-    dotenv: [".env.caimst"]
-    cmds:
-      - tusk -f tusk-arena.yml deploy-arena-new
-
   deploy:mumbai:
-    dotenv: [".env.mumbai"]
     desc: deploy the contracts to polygon mumbai testnet
     cmds:
-      - tusk -f tusk-arena.yml deploy-arena --gasprice "2.6" {{.CLI_ARGS}}
+      - task: deploy:up
+        vars:
+          PROVIDER_ID: "mumbai"
+          GAS_PRICE: "2.6"
+
   deploy:mumbai-new:
     desc: deploy the contracts to polygon mumbai testnet
-    dotenv: [".env.mumbai"]
     cmds:
-      - tusk -f tusk-arena.yml deploy-arena-new --gasprice "2.6"
+      - task: deploy:new
+        vars:
+          PROVIDER_ID: "mumbai"
+          GAS_PRICE: "2.6"
 
   find:mumbai:
     dotenv: [".env.mumbai"]
@@ -261,24 +240,98 @@ tasks:
       - |
         tusk -f tusk-arena.yml diamond-find
 
-  deploy:hh:
-    dotenv: [".env.hh"]
+  deploy:up:
+    desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
+      GAS_PRICE: '{{.GAS_PRICE | default ""}}'
+      DIAMOND_ADDRESS: '{{.DIAMOND_ADDRESS | default ""}}'
+      DIAMOND_NONCE: '{{.DIAMOND_NONCE | default ""}}'
+    cmds:
+      - |
+        echo "ARENASTATE_DEPLOY_KEY: $ARENASTATE_DEPLOY_KEY"
+        echo "PROVIDER_ID {{.PROVIDER_ID}}"
+        echo "ARENASTATE_ARENA: $ARENASTATE_ARENA"
+        DIAMOND_ADDRESS=${ARENASTATE_AREANA:-"{{.DIAMOND_ADDRESS}}"}
+        echo "DIAMOND_ADDRESS: $DIAMOND_ADDRESS"
+        DIAMOND_NONCE=${ARENASTATE_DIAMOND_NONCE:-"{{.DIAMOND_NONCE}}"}
+        echo "DIAMOND_NONCE: $DIAMOND_NONCE"
+
+        {{.DEPLOYCLI}} list \
+          -I facet -n Diamond DiamondNew \
+          -i node_modules/@polysensus/chaintrap-contracts/abi \
+          --format json -x node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json \
+          > diamond-deploy.json
+
+        {{.DEPLOYCLI}} \
+          -u "${ARENASTATE_PROVIDER_URL}" \
+          -d "${ARENASTATE_DEPLOY_KEY}" \
+          diamond-up \
+            $([ -n '{{.DIAMOND_NONCE}}' ] && echo -n '--diamond-nonce {{.DIAMOND_NONCE}}' ) \
+            $([ -n '{{.DIAMOND_ADDRESS}}' ] && echo -n '--diamond-address {{.DIAMOND_ADDRESS}}' ) \
+            --replace \
+            $([ -n '{{.GAS_PRICE}}' ] && echo -n '--gasprice {{.GAS_PRICE}}' ) \
+            --legacy \
+            --diamond-owner-key ${ARENASTATE_OWNER_KEY} \
+            --diamond-init-name DiamondNew \
+            --diamond-init-args \
+              '[{"typeURIs": ["GAME_TYPE", "TRANSCRIPT_TYPE", "FURNITURE_TYPE"]}]' \
+            -f diamond-deploy.json \
+            {{.CLI_ARGS}}
+
+          # '-- --commit' (utilising .CLI_ARGS) is the idiomatic way to cause the action to commit
+
+
+  deploy:new:
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
+      GAS_PRICE: '{{.GAS_PRICE | default ""}}'
+
     desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
     cmds:
       - |
-        tusk -f tusk-arena.yml deploy-arena
-  deploy:hh-new:
-    dotenv: [".env.hh"]
-    desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
+
+        echo "PROVIDER_ID {{.PROVIDER_ID}}"
+        echo "ARENASTATE_DEPLOY_KEY: $ARENASTATE_DEPLOY_KEY"
+
+        {{.DEPLOYCLI}} list \
+          -I facet -n Diamond DiamondNew \
+          -i node_modules/@polysensus/chaintrap-contracts/abi \
+          --format json -x node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json \
+          > diamond-deploy.json
+
+        {{.DEPLOYCLI}} \
+          -u "${ARENASTATE_PROVIDER_URL}" \
+          -d "${ARENASTATE_DEPLOY_KEY}" \
+          diamond-new \
+            --replace \
+            $([ -n '{{.GAS_PRICE}}' ] && echo -n '--gasprice {{.GAS_PRICE}}' ) \
+            --legacy \
+            --diamond-owner-key ${ARENASTATE_OWNER_KEY} \
+            --diamond-init-name DiamondNew \
+            --diamond-init-args \
+              '[{"typeURIs": ["GAME_TYPE", "TRANSCRIPT_TYPE", "FURNITURE_TYPE"]}]' \
+            -f diamond-deploy.json \
+            {{.CLI_ARGS}}
+
+          # '-- --commit' (utilising .CLI_ARGS) is the idiomatic way to cause the action to commit
+
+  find:
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
+      DIAMOND_NONCE: '{{.DIAMOND_NONCE | default ""}}'
+
+    desc: find the arena on the chosen PROVIDER_ID
     cmds:
       - |
-        tusk -f tusk-arena.yml deploy-arena-new
-  find:hh:
-    dotenv: [".env.hh"]
-    desc: find the arena on hardhat
-    cmds:
-      - |
-        tusk -f tusk-arena.yml diamond-find
+        {{.DEPLOYCLI}} \
+          -u "${ARENASTATE_PROVIDER_URL}" \
+          -d "${ARENASTATE_DEPLOY_KEY}" \
+          find \
+            $([ -n '{{.DIAMOND_NONCE}}' ] && echo -n '--diamond-nonce {{.DIAMOND_NONCE}}' )
 
   dev:hh:start:
     desc: start a local hardhat node (if there isn't one running)
