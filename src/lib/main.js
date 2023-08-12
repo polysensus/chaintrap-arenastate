@@ -3,6 +3,7 @@ export * from "./abiconst.js";
 export * from "./arenaabi.js";
 export * from "./chainkit/hhkeys.js";
 export * from "./arenaevent.js";
+export * from "./randomnames.js";
 export * from "./chainkit/eventparser.js";
 export * from "./chainkit/transactor.js";
 export * from "./chainkit/aespbkdf.js";
