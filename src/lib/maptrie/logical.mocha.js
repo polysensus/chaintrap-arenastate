@@ -25,7 +25,7 @@ import { Furniture } from "../map/furniture.js";
 const { map02 } = maps;
 
 describe("LogicalTopology tests", function () {
-  it("Should build merkle for standard test map map", function () {
+  it("Should build merkle for standard test map", function () {
     const topo = new LogicalTopology();
     topo.extendJoins(map02.model.corridors); // rooms 0,1 sides EAST, WEST
     topo.extendLocations(map02.model.rooms);
@@ -39,6 +39,23 @@ describe("LogicalTopology tests", function () {
       console.log("Proof:", proof);
     }
   });
+
+  it("Should build merkle for standard furnished test map", function () {
+    const topo = new LogicalTopology();
+    topo.extendJoins(map02.model.corridors); // rooms 0,1 sides EAST, WEST
+    topo.extendLocations(map02.model.rooms);
+    const furniture = new Furniture(furnishings);
+    topo.placeFinish(furniture.byName("finish_exit"));
+    topo.placeFurniture(furniture);
+    const trie = topo.commit();
+
+    for (const [i, v] of trie.entries()) {
+      const proof = trie.getProof(i);
+      console.log("Value:", v);
+      console.log("Proof:", proof);
+    }
+  });
+
 
   it("Should throw because join and location access disagree", function () {
     const topo = new LogicalTopology();

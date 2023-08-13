@@ -1,4 +1,8 @@
 import { Furniture } from "./map/furniture.js";
+import {
+  FurnitureTypeCodes,
+  FurnitureSingletons,
+} from "./map/furnitureconst.js";
 import { rootLabel, LogicalTopology } from "./maptrie/logical.js";
 import { Minter } from "./minter.js";
 import { TransactRequest } from "./chainkit/transactor.js";
@@ -78,8 +82,12 @@ export class Guardian {
 
   furnishDungeon(furnishings) {
     this.furnishings = new Furniture(furnishings);
-    const finish = this.furnishings.byName(FINISH_EXIT_NAME);
-    this.topology.placeFinish(finish);
+    this.topology.placeFinish(
+      this.furnishings.byName(FurnitureSingletons.finish_exit)
+    );
+    this.topology.placeFurniture(
+      this.furnishings.byType(ObjectType.FatalChestTrap)
+    );
   }
 
   finalizeDungeon() {

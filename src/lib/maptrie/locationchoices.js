@@ -15,9 +15,16 @@ export class LocationChoices {
   static LOCATION_INPUT = 0;
   static CHOICE_INPUTS = 1;
 
-  constructor(location, sideExits) {
+  /**
+   *
+   * @param {number} location
+   * @param {[[]]} sideExits
+   * @param {[[]]} furniture
+   */
+  constructor(location, sideExits, furniture) {
     this.location = location;
     this.sideExits = sideExits;
+    this.furniture = furniture;
   }
 
   /**
@@ -45,13 +52,19 @@ export class LocationChoices {
   }
 
   inputs(options) {
-    if (!options.unconditioned)
-      return [
+    if (!options.unconditioned) {
+      let conditioned = [
         [conditionInput(this.location)],
-        ...conditionInputs(this.sideExits),
-      ];
-
-    return [[this.location], ...this.sideExits];
+        ...conditionInputs(this.sideExits)
+      ]
+      if (this.furniture?.length > 0)
+        conditioned = [...conditioned, ...conditionInputs(this.furniture)];
+      return conditioned;
+    }
+    let unconditioned = [[this.location], ...this.sideExits];
+    if (this.furniture?.length > 0)
+      unconditioned = [...unconditioned, ...this.furniture];
+    return unconditioned;
   }
 
   /**

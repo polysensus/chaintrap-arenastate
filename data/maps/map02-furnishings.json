@@ -15,11 +15,23 @@
       },
       "meta": {
         "notes": [
-          "adds a finish exit to location 1. note that location 1 does not *have* an exit on this side in the model data",
+          "adds a finish exit to location 8. note that location 1 does not *have* an exit on this side in the model data",
           "there can only be one finish exit, so the id is also its type",
           "items with no id are not added to the index",
           "an id is set by the loader automatically reflecting the position in the items array"
         ]
+      }
+    },
+    {
+      "unique_name": "chest_1",
+      "labels": ["death_condition"],
+      "choiceType": "open_chest",
+      "type": "fatal_chest_trap",
+      "data": {
+        "location": 0
+      },
+      "meta": {
+        "notes": ["adds a fatal trap to location 0"]
       }
     }
   ]
