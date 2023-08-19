@@ -1,8 +1,4 @@
 import { Furniture } from "./map/furniture.js";
-import {
-  FurnitureTypeCodes,
-  FurnitureSingletons,
-} from "./map/furnitureconst.js";
 import { rootLabel, LogicalTopology } from "./maptrie/logical.js";
 import { Minter } from "./minter.js";
 import { TransactRequest } from "./chainkit/transactor.js";
@@ -81,13 +77,7 @@ export class Guardian {
   }
 
   furnishDungeon(furnishings) {
-    this.furnishings = new Furniture(furnishings);
-    this.topology.placeFinish(
-      this.furnishings.byName(FurnitureSingletons.finish_exit)
-    );
-    this.topology.placeFurniture(
-      this.furnishings.byType(ObjectType.FatalChestTrap)
-    );
+    this.topology.placeFurniture(new Furniture(furnishings));
   }
 
   finalizeDungeon() {
@@ -111,8 +101,9 @@ export class Guardian {
       ...options,
       trialSetupCodex: options.codexPublish ? this.trialSetupCodex : undefined,
       choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
+      transitionTypes: [ObjectType.Link2, ObjectType.Finish, ObjectType.FatalChestTrap],
       victoryTransitionTypes: [ObjectType.Finish],
+      haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
     });
     const r = await this.minter.mint({
       topology: this.topology,
@@ -218,6 +209,13 @@ export class Guardian {
             "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
           );
           break;
+        }
+        case ObjectType.FatalChestTrap: {
+          request.requireLogs(
+            "TranscriptParticipantHalted(uint256,address,uint256)"
+          );
+          break;
+
         }
         default:
           throw new Error(`un-expected transitionType`);

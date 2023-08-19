@@ -35,7 +35,6 @@ export class Furniture {
     return [...furns];
   }
 
-
   init(data) {
     this.map = data.map;
     this.items = data.items;

@@ -6,7 +6,6 @@ import { titleCase } from "../strings.js";
  * All located furniture is instanced with this class. Note, this excludes the finish_exit
  */
 export class Furnishing {
-
   /**
    * @param {number} id the identifier the container knows this furnishing by.
    * @param {{
@@ -24,7 +23,9 @@ export class Furnishing {
     if (typeof this.type === "undefined")
       throw new Error(`item type ${item.type} not found`);
     // choiceType may legitemately be undefined
-    this.choiceType = item.choiceType ? LocationChoiceType[titleCase(item.choiceType)] : undefined;
+    this.choiceType = item.choiceType
+      ? LocationChoiceType[titleCase(item.choiceType)]
+      : undefined;
     this.item = item;
   }
   get typeName() {

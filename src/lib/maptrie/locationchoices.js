@@ -55,8 +55,8 @@ export class LocationChoices {
     if (!options.unconditioned) {
       let conditioned = [
         [conditionInput(this.location)],
-        ...conditionInputs(this.sideExits)
-      ]
+        ...conditionInputs(this.sideExits),
+      ];
       if (this.furniture?.length > 0)
         conditioned = [...conditioned, ...conditionInputs(this.furniture)];
       return conditioned;

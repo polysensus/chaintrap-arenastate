@@ -8,7 +8,7 @@ import { conditionInputs } from "./objects.js";
 import { LogicalRef } from "./logicalref.js";
 
 /**
- * [CHOICE-TYPE, [[FURNITURE-TYPE], [REF(#L, i)]]]
+ * [FURNITURE-TYPE, [[CHOICE-TYPE], [REF(#L, i)]]]
  */
 export class LocationFurnishing {
   // static ObjectType = ObjectType.Chest;
@@ -17,7 +17,7 @@ export class LocationFurnishing {
    * @param {import('../logicalref.js').LogicalRef} inputRef
    */
   constructor(furn, inputRef) {
-    this.furn = furn
+    this.furn = furn;
     this.inputRef = inputRef;
   }
 
@@ -28,9 +28,8 @@ export class LocationFurnishing {
         `a reference resolver is required to prepare LocationExit instances`
       );
 
-    const inputs = [[this.furn.type], resolveValue(this.inputRef)];
-    if (!options.unconditioned)
-      return conditionInputs(inputs);
+    const inputs = [[this.furn.choiceType], resolveValue(this.inputRef)];
+    if (!options.unconditioned) return conditionInputs(inputs);
     return inputs;
   }
 
@@ -39,6 +38,6 @@ export class LocationFurnishing {
    * @returns
    */
   prepare(options) {
-    return [this.furn.choiceType, this.inputs(options)];
+    return [this.furn.type, this.inputs(options)];
   }
 }

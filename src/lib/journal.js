@@ -112,10 +112,10 @@ export class Journal {
       ethers.utils.formatBytes32String(staticRootLabel);
   }
 
-  locationChoiceArgs(gid, start, exit) {
+  locationChoiceArgs(gid, ...input) {
     return {
       rootLabel: this.staticRootLabel(gid),
-      input: [start, exit].map(conditionInput),
+      input: input.map(conditionInput),
       data: "0x",
     };
   }

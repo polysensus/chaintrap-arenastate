@@ -56,7 +56,6 @@ describe("LogicalTopology tests", function () {
     }
   });
 
-
   it("Should throw because join and location access disagree", function () {
     const topo = new LogicalTopology();
     topo.extendJoins([{ joins: [0, 1], sides: [3, 1] }]); // rooms 0,1 sides EAST, WEST

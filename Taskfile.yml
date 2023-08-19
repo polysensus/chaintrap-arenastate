@@ -60,7 +60,7 @@ tasks:
       - task: deploy:new
         vars:
           PROVIDER_ID: "hh"
-          COMMIT:  "yes"
+          COMMIT: "yes"
       - task: find
         vars:
           PROVIDER_ID: "hh"
@@ -200,7 +200,7 @@ tasks:
       - task: deploy:new
         vars:
           PROVIDER_ID: "hh"
-          COMMIT:  "yes"
+          COMMIT: "yes"
       - task: deploy:new
         vars:
           PROVIDER_ID: "caimst"

@@ -116,7 +116,6 @@ export class LeafObject {
 }
 
 export class ObjectCodec {
-
   /**
    * Prepare a LeafObject to be ethers ABI encoded according to {@link LeafObject.ABI}
    * The round trip looks like this:
@@ -126,7 +125,6 @@ export class ObjectCodec {
    * @param {LeafObject} o
    */
   static prepare(o, options) {
-
     // TODO: decide if we really wan't the ObjectCodec at all
     const [typeId, inputs] = o.leaf.prepare(options);
 

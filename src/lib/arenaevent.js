@@ -17,7 +17,7 @@ export const ERC1155URISignature = "URI(string,uint256)";
 /**
  *
  * @param {EventParser} eventParser
- * @returns {ethers.BigNumber}
+ * @returns {ArenaEvent}
  */
 export function getGameCreated(receipt, eventParser) {
   return eventParser.receiptLog(
@@ -99,6 +99,13 @@ export class ArenaEvent {
           profile: msgpack.decode(arrayify(parsedLog.args.profile)),
         };
         break;
+      case ABIName.TranscriptParticipantHalted:
+        arenaEvent.subject = parsedLog.args.participant;
+        arenaEvent.update = {
+          halted: true
+        };
+        break;
+
       case ABIName.TranscriptEntryChoices:
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.eid = parsedLog.args.eid;

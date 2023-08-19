@@ -13,6 +13,7 @@ import { ObjectType } from "./objecttypes.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
 import { Location } from "./location.js";
 import { LocationFurnishing } from "./locationfurnishing.js";
+import { FurnitureSingletons } from "../map/furnitureconst.js";
 
 export function rootLabel(map) {
   if (!map)
@@ -171,6 +172,8 @@ export class LogicalTopology {
     this.finish = finish;
   }
   placeFurniture(furniture) {
+    if (!this.finish)
+      this.placeFinish(furniture.byName(FurnitureSingletons.finish_exit));
     this.furniture = furniture;
   }
 
@@ -192,11 +195,21 @@ export class LogicalTopology {
       if (this.finish.item.data.location === locationId) {
         // check the finish does not conflict with a side, exit from the generated map
         for (const [side, exit] of sideExits)
-          if (this.finish.item.data.side === side && this.finish.item.data.exit === exit)
+          if (
+            this.finish.item.data.side === side &&
+            this.finish.item.data.exit === exit
+          )
             throw new Error(`finish placement conflicts with map exit`);
-        sideExits.push([this.finish.item.data.side, this.finish.item.data.exit]);
+        sideExits.push([
+          this.finish.item.data.side,
+          this.finish.item.data.exit,
+        ]);
       }
-      const location = new LocationChoices(locationId, sideExits, furnitureChoices.choices);
+      const location = new LocationChoices(
+        locationId,
+        sideExits,
+        furnitureChoices.choices
+      );
 
       let leafObject = new LeafObject({
         type: LocationChoices.ObjectType,
@@ -210,7 +223,7 @@ export class LogicalTopology {
 
       this.locationChoices.push(leafObject);
       this.locationChoicesPrepared.push(prepared);
-      this.locationChoicesProof.push();
+      // this.locationChoicesProof.push();
       this.locationChoicesKeys[key] = this.locationChoices.length - 1;
 
       // We need a node for each of the locations exits. We most easily derive this from the exitMenu
@@ -257,8 +270,7 @@ export class LogicalTopology {
 
       // Create the choice references for the chests placed at this location
       const furniture = furnitureChoices.furniture;
-      for (let j = 0; j < furniture.length; j++) {
-
+      for (let j = 0; j < furniture?.length ?? 0; j++) {
         const furn = furniture[j];
 
         const locationChoiceRef = new LogicalRef(
@@ -272,12 +284,14 @@ export class LogicalTopology {
           leaf: new LocationFurnishing(furn, locationChoiceRef),
         });
         prepared = this.prepareLeaf(leafObject);
+        const xx = ethers.utils.defaultAbiCoder.encode(LeafObject.ABI, prepared);
+        console.log('encoded', xx);
         key = leafHash(prepared);
 
-        this.furnKeys[key] = furn.id; // leaf hash -> this.furniture.items[index]
-        this.locationFurn[
-          `${locationId}:${furn.choiceType}:${j}`
-        ] = furn.id;
+        const id = this.furnLeafs.length;
+
+        this.furnKeys[key] = id; // leaf hash -> this.furniture.items[index]
+        this.locationFurn[`${locationId}:${furn.choiceType}:${j}`] = id;
         this.furnLeafs.push(leafObject);
         this.furnPrepared.push(prepared);
       }
@@ -313,7 +327,7 @@ export class LogicalTopology {
         ...this.locationChoicesPrepared,
         ...this.exitsPrepared,
         ...this.locationExitLinksPrepared,
-        ...this.furnPrepared
+        ...this.furnPrepared,
       ],
       LeafObject.ABI
     );
@@ -327,8 +341,11 @@ export class LogicalTopology {
     for (const prepared of this.locationExitLinksPrepared)
       this.locationExitLinksProof.push(this.trie.getProof(prepared));
 
-    for (const prepared of this.furnPrepared)
-      this.furnProof.push(this.trie.getProof(prepared));
+    for (const prepared of this.furnPrepared) {
+      const proof = this.trie.getProof(prepared);
+      const key = leafHash(prepared);
+      this.furnProof.push(proof);
+    }
 
     this._committed = true;
     return this.trie;
@@ -390,8 +407,8 @@ export class LogicalTopology {
   }
 
   furnitureId(location, choiceType, index) {
-    const id = this.locationFurnuture[`${location}:${choiceType}:${index}`];
-    if (typeof id === 'undefined')
+    const id = this.locationFurn[`${location}:${choiceType}:${index}`];
+    if (typeof id === "undefined")
       throw new Error(
         `location furniture not found for ${location}:${choiceType}:${index}`
       );
@@ -475,7 +492,6 @@ export class LogicalTopology {
   }
 
   locationFurnitureChoices(location) {
-
     if (!this.furniture) return [];
 
     // The first 4 choice entries are the 'sides', further entries will have
@@ -488,11 +504,11 @@ export class LogicalTopology {
 
     for (let i = 0; i < furniture.length; i++) {
       const furn = furniture[i];
-      if (typeof furn.choiceType === 'undefined') continue;
-      choices.push([furn.choiceType, i])
-      choosable.push(furn)
+      if (typeof furn.choiceType === "undefined") continue;
+      choices.push([furn.choiceType, i]);
+      choosable.push(furn);
     }
-    return {furniture:choosable, choices};
+    return { furniture: choosable, choices };
   }
 
   /**

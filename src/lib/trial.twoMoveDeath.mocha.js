@@ -1,5 +1,8 @@
 // @ts-check
-import { expect } from "chai";
+import { expect, use as chaiUse } from "chai";
+// import * as chaiAsPromised from "chai-as-promised";
+// chaiUse(chaiAsPromised);
+
 import { ethers } from "ethers";
 
 import { Guardian } from "./guardian.js";
@@ -15,8 +18,8 @@ import { Dispatcher } from "./chainkit/dispatcher.js";
 const defaultMaxWait = 4000;
 const defaultInterval = 500;
 
-describe("Game session victory tests", function () {
-  it("Should complete game in two moves", async function () {
+describe("Game session participant halt tests", function () {
+  it("Should halt participant in two moves", async function () {
     if (!this.gameOptions) {
       this.skip();
     }
@@ -60,7 +63,8 @@ describe("Game session victory tests", function () {
       interval: pollingInterval,
       logBanner: "trialist: ",
     });
-    await trialist.commitLocationChoice(gid, 1, 0); // -> location 8
+    // await trialist.commitLocationChoice(gid, 1, 0); // -> location 8
+    await trialist.commitLocationChoice(gid, 4, 0); // -> open_chest
 
     await guardian.journal?.waitPendingOutcomes(gid, 1, {
       interval: pollingInterval,
@@ -76,17 +80,7 @@ describe("Game session victory tests", function () {
     // contract.
     await trialist.startListening(gid);
     await trialist.journal?.waitOutcomeResolutions(gid);
-    await trialist.commitLocationChoice(gid, 0, 0); // -> finish_exit
-
-    await guardian.journal?.waitPendingOutcomes(gid, 1, {
-      pollingInterval,
-      logBanner: "guardian: ",
-    });
-    resolved = await guardian.resolvePending(gid);
-    expect(resolved.length).to.equal(1);
-
-    // TODO: close the game on victory and transfer the transcript nft to the victor.
-
-    // now commit to the victory choice
+    // Check that an attempt by the halted participant to make further choices is rejected with the appropriate error.
+    expect(trialist.commitLocationChoice(gid, 0, 0)).to.be.rejectedWith(/.*/, 'Transcript_ParticipantHalted()');
   });
 });

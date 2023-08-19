@@ -13,6 +13,7 @@ export class LocationChoiceType {
   static West = 1;
   static South = 2;
   static East = 3;
+  static LastSideChoice = 3;
 
   // Each menu entry identifies a chest that can be opened at this location.
   // The consequences of opening are not inferable from the id.
