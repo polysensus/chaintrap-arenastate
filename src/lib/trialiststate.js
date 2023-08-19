@@ -5,6 +5,7 @@ import { PropDelta } from "./propdelta.js";
 
 export const TrialistEvents = Object.fromEntries([
   [ABIName.TranscriptRegistration, true],
+  [ABIName.TranscriptParticipantHalted, true],
   [ABIName.TranscriptEntryChoices, true],
   [ABIName.TranscriptEntryCommitted, true],
   [ABIName.TranscriptEntryOutcome, true],
@@ -29,6 +30,7 @@ export class TrialistState {
     this.propDelta = new PropDelta(
       [
         "registered",
+        "halted",
         "address",
         "profile",
         "rootLabel",

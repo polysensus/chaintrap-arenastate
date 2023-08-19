@@ -77,9 +77,7 @@ export class Guardian {
   }
 
   furnishDungeon(furnishings) {
-    this.furnishings = new Furniture(furnishings);
-    const finish = this.furnishings.byName(FINISH_EXIT_NAME);
-    this.topology.placeFinish(finish);
+    this.topology.placeFurniture(new Furniture(furnishings));
   }
 
   finalizeDungeon() {
@@ -103,8 +101,9 @@ export class Guardian {
       ...options,
       trialSetupCodex: options.codexPublish ? this.trialSetupCodex : undefined,
       choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
+      transitionTypes: [ObjectType.Link2, ObjectType.Finish, ObjectType.FatalChestTrap],
       victoryTransitionTypes: [ObjectType.Finish],
+      haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
     });
     const r = await this.minter.mint({
       topology: this.topology,
@@ -210,6 +209,13 @@ export class Guardian {
             "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
           );
           break;
+        }
+        case ObjectType.FatalChestTrap: {
+          request.requireLogs(
+            "TranscriptParticipantHalted(uint256,address,uint256)"
+          );
+          break;
+
         }
         default:
           throw new Error(`un-expected transitionType`);

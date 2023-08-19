@@ -116,14 +116,6 @@ export class LeafObject {
 }
 
 export class ObjectCodec {
-  static typePrepare = Object.fromEntries([
-    [ObjectType.Exit, (leaf, options) => leaf.prepare(options)],
-    [ObjectType.LocationChoices, (leaf, options) => leaf.prepare(options)],
-    [ObjectType.Link2, (leaf, options) => leaf.prepare(options)],
-    [ObjectType.Finish, (leaf, options) => leaf.prepare(options)],
-    [ObjectType.FinishLink, (leaf, options) => leaf.prepare(options)],
-  ]);
-
   /**
    * Prepare a LeafObject to be ethers ABI encoded according to {@link LeafObject.ABI}
    * The round trip looks like this:
@@ -133,10 +125,8 @@ export class ObjectCodec {
    * @param {LeafObject} o
    */
   static prepare(o, options) {
-    const preper = ObjectCodec.typePrepare[o.type];
-    if (!preper) throw new Error(`type ${o.type} not configured`);
-
-    const [typeId, inputs] = preper(o.leaf, options);
+    // TODO: decide if we really wan't the ObjectCodec at all
+    const [typeId, inputs] = o.leaf.prepare(options);
 
     return [typeId, directPreimage(inputs)];
   }

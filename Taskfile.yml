@@ -57,10 +57,13 @@ tasks:
     cmds:
       - |
       - task: dev:hh:restart
-      - task: deploy:hh-new
-      - |
-        set -e
-        tusk -q -f tusk-arena.yml diamond-find | tee arenaproxy.addr
+      - task: deploy:new
+        vars:
+          PROVIDER_ID: "hh"
+          COMMIT: "yes"
+      - task: find
+        vars:
+          PROVIDER_ID: "hh"
 
   test:
     desc: run the integration tests
@@ -197,6 +200,7 @@ tasks:
       - task: deploy:new
         vars:
           PROVIDER_ID: "hh"
+          COMMIT: "yes"
       - task: deploy:new
         vars:
           PROVIDER_ID: "caimst"
@@ -282,12 +286,12 @@ tasks:
 
           # '-- --commit' (utilising .CLI_ARGS) is the idiomatic way to cause the action to commit
 
-
   deploy:new:
     dotenv: [".env.{{.PROVIDER_ID}}"]
     vars:
       PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
       GAS_PRICE: '{{.GAS_PRICE | default ""}}'
+      COMMIT: '{{.COMMIT | default ""}}'
 
     desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
     cmds:
@@ -314,9 +318,7 @@ tasks:
             --diamond-init-args \
               '[{"typeURIs": ["GAME_TYPE", "TRANSCRIPT_TYPE", "FURNITURE_TYPE"]}]' \
             -f diamond-deploy.json \
-            {{.CLI_ARGS}}
-
-          # '-- --commit' (utilising .CLI_ARGS) is the idiomatic way to cause the action to commit
+            $([ -n '{{.COMMIT}}' ] && echo -n '--commit {{.COMMIT}}' )
 
   find:
     dotenv: [".env.{{.PROVIDER_ID}}"]

@@ -38,8 +38,8 @@ export class Trialist {
     return await this.journal.startListening([gid], options);
   }
 
-  async commitLocationChoice(gid, side, exit) {
-    const args = this.journal.locationChoiceArgs(gid, side, exit);
+  async commitLocationChoice(gid, ...input) {
+    const args = this.journal.locationChoiceArgs(gid, ...input);
 
     const request = new TransactRequest(this.eventParser);
     request

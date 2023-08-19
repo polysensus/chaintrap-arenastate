@@ -133,6 +133,7 @@ async function creategame(program, options) {
 
   const guardian = await prepareGuardian(eventParser, program, options);
 
+  // Note: this will require a furnitureFile if furniture is not alread present in the existing codex data.
   const { codex } = await fetchCodex(program, options);
 
   // everything gets an icon, but don't hit openai unless asked.

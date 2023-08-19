@@ -41,17 +41,31 @@ describe("LogicalTopology setStart tests", function () {
           type: "finish_exit",
           data: { location: 1, side: 3, exit: 0 },
         },
+        {
+          unique_name: "chest_1",
+          labels: ["death_condition"],
+          choiceType: "open_chest",
+          type: "fatal_chest_trap",
+          data: {
+            location: 0,
+          },
+        },
       ],
     });
-    topo.placeFinish(furniture.byName("finish_exit"));
+    topo.placeFurniture(furniture);
 
     const trie = topo.commit();
 
     // mint without publishing nft metadata
     this.minter.applyOptions({
       choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
+      transitionTypes: [
+        ObjectType.Link2,
+        ObjectType.Finish,
+        ObjectType.FatalChestTrap,
+      ],
       victoryTransitionTypes: [ObjectType.Finish],
+      haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
     });
     let r = await this.mintGame({ topology: topo, trie: trie });
 

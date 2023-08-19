@@ -3,6 +3,7 @@ export class ABIName {
   static TranscriptStarted = "TranscriptStarted";
   static TranscriptCompleted = "TranscriptCompleted";
   static TranscriptRegistration = "TranscriptRegistration";
+  static TranscriptParticipantHalted = "TranscriptParticipantHalted";
   static TranscriptMerkleRootSet = "TranscriptMerkleRootSet";
   static TranscriptEntryChoices = "TranscriptEntryChoices";
   static TranscriptEntryCommitted = "TranscriptEntryCommitted";

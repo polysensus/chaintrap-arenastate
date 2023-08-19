@@ -271,6 +271,12 @@ export class GameMetadataCreator {
           `all victory transition types must also be listed in transitionTypes`
         );
 
+    for (const ty of options.haltParticipantTransitionTypes ?? [])
+      if (!(ty in transitionTypes))
+        throw new Error(
+          `all halting transition types must also be listed in transitionTypes`
+        );
+
     // if (!options.map) throw new Error("a map is required");
 
     // Note: allowing for an undefined map is a concession to testability
@@ -317,7 +323,8 @@ export class GameMetadataCreator {
     this.initArgs.transitionTypes = options.transitionTypes.map(conditionInput);
     this.initArgs.victoryTransitionTypes =
       options.victoryTransitionTypes.map(conditionInput);
-    this.initArgs.haltParticipantTransitionTypes = [];
+    this.initArgs.haltParticipantTransitionTypes =
+      (options.haltParticipantTransitionTypes ?? []).map(conditionInput);
 
     delete this._pendingOptions["map"];
   }

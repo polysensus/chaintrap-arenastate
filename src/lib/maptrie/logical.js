@@ -12,6 +12,8 @@ import { ObjectCodec, LeafObject, leafHash } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
 import { Location } from "./location.js";
+import { LocationFurnishing } from "./locationfurnishing.js";
+import { FurnitureSingletons } from "../map/furnitureconst.js";
 
 export function rootLabel(map) {
   if (!map)
@@ -101,6 +103,13 @@ export class LogicalTopology {
     this.locationExitLinksProof = [];
     this.locationExitLinkKeys = {};
 
+    this.furnLeafs = [];
+    this.furnPrepared = [];
+    this.furnProof = [];
+    this.furnKeys = {};
+    // `${location}:${<ChoiceInputType>}:${furnIndex}` furnIndex means the i'th chest in the location, it doesn't index anywhere else. it is refered to by the furniture leaves.
+    this.locationFurn = {};
+
     this._trie = undefined;
     this._committed = false;
   }
@@ -162,6 +171,11 @@ export class LogicalTopology {
   placeFinish(finish) {
     this.finish = finish;
   }
+  placeFurniture(furniture) {
+    if (!this.finish)
+      this.placeFinish(furniture.byName(FurnitureSingletons.finish_exit));
+    this.furniture = furniture;
+  }
 
   /**
    * Commit the whole map topology to a merkle trie, building a cache of entries
@@ -176,29 +190,40 @@ export class LogicalTopology {
 
     for (let locationId = 0; locationId < this.locations.length; locationId++) {
       const sideExits = this.locationExitChoices(locationId); // the flattened list of [[side, exit], ...., [side, exit]]
+      const furnitureChoices = this.locationFurnitureChoices(locationId); // [[OpenChest, 0], ..., [OpenChest, n]
 
-      if (this.finish.data.location === locationId) {
+      if (this.finish.item.data.location === locationId) {
         // check the finish does not conflict with a side, exit from the generated map
         for (const [side, exit] of sideExits)
-          if (this.finish.data.side === side && this.finish.data.exit === exit)
+          if (
+            this.finish.item.data.side === side &&
+            this.finish.item.data.exit === exit
+          )
             throw new Error(`finish placement conflicts with map exit`);
-        sideExits.push([this.finish.data.side, this.finish.data.exit]);
+        sideExits.push([
+          this.finish.item.data.side,
+          this.finish.item.data.exit,
+        ]);
       }
-      const location = new LocationChoices(locationId, sideExits);
+      const location = new LocationChoices(
+        locationId,
+        sideExits,
+        furnitureChoices.choices
+      );
 
-      let leaf = new LeafObject({
+      let leafObject = new LeafObject({
         type: LocationChoices.ObjectType,
         leaf: location,
       });
-      let prepared = this.prepareLeaf(leaf);
+      let prepared = this.prepareLeaf(leafObject);
 
       let key = leafHash(prepared);
       if (key in this.locationChoicesKeys)
         throw new Error(`locations are expected to be naturally unique`);
 
-      this.locationChoices.push(leaf);
+      this.locationChoices.push(leafObject);
       this.locationChoicesPrepared.push(prepared);
-      this.locationChoicesProof.push();
+      // this.locationChoicesProof.push();
       this.locationChoicesKeys[key] = this.locationChoices.length - 1;
 
       // We need a node for each of the locations exits. We most easily derive this from the exitMenu
@@ -212,32 +237,63 @@ export class LogicalTopology {
 
         // if we placed the finish exit in this location, build the choices accordingly
         if (
-          this.finish.data.location === locationId &&
+          this.finish.item.data.location === locationId &&
           j === sideExits.length - 1
         ) {
-          leaf = new LeafObject({
+          leafObject = new LeafObject({
             type: FinishExit.ObjectType,
             leaf: new FinishExit(locationChoiceRef),
           });
           this.finishExitId = this.exits.length; // it is added below
           this.finishLocationId = this.locationChoices.length - 1; // it was added above
         } else {
-          leaf = new LeafObject({
+          leafObject = new LeafObject({
             type: LocationExit.ObjectType,
             leaf: new LocationExit(locationChoiceRef),
           });
         }
 
-        prepared = this.prepareLeaf(leaf);
+        prepared = this.prepareLeaf(leafObject);
         key = leafHash(prepared);
 
-        const locationExitIndex = this.exits.length;
-        this.exitKeys[key] = locationExitIndex;
+        const id = this.exits.length;
+        this.exitKeys[key] = id;
         this.locationExits[
           `${locationId}:${sideExits[j][0]}:${sideExits[j][1]}`
-        ] = locationExitIndex;
-        this.exits.push(leaf);
+        ] = id;
+        this.exits.push(leafObject);
         this.exitsPrepared.push(prepared);
+      }
+
+      // We need a node for all furniture placed at specific locations. (except
+      // for the finish exit which is a special exit)
+
+      // Create the choice references for the chests placed at this location
+      const furniture = furnitureChoices.furniture;
+      for (let j = 0; j < furniture?.length ?? 0; j++) {
+        const furn = furniture[j];
+
+        const locationChoiceRef = new LogicalRef(
+          LogicalRefType.ProofInput,
+          ObjectType.LocationChoices,
+          locationId,
+          location.iChoices() + sideExits.length + j
+        );
+        leafObject = new LeafObject({
+          type: furn.type,
+          leaf: new LocationFurnishing(furn, locationChoiceRef),
+        });
+        prepared = this.prepareLeaf(leafObject);
+        const xx = ethers.utils.defaultAbiCoder.encode(LeafObject.ABI, prepared);
+        console.log('encoded', xx);
+        key = leafHash(prepared);
+
+        const id = this.furnLeafs.length;
+
+        this.furnKeys[key] = id; // leaf hash -> this.furniture.items[index]
+        this.locationFurn[`${locationId}:${furn.choiceType}:${j}`] = id;
+        this.furnLeafs.push(leafObject);
+        this.furnPrepared.push(prepared);
       }
     }
 
@@ -271,6 +327,7 @@ export class LogicalTopology {
         ...this.locationChoicesPrepared,
         ...this.exitsPrepared,
         ...this.locationExitLinksPrepared,
+        ...this.furnPrepared,
       ],
       LeafObject.ABI
     );
@@ -283,6 +340,12 @@ export class LogicalTopology {
 
     for (const prepared of this.locationExitLinksPrepared)
       this.locationExitLinksProof.push(this.trie.getProof(prepared));
+
+    for (const prepared of this.furnPrepared) {
+      const proof = this.trie.getProof(prepared);
+      const key = leafHash(prepared);
+      this.furnProof.push(proof);
+    }
 
     this._committed = true;
     return this.trie;
@@ -343,6 +406,15 @@ export class LogicalTopology {
     return id;
   }
 
+  furnitureId(location, choiceType, index) {
+    const id = this.locationFurn[`${location}:${choiceType}:${index}`];
+    if (typeof id === "undefined")
+      throw new Error(
+        `location furniture not found for ${location}:${choiceType}:${index}`
+      );
+    return id;
+  }
+
   /**
    *
    * @param {number} typeId
@@ -357,6 +429,10 @@ export class LogicalTopology {
         return this.exits[id];
       case ObjectType.Link2:
         return this.locationExitLinks[id];
+      case ObjectType.FinishExit:
+        return this.furnLeafts[id];
+      case ObjectType.FatalChestTrap:
+        return this.furnLeafts[id];
     }
     return undefined;
   }
@@ -413,6 +489,26 @@ export class LogicalTopology {
         choices.push([side, exit]);
     }
     return choices;
+  }
+
+  locationFurnitureChoices(location) {
+    if (!this.furniture) return [];
+
+    // The first 4 choice entries are the 'sides', further entries will have
+    // fixed meaning. The first such entry represents a list of openable chests
+    // [sides 0-3, [ChoiceType, ], [open, chest-b], ...]]
+    const choices = [];
+
+    const furniture = this.furniture.byLocation(location);
+    const choosable = []; // FinishExits are furniture but they are handled as exits
+
+    for (let i = 0; i < furniture.length; i++) {
+      const furn = furniture[i];
+      if (typeof furn.choiceType === "undefined") continue;
+      choices.push([furn.choiceType, i]);
+      choosable.push(furn);
+    }
+    return { furniture: choosable, choices };
   }
 
   /**

@@ -7,10 +7,21 @@ import {
   leafHash,
 } from "./maptrie/objects.js";
 import { ObjectType } from "./maptrie/objecttypes.js";
+import { LocationChoiceType } from "./maptrie/inputtypes.js";
 import { TranscriptOutcome } from "./abiconst.js";
 
 const abiCoder = ethers.utils.defaultAbiCoder;
 const hexlify = ethers.utils.hexlify;
+
+function logProof(name, prepared, proof) {
+  // remember, the inputs are indirect, so prepared != inputs
+  console.log(`leafHash: ${leafHash(prepared)}`);
+  console.log("proof", proof);
+  let x = abiCoder.encode(LeafObject.ABI, prepared);
+  console.log(`encoded:(${name})) ${hexlify(x)}`);
+  console.log("");
+};
+
 
 export class Trial {
   /**
@@ -79,24 +90,103 @@ export class Trial {
   }
 
   createResolveOutcomeArgs(trialist, locationId, choice) {
-    if (locationId === this.topology.finishLocationId) {
-      const [side, exit] = choice.map((i) => deconditionInput(i));
-      const exitId = this.topology.exitId(locationId, side, exit);
-      if (exitId === this.topology.finishExitId)
-        return this.createResolveOutcomeFinishArgs(
+
+    const inputs = choice.map((i) => deconditionInput(i));
+
+    switch (inputs[0]) {
+      case LocationChoiceType.North:
+      case LocationChoiceType.West:
+      case LocationChoiceType.South:
+      case LocationChoiceType.East:
+        if (locationId === this.topology.finishLocationId) {
+          const [side, exit] = inputs;
+          const exitId = this.topology.exitId(locationId, side, exit);
+          if (exitId === this.topology.finishExitId)
+            return this.createResolveOutcomeFinishArgs(
+              trialist,
+              locationId,
+              choice
+            );
+          // else fall through, its a normal navigation exit
+        }
+
+        return this.createResolveOutcomeNavigationArgs(
           trialist,
           locationId,
           choice
         );
-      // else fall through, its a normal navigation exit
+      case LocationChoiceType.OpenChest:
+        return this.createResolveOpenChest(trialist, locationId, inputs);
     }
-
-    return this.createResolveOutcomeNavigationArgs(
-      trialist,
-      locationId,
-      choice
-    );
   }
+
+  createResolveOpenChest(trialist, locationId, inputs) {
+    if (inputs[0] !== LocationChoiceType.OpenChest)
+      throw new Error(`Trial# invalid input for OpenChest`);
+    const location = this.topology.locationChoices[locationId];
+    const locationInputIndex = location.leaf.matchInput(inputs);
+
+    const leaves = [];
+    const stack = [];
+
+    let prepared = this.topology.locationChoicesPrepared[locationId];
+    let proof = this.topology.locationChoicesProof[locationId];
+
+    // STACK (0) current location
+    // [LOCATIONCHOICE, [[location], [choice], ... [choice]]] => #L
+    leaves.push({ typeId: prepared[0], inputs: prepared[1] });
+    stack.push({
+      inputRefs: [],
+      proofRefs: [],
+      rootLabel: this.staticRootLabel,
+      proof,
+    });
+    logProof("STACK(0) LOCATION", prepared, stack[stack.length - 1]);
+
+    // STACK(1) to ChestOpen proof
+
+    // The only chests we have are death traps, thats a bit of a spoiler for
+    // now, but treat chests will follow.
+
+
+    // Obtain an proof linking the furniture to a specific choice menu type choice.
+    // [FURNITURE-TYPE, [[CHOICE-TYPE], [REF(#L, i)]]]
+    // note that the proof for the current location choice is at STACK(0)
+    const id = this.topology.furnitureId(locationId, ...inputs);
+    const furn = this.topology.furnLeafs[id];
+    if (furn.type !== ObjectType.FatalChestTrap) throw new Error(`furniture type ${furn.type} is not openable`);
+
+    prepared = this.topology.furnPrepared[id];
+    if (prepared[0] !== ObjectType.FatalChestTrap)
+      throw new Error(`OpenChest transition type ${prepared[0]} unsuported`);
+
+    proof = this.topology.furnProof[id];
+    // the inputs are indirect, the stack slot and the input index
+    leaves.push({
+      typeId: prepared[0],
+      inputs: conditionInputs([prepared[1][0],[0, locationInputIndex]]),
+    });
+    stack.push({
+      inputRefs: [1], // mark the second input as an indirect reference to a prior stack entries proof input
+      proofRefs: [],
+      rootLabel: this.staticRootLabel,
+      proof,
+    });
+    logProof("STACK(1) FURNITURE-TYPE", prepared, stack[stack.length - 1]);
+
+    return {
+      participant: trialist,
+      outcome: TranscriptOutcome.Accepted,
+      proof: {
+        choiceSetType: ObjectType.LocationChoices,
+        transitionType: ObjectType.FatalChestTrap, // this will halt the player
+        stack,
+        leaves,
+      },
+      data: "0x",
+      choiceLeafIndex: 0, // XXX: this refers to the current choice, this is just temporary till game completion is in place on the contracts
+    };
+  } 
 
   createResolveOutcomeFinishArgs(trialist, locationId, choice) {
     // const location = this.locationChoices[locationId];
@@ -111,15 +201,6 @@ export class Trial {
     let prepared = this.topology.locationChoicesPrepared[locationId];
     let proof = this.topology.locationChoicesProof[locationId];
 
-    const logit = (name, prepared, proof) => {
-      // remember, the inputs are indirect, so prepared != inputs
-      console.log(`leafHash: ${leafHash(prepared)}`);
-      console.log("proof", proof);
-      let x = abiCoder.encode(LeafObject.ABI, prepared);
-      console.log(`encoded:(${name})) ${hexlify(x)}`);
-      console.log("");
-    };
-
     // STACK (0) current location
     // [LOCATIONCHOICE, [[location], [choice], ... [choice]]] => #L
     leaves.push({ typeId: prepared[0], inputs: prepared[1] });
@@ -129,7 +210,7 @@ export class Trial {
       rootLabel: this.staticRootLabel,
       proof,
     });
-    logit("STACK(0) LOCATION", prepared, stack[stack.length - 1]);
+    logProof("STACK(0) LOCATION", prepared, stack[stack.length - 1]);
 
     // STACK(1) to FINISH proof
     // Obtain an exit proof linking the EXIT to a specific location menu choice.
@@ -152,7 +233,7 @@ export class Trial {
       rootLabel: this.staticRootLabel,
       proof,
     });
-    logit("STACK(1) FINISH", prepared, stack[stack.length - 1]);
+    logProof("STACK(1) FINISH", prepared, stack[stack.length - 1]);
     return {
       participant: trialist,
       outcome: TranscriptOutcome.Accepted,
@@ -186,15 +267,6 @@ export class Trial {
     let prepared = this.topology.locationChoicesPrepared[locationId];
     let proof = this.topology.locationChoicesProof[locationId];
 
-    const logit = (name, prepared, proof) => {
-      // remember, the inputs are indirect, so prepared != inputs
-      console.log(`leafHash: ${leafHash(prepared)}`);
-      console.log("proof", proof);
-      let x = abiCoder.encode(LeafObject.ABI, prepared);
-      console.log(`encoded:(${name})) ${hexlify(x)}`);
-      console.log("");
-    };
-
     // STACK (0) current location
     // [LOCATIONCHOICE, [[location], [choice], ... [choice]]] => #L
     leaves.push({ typeId: prepared[0], inputs: prepared[1] });
@@ -204,7 +276,7 @@ export class Trial {
       rootLabel: this.staticRootLabel,
       proof,
     });
-    logit("STACK(0) LOCATION", prepared, stack[stack.length - 1]);
+    logProof("STACK(0) LOCATION", prepared, stack[stack.length - 1]);
 
     // STACK(1) to EXIT proof
     // Obtain an exit proof linking the EXIT to a specific location menu choice.
@@ -224,7 +296,7 @@ export class Trial {
       rootLabel: this.staticRootLabel,
       proof,
     });
-    logit("STACK(1) EXIT", prepared, stack[stack.length - 1]);
+    logProof("STACK(1) EXIT", prepared, stack[stack.length - 1]);
 
     const [ingressLocationId, ingressSide, ingressExit] =
       this.topology._accessJoin(locationId, side, exit);
@@ -242,7 +314,7 @@ export class Trial {
       rootLabel: this.staticRootLabel,
       proof,
     });
-    logit("STACK(2) INGRESS LOCATION", prepared, stack[stack.length - 1]);
+    logProof("STACK(2) INGRESS LOCATION", prepared, stack[stack.length - 1]);
 
     // Set STACK(3) to ingress location exit
     // Obtain an exit proof linking the EXIT to a specific location menu choice.
@@ -267,7 +339,7 @@ export class Trial {
       rootLabel: this.staticRootLabel,
       proof,
     });
-    logit("STACK(3) INGRESS EXIT", prepared, stack[stack.length - 1]);
+    logProof("STACK(3) INGRESS EXIT", prepared, stack[stack.length - 1]);
 
     // Now add the link. Note that links are directional. For each location exit
     // pair there is a link from a -> b and also b->a. So the link used here
@@ -293,7 +365,7 @@ export class Trial {
       rootLabel: this.staticRootLabel,
       proof,
     });
-    logit("STACK(4) LINK", prepared, stack[stack.length - 1]);
+    logProof("STACK(4) LINK", prepared, stack[stack.length - 1]);
 
     return {
       participant: trialist,

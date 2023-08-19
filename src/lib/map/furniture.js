@@ -1,7 +1,14 @@
+import { FurnitureTypeCodes } from "./furnitureconst.js";
+import { Furnishing } from "./furnishing.js";
 export class Furniture {
   static fromJSON(data) {
     return new Furniture(data);
   }
+
+  /**
+   *
+   * @param {{map,items:[]}} data
+   */
   constructor(data) {
     this.init(data);
   }
@@ -12,25 +19,51 @@ export class Furniture {
     return it;
   }
 
+  byTypeName(typeName) {
+    return this.byType(FurnitureTypeCodes[typeName]);
+  }
+
+  byType(type) {
+    const furns = this.index.types[type];
+    if (!furns) throw new Error(`type ${type} not found`);
+    return [...furns];
+  }
+
+  byLocation(location) {
+    const furns = this.index.located[location];
+    if (!furns) return [];
+    return [...furns];
+  }
+
   init(data) {
     this.map = data.map;
     this.items = data.items;
     this.index = {
       types: {},
       identified: {},
+      located: {},
+      typeByIndex: {},
     };
     for (let i = 0; i < this.items.length; i++) {
       const it = this.items[i];
+      const furn = new Furnishing(i, it);
 
-      it.id = i; // the id is the index in the items array
-
-      if (it.unique_name) {
-        if (it.unique_name in this.index.identified)
-          throw new Error(`id ${it.unique_name} previously defined`);
-        this.index.identified[it.unique_name] = it;
+      if (furn.unique) {
+        if (furn.uniqueName in this.index.identified)
+          throw new Error(`id ${furn.uniqueName} previously defined`);
+        this.index.identified[furn.uniqueName] = furn;
       }
-      if (it.type)
-        this.index.types[it.type] = [...(this.index.types[it.type] ?? []), it];
+      this.index.typeByIndex[i] = furn.type;
+      this.index.types[furn.type] = [
+        ...(this.index.types[furn.type] ?? []),
+        furn,
+      ];
+
+      if (typeof furn.location !== "undefined")
+        this.index.located[furn.location] = [
+          ...(this.index.located[furn.location] ?? []),
+          furn,
+        ];
     }
   }
 }
