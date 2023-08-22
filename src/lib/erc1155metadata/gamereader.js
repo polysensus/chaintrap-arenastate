@@ -1,7 +1,7 @@
 // read game metadata from a token url
 
 import { ipfsGatewayURL, IPFSScheme } from "../chainkit/nftstorage.js";
-import { BlobCodex } from "../chainkit/secretblobs.js";
+import { BlobCodex } from "@polysensus/blobcodex";
 
 import { CODEX_INDEXED_ITEMS, CODEX_FURNITURE_INDEX } from "../guardian.js";
 // All of the items expected in a trial setup serialized as an encrypted blob codex.

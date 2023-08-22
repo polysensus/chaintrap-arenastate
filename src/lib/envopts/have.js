@@ -6,9 +6,10 @@
  */
 export function haveAllNames(names, options) {
   const prefix = options?.prefix ?? "ARENASTATE_";
+  const env = options?.env ?? process.env;
 
   for (const name of names) {
-    const value = process.env[`${prefix}${name}`];
+    const value = env[`${prefix}${name}`];
     if (typeof value === "undefined") return false;
     if (value.constructor.name === "String" && value === "") return false;
     if (!value && value !== 0) return false;

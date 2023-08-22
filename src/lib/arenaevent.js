@@ -102,7 +102,7 @@ export class ArenaEvent {
       case ABIName.TranscriptParticipantHalted:
         arenaEvent.subject = parsedLog.args.participant;
         arenaEvent.update = {
-          halted: true
+          halted: true,
         };
         break;
 

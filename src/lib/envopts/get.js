@@ -1,12 +1,13 @@
 export function getAllNames(names, cfg) {
   const prefix = cfg?.prefix ?? "ARENASTATE_";
   const group = cfg?.group;
+  const env = cfg.env ?? process.env;
 
   const missing = [];
   const options = {};
 
   for (const name of names) {
-    const value = process.env[`${prefix}${name}`];
+    const value = env[`${prefix}${name}`];
     if (typeof value === "undefined") {
       missing.push(name);
       continue;

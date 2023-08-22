@@ -8,13 +8,17 @@ export const ALL = [...REQUIRED, "GAME_ICON_FILENAME"];
  * returns true if all the non optional maptool vars are available in the env.
  * @returns {boolean}
  */
-export function have() {
-  return haveAllNames(REQUIRED, { prefix: "ARENASTATE_NFTSTORAGE_" });
+export function have(options) {
+  return haveAllNames(REQUIRED, {
+    prefix: "ARENASTATE_NFTSTORAGE_",
+    ...options,
+  });
 }
 
-export function get() {
+export function get(options) {
   return getAllNames(ALL, {
     prefix: "ARENASTATE_NFTSTORAGE_",
     group: "nftstorage",
+    ...options,
   });
 }

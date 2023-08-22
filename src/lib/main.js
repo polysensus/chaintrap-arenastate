@@ -4,10 +4,14 @@ export * from "./arenaabi.js";
 export * from "./chainkit/hhkeys.js";
 export * from "./arenaevent.js";
 export * from "./randomnames.js";
+export { get as getMaptool, have as haveMaptool } from "./envopts/maptool.js";
+export { get as getOpenai, have as haveOpenai } from "./envopts/openai.js";
+export {
+  get as getNftstorage,
+  have as haveNftstorage,
+} from "./envopts/nftstorage.js";
 export * from "./chainkit/eventparser.js";
 export * from "./chainkit/transactor.js";
-export * from "./chainkit/aespbkdf.js";
-export * from "./chainkit/secretblobs.js";
 export * from "./chainkit/secretblobsipfs.js";
 export * from "./maptrie/access.js";
 export * from "./maptrie/geometry.js";

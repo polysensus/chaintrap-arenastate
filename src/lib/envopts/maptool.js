@@ -8,10 +8,14 @@ export const ALL = [...REQUIRED];
  * returns true if all the non optional maptool vars are available in the env.
  * @returns {boolean}
  */
-export function have() {
-  return haveAllNames(REQUIRED, { prefix: "ARENASTATE_MAPTOOL_" });
+export function have(options) {
+  return haveAllNames(REQUIRED, { prefix: "ARENASTATE_MAPTOOL_", ...options });
 }
 
-export function get() {
-  return getAllNames(ALL, { prefix: "ARENASTATE_MAPTOOL_", group: "maptool" });
+export function get(options) {
+  return getAllNames(ALL, {
+    prefix: "ARENASTATE_MAPTOOL_",
+    group: "maptool",
+    ...options,
+  });
 }

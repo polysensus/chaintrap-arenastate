@@ -5,7 +5,7 @@ import { Option } from "commander";
 import { readJson } from "./fsutil.js";
 import { isFile } from "./fsutil.js";
 import { NameGenerator } from "../lib/randomnames.js";
-import { BlobCodex } from "../lib/chainkit/secretblobs.js";
+import { BlobCodex } from "@polysensus/blobcodex";
 
 const out = console.log;
 

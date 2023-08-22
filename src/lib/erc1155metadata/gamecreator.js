@@ -323,8 +323,9 @@ export class GameMetadataCreator {
     this.initArgs.transitionTypes = options.transitionTypes.map(conditionInput);
     this.initArgs.victoryTransitionTypes =
       options.victoryTransitionTypes.map(conditionInput);
-    this.initArgs.haltParticipantTransitionTypes =
-      (options.haltParticipantTransitionTypes ?? []).map(conditionInput);
+    this.initArgs.haltParticipantTransitionTypes = (
+      options.haltParticipantTransitionTypes ?? []
+    ).map(conditionInput);
 
     delete this._pendingOptions["map"];
   }

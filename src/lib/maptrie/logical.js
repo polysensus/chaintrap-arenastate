@@ -284,8 +284,11 @@ export class LogicalTopology {
           leaf: new LocationFurnishing(furn, locationChoiceRef),
         });
         prepared = this.prepareLeaf(leafObject);
-        const xx = ethers.utils.defaultAbiCoder.encode(LeafObject.ABI, prepared);
-        console.log('encoded', xx);
+        const xx = ethers.utils.defaultAbiCoder.encode(
+          LeafObject.ABI,
+          prepared
+        );
+        console.log("encoded", xx);
         key = leafHash(prepared);
 
         const id = this.furnLeafs.length;

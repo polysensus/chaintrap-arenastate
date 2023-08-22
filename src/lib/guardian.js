@@ -101,7 +101,11 @@ export class Guardian {
       ...options,
       trialSetupCodex: options.codexPublish ? this.trialSetupCodex : undefined,
       choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [ObjectType.Link2, ObjectType.Finish, ObjectType.FatalChestTrap],
+      transitionTypes: [
+        ObjectType.Link2,
+        ObjectType.Finish,
+        ObjectType.FatalChestTrap,
+      ],
       victoryTransitionTypes: [ObjectType.Finish],
       haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
     });
@@ -215,7 +219,6 @@ export class Guardian {
             "TranscriptParticipantHalted(uint256,address,uint256)"
           );
           break;
-
         }
         default:
           throw new Error(`un-expected transitionType`);

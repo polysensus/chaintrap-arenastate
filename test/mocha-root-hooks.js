@@ -55,7 +55,12 @@ export const mochaHooks = {
     if (isFile(dotenvFile)) {
       console.log(`mocha-root-hook.js# test env config found at ${dotenvFile}`);
       dotenv.config({ path: dotenvFile });
-    } else dotenv.config();
+    } else {
+      console.log(
+        `mocha-root-hook.js# no test env config found, "${dotenvFile}" is not a file`
+      );
+      dotenv.config();
+    }
 
     this.ethersPollingInterval =
       process.env.ARENASTATE_ETHERS_POLLING_INTERVAL ?? 500;
@@ -63,6 +68,7 @@ export const mochaHooks = {
     if (haveOpenAI()) this.openaiOptions = getOpenAIOpts();
     if (haveNFTStorage()) this.nftstorageOptions = getNFTStorageOpts();
     if (haveMaptool()) this.maptoolOptions = getMaptoolOpts();
+    console.log(JSON.stringify(this.nftstorageOptions, null, "  "));
   },
 
   async afterEach() {

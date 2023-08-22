@@ -20,8 +20,7 @@ function logProof(name, prepared, proof) {
   let x = abiCoder.encode(LeafObject.ABI, prepared);
   console.log(`encoded:(${name})) ${hexlify(x)}`);
   console.log("");
-};
-
+}
 
 export class Trial {
   /**
@@ -90,7 +89,6 @@ export class Trial {
   }
 
   createResolveOutcomeArgs(trialist, locationId, choice) {
-
     const inputs = choice.map((i) => deconditionInput(i));
 
     switch (inputs[0]) {
@@ -148,13 +146,13 @@ export class Trial {
     // The only chests we have are death traps, thats a bit of a spoiler for
     // now, but treat chests will follow.
 
-
     // Obtain an proof linking the furniture to a specific choice menu type choice.
     // [FURNITURE-TYPE, [[CHOICE-TYPE], [REF(#L, i)]]]
     // note that the proof for the current location choice is at STACK(0)
     const id = this.topology.furnitureId(locationId, ...inputs);
     const furn = this.topology.furnLeafs[id];
-    if (furn.type !== ObjectType.FatalChestTrap) throw new Error(`furniture type ${furn.type} is not openable`);
+    if (furn.type !== ObjectType.FatalChestTrap)
+      throw new Error(`furniture type ${furn.type} is not openable`);
 
     prepared = this.topology.furnPrepared[id];
     if (prepared[0] !== ObjectType.FatalChestTrap)
@@ -164,7 +162,7 @@ export class Trial {
     // the inputs are indirect, the stack slot and the input index
     leaves.push({
       typeId: prepared[0],
-      inputs: conditionInputs([prepared[1][0],[0, locationInputIndex]]),
+      inputs: conditionInputs([prepared[1][0], [0, locationInputIndex]]),
     });
     stack.push({
       inputRefs: [1], // mark the second input as an indirect reference to a prior stack entries proof input
@@ -186,7 +184,7 @@ export class Trial {
       data: "0x",
       choiceLeafIndex: 0, // XXX: this refers to the current choice, this is just temporary till game completion is in place on the contracts
     };
-  } 
+  }
 
   createResolveOutcomeFinishArgs(trialist, locationId, choice) {
     // const location = this.locationChoices[locationId];

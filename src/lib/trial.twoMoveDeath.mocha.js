@@ -81,6 +81,9 @@ describe("Game session participant halt tests", function () {
     await trialist.startListening(gid);
     await trialist.journal?.waitOutcomeResolutions(gid);
     // Check that an attempt by the halted participant to make further choices is rejected with the appropriate error.
-    expect(trialist.commitLocationChoice(gid, 0, 0)).to.be.rejectedWith(/.*/, 'Transcript_ParticipantHalted()');
+    expect(trialist.commitLocationChoice(gid, 0, 0)).to.be.rejectedWith(
+      /.*/,
+      "Transcript_ParticipantHalted()"
+    );
   });
 });

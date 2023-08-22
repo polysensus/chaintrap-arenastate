@@ -68,7 +68,7 @@ tasks:
   test:
     desc: run the integration tests
     cmds:
-      - npx mocha './**/*.mocha.js'
+      - npx mocha './**/*.mocha.js' {{.CLI_ARGS}}
 
   build:js:
     desc: format and lint the code, then build the package
