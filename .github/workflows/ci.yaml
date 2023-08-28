@@ -96,13 +96,11 @@ jobs:
       - name: test
         working-directory: chaintrap-arenastate
         run: |
-          task dev:hh:restart
           task test
 
       - name: test cms3
         working-directory: chaintrap-arenastate
         run: |
-          task dev:hh:restart
           task test:cms3
 
       # this didn't work, despite looking like jest/junit format the reporter

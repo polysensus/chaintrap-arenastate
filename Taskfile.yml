@@ -5,6 +5,7 @@ vars:
   CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
   TUSKS: ".local/dev"
   FACETS_EXCLUDE: node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json
+  FACETS_DEPLOYED: "facets-deployed.json"
   CHAINTRAP_CONTRACTS_ABI_DIR: node_modules/@polysensus/chaintrap-contracts/abi
   DIAMOND_DEPLOY_JSON: .local/dev/diamond-deploy.json
   DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
@@ -416,7 +417,6 @@ tasks:
       GAS_LIMIT: '{{.GAS_LIMIT | default ""}}'
       CUTTER_GAS_LIMIT: '{{.CUTTER_GAS_LIMIT | default ""}}'
       COMMIT: '{{.COMMIT | default ""}}'
-      FACETS_DEPLOYED: '{{.FACETS_DEPLOYED | default "facets-deployed.json"}}'
 
     cmds:
       - |
@@ -464,7 +464,6 @@ tasks:
       GAS_LIMIT: '{{.GAS_LIMIT | default ""}}'
       CUTTER_GAS_LIMIT: '{{.CUTTER_GAS_LIMIT | default ""}}'
       COMMIT: '{{.COMMIT | default ""}}'
-      FACETS_DEPLOYED: '{{.FACETS_DEPLOYED | default "facets-deployed.json"}}'
 
     desc: |
       deploy the contracts to hardhat (assumes the local server is listening on 8545)
@@ -474,6 +473,7 @@ tasks:
     cmds:
       - |
         echo "PROVIDER_ID {{.PROVIDER_ID}}"
+        echo "PROVIDER_URL: $ARENASTATE_PROVIDER_URL"
         echo "ARENASTATE_DEPLOY_KEY: $ARENASTATE_DEPLOY_KEY"
         echo "ARENASTATE_ARENA: $ARENASTATE_ARENA"
         echo "ARENASTATE_OWNER_KEY: $ARENASTATE_OWNER_KEY"
@@ -483,6 +483,8 @@ tasks:
         [ -z $FACETS_DEPLOYED ] && echo 'A filename for --facets-deployed is required' && exit 1
         if [ ! -f $FACETS_DEPLOYED ]; then
           echo '{}' > $FACETS_DEPLOYED
+        else
+          echo "**** re-using deployed facets from $FACETS_DEPLOYED ***"
         fi
 
         {{.DEPLOYCLI}} list \
@@ -516,6 +518,7 @@ tasks:
   find:
     dotenv: [".env.{{.PROVIDER_ID}}"]
     vars:
+      PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
       DIAMOND_NONCE: '{{.DIAMOND_NONCE | default ""}}'
 
     desc: find the arena on the chosen PROVIDER_ID
@@ -531,6 +534,7 @@ tasks:
     desc: start a local hardhat node (if there isn't one running)
     cmds:
       - tusk -q -f {{.TUSKS}}/tusk-hardhat.yml start-node -d .local/hh
+      - rm -f hh.{{.FACETS_DEPLOYED}}
 
   dev:hh:restart:
     desc: restart the local hardhat node
