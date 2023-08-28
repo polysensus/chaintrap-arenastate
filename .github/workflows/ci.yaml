@@ -9,14 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      # - name: Checkout the contracts repository
-      #   uses: actions/checkout@v3
-      #   with:
-      #     repository: polysensus/chaintrap-contracts
-      #     token: ${{ steps.cicd-app-authenticate.outputs.app_token }}
-      #     submodules: recursive
-      #     path: chaintrap-contracts
-
       - name: Checkout the arenastate repository
         uses: actions/checkout@v3
         with:
@@ -30,11 +22,6 @@ jobs:
           node-version: 18.15.0
           scope: "@polysensus"
           registry-url: "https://registry.npmjs.org"
-
-      # - name: Install Foundry
-      #   uses: foundry-rs/foundry-toolchain@v1
-      #   with:
-      #     version: nightly
 
       - name: Install go-tusk and go-task
         run: |
@@ -53,10 +40,6 @@ jobs:
 
         run: |
 
-          # pushd chaintrap-contracts
-          # npm install
-          # task build
-          # popd
           pushd chaintrap-arenastate
 
           task bootstrap
@@ -92,12 +75,3 @@ jobs:
         working-directory: chaintrap-arenastate
         run: |
           task test:cms3
-
-      # this didn't work, despite looking like jest/junit format the reporter
-      # crashed when looking at the time property
-      # https://github.com/marketplace/actions/test-reporter
-      # - uses: actions/upload-artifact@v2
-      #   if: success() || failure() # even if previous failed
-      #   with:
-      #     name: test-results
-      #     path: chaintrap-arenastate/jest-junit.xml
