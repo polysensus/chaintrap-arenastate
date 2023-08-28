@@ -52,7 +52,7 @@ tasks:
     cmds:
       - |
         cat .env.example.hh | envsubst > .env.hh
-        cat .env.hh | grep _KEY
+        cat .env.hh | grep ARENASTATE_
         cp .env.hh .env.test
 
   test:prepare:

@@ -81,22 +81,28 @@ jobs:
       - name: build
         working-directory: chaintrap-arenastate
         run: |
-          ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
           task build
+
+      - name: test prepare
+        working-directory: chaintrap-arenastate
+        env:
+          ARENASTATE_NFTSTORAGE_API_KEY: ${{ secrets.ARENASTATE_NFTSTORAGE_API_KEY }}
+          ARENASTATE_OPENAI_API_KEY: ${{ secrets.ARENASTATE_OPENAI_API_KEY }}
+        run: |
+          ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
+          task test:prepare:cd
+          task dev:hh:start
 
       - name: test
         working-directory: chaintrap-arenastate
         run: |
-          ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
-          task test:prepare:cd
+          task dev:hh:restart
           task test
 
       - name: test cms3
         working-directory: chaintrap-arenastate
         run: |
-          ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
-          task dev:hh:start
-          task test:prepare:cd
+          task dev:hh:restart
           task test:cms3
 
       # this didn't work, despite looking like jest/junit format the reporter
