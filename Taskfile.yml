@@ -53,6 +53,7 @@ tasks:
       - |
         cat .env.example.hh | envsubst > .env.hh
         cat .env.hh | grep _KEY
+        cp .env.hh .env.test
 
   test:prepare:
     dotenv: [".env.test"]
