@@ -1,7 +1,5 @@
 on:
   push:
-    #tags:
-    #  - "v[0-9]+.[0-9]+.[0-9]+"
 
 name: ci
 
@@ -93,20 +91,13 @@ jobs:
           task test:prepare:cd
           task test
 
-      - name: publish npm package
+      - name: test cms3
         working-directory: chaintrap-arenastate
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH }}
-        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         run: |
-
-          # github has scale issues when there are a large (> 20 ) npm packages in
-          # a repo, so force for fixes seems like the right thing for now.
-          FORCE=""
-          if [[ ! $(git log -1 --pretty=%B) =~ '^release:v' ]]; then
-            export FORCE=--force
-          fi
-          npm publish $FORCE --access public
+          ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
+          task dev:hh:start
+          task test:prepare:cd
+          task test:cms3
 
       # this didn't work, despite looking like jest/junit format the reporter
       # crashed when looking at the time property

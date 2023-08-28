@@ -20,7 +20,7 @@ export class Trialist {
     let profile = options?.profile;
     if (!profile) profile = { nickname: options?.nickname ?? "<bashfulbob>" };
 
-    const request = new TransactRequest(this.eventParser);
+    const request = new TransactRequest(this.eventParser, this.initialOptions);
     request
       .method(this.arena.registerTrialist, gid, msgpack.encode(profile))
       .requireLogs("TranscriptRegistration(uint256,address,bytes)");

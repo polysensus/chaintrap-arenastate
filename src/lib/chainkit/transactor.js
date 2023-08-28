@@ -130,13 +130,15 @@ export class TransactRequest {
    * @constructor
    * @param {LogParser} logParser - an instance that implements a receiptLogs parser
    */
-  constructor(logParser) {
+  constructor(logParser, options) {
     /**@readonly */
     this.logParser = logParser;
     /**@readonly */
     this._method = undefined;
     /**@readonly */
     this.args = undefined;
+
+    if (options) this.options = { ...options };
     /**
      * @type {undefined|{anticipated:string[], required:string[], excluded:string[]}}
      */
@@ -154,6 +156,8 @@ export class TransactRequest {
    */
   method(method, ...args) {
     this._method = method;
+
+    if (!this.options?.networkEIP1559) args = [...args, { type: 0 }]; // legacy gas pricing
     this.args = args;
     return this; // chainable
   }

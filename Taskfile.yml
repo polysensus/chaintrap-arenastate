@@ -7,7 +7,15 @@ vars:
   FACETS_EXCLUDE: node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json
   CHAINTRAP_CONTRACTS_ABI_DIR: node_modules/@polysensus/chaintrap-contracts/abi
   DIAMOND_DEPLOY_JSON: .local/dev/diamond-deploy.json
-  DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
+  #DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
+  DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/deploycli.js"
+  FURNITURE_FILE: "data/maps/map02-furnishings.json"
+  MAP_FILE: "data/maps/map02.json"
+  MAP_NAME: "map02"
+  CODEX_FILENAME: "map02.codex.json"
+  CODEX_PASSWORD: "very-secret"
+  OPENAI_IMAGE_PROMPT: "A stylised icon representing a turn based random dungeon crawler game"
+  PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
 
 tasks:
   bootstrap:
@@ -43,8 +51,8 @@ tasks:
     desc: start hardhat and deploy contracts for test:integ
     cmds:
       - |
-        cat .env.example.test.cd | envsubst > .env.test
-        cat .env.test | grep _KEY
+        cat .env.example.hh | envsubst > .env.hh
+        cat .env.hh | grep _KEY
 
   test:prepare:
     dotenv: [".env.test"]
@@ -66,7 +74,7 @@ tasks:
           PROVIDER_ID: "hh"
 
   test:
-    desc: run the integration tests
+    desc: run the unit tests
     cmds:
       - npx mocha './**/*.mocha.js' {{.CLI_ARGS}}
 
@@ -89,110 +97,234 @@ tasks:
           --format json | tee {{.DIAMOND_DEPLOY_JSON}}
 
   # ----
-  # hardhat game commands
+  # Milestone demos
   # ----
-  chaintrap:hh:creategame:
-    dotenv: [".env.hh"]
+  test:cms3:
+    desc: |
+      Creates a map and game, with a finish and an openable chest. The chest kills the
+      trialist that opens it.
+
+      Run through a short game sequence showing this:
+      * bob choses to open the chest placed at the start location and is halted.
+      * alice uses the exit that reaches finish and ownership of the game token is transfered to her.
+
+    cmds:
+      - echo ------------------------------------------------------------
+      - echo "create the map"
+      - echo ------------------------------------------------------------
+      - task: game:maptool
+      - echo ------------------------------------------------------------
+      - echo "create the game token"
+      - echo ------------------------------------------------------------
+      - task: game:creategame
+      - echo ------------------------------------------------------------
+      - echo "trialist 1 joins the game"
+      - echo ------------------------------------------------------------
+      - task: game:joingame:user1
+      - echo ------------------------------------------------------------
+      - echo "trialist 2 joins the game"
+      - echo ------------------------------------------------------------
+      - task: game:joingame:user2
+      - echo ------------------------------------------------------------
+      - echo "guardian starts the game"
+      - echo ------------------------------------------------------------
+      - task: game:startgame
+      - echo ------------------------------------------------------------
+      - echo "trialist 1 takes the first exit on the west side"
+      - echo ------------------------------------------------------------
+      # USER1 uses the first exit on the west
+      - task: game:commitchoice
+        vars: { MENU: "1", CHOICE: "0" }
+      - task: game:resolvechoice
+      - echo ------------------------------------------------------------
+      - echo "trialist 2 opens the chest"
+      - echo ------------------------------------------------------------
+      # USER2 opens the chest
+      - task: game:commitchoice:user2
+        vars: { MENU: "4", CHOICE: "0" }
+      - task: game:resolvechoice
+      # USER1 uses the finish exit on the north side
+      - echo ------------------------------------------------------------
+      - echo "trialist 1 uses the finish exit and wins the game token"
+      - echo ------------------------------------------------------------
+      - task: game:commitchoice
+        vars: { MENU: "0", CHOICE: "0" }
+      - task: game:resolvechoice
+
+  # ----
+  # game commands
+  # ----
+  game:maptool:
+    desc: load a map file and save it in a game codex
+    dotenv: [".env.{{.PROVIDER_ID}}"]
     cmds:
       - |
-        export ARENASTATE_ARENA=$(tusk -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml creategame
+        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
+        ./cli.js \
+          --map-name {{.MAP_NAME}} \
+          maptool \
+            --map-load \
+            --map-filename {{.MAP_FILE}} \
+            --codex-filename {{.CODEX_FILENAME}} \
+            --codex-password {{.CODEX_PASSWORD}}
 
-  chaintrap:hh:joingame:
-    dotenv: [".env.hh"]
+  game:creategame:
+    desc: mint a new game
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      KEY: '{{.KEY | default ""}}'
+
     cmds:
       - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml joingame
 
-  chaintrap:hh:startgame:
-    dotenv: [".env.hh"]
+        KEY=$(task -s resolve-key KEY={{.KEY}} KEY_ENV_DEFAULT=GUARDIAN PROVIDER_ID='{{.PROVIDER_ID}}')
+        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
+        echo "creategame ARENASTATE_ARENA=$ARENASTATE_ARENA"
+
+        ./cli.js \
+          --codex-filename {{.CODEX_FILENAME}} \
+          --codex-password {{.CODEX_PASSWORD}} \
+          --map-name map02 \
+          --key $KEY \
+          --furniture {{.FURNITURE_FILE}} \
+            creategame \
+              --codex-publish \
+              --codex-from-disc \
+              --name "A chaintrap game created by automated testing" \
+              --description \
+                "The description of a chaintrap game created by developer testing" \
+              --max-participants 3 \
+              --openai-image-prompt '{{.OPENAI_IMAGE_PROMPT}}'
+
+  game:joingame:
+    desc: join a game as a trialist
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      NICKNAME: '{{.NICKNAME | default "alice" }}'
+      KEY: '{{.KEY | default ""}}'
+      KEY_ENV_DEFAULT: '{{.KEY_ENV_DEFAULT | default "USER1"}}'
     cmds:
       - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml startgame
+        KEY=$(task -s resolve-key KEY={{.KEY}} KEY_ENV_DEFAULT={{.KEY_ENV_DEFAULT}} PROVIDER_ID='{{.PROVIDER_ID}}')
+        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
+        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
 
-  chaintrap:hh:commitchoice:
-    dotenv: [".env.hh"]
+        ./cli.js --key $KEY joingame --nickname {{.NICKNAME}}
+
+  game:joingame:user1:
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    desc: join a game as a trialist, default to the user1 key
+    vars:
+      NICKNAME: '{{.NICKNAME | default "alice" }}'
+      KEY: '{{.KEY | default ""}}'
+    cmds:
+      - task: game:joingame
+        vars:
+          {
+            NICKNAME: "{{.NICKNAME}}",
+            KEY: "{{.KEY}}",
+            KEY_ENV_DEFAULT: "USER1",
+          }
+
+  game:joingame:user2:
+    desc: join a game as a trialist, default to the user2 key
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      NICKNAME: '{{.NICKNAME | default "bob" }}'
+      KEY: '{{.KEY | default ""}}'
+    cmds:
+      - task: game:joingame
+        vars:
+          {
+            NICKNAME: "{{.NICKNAME}}",
+            KEY: "{{.KEY}}",
+            KEY_ENV_DEFAULT: "USER2",
+          }
+
+  game:startgame:
+    desc: start a game, default expects two trialists
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      STARTS: '{{.STARTS | default "0,0"}}'
+      KEY: '{{.KEY | default ""}}'
     cmds:
       - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml commitchoice -- {{.CLI_ARGS}}
+        KEY=$(task -s resolve-key KEY="{{.KEY}}" KEY_ENV_DEFAULT="GUARDIAN" PROVIDER_ID='{{.PROVIDER_ID}}')
+        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
+        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
+        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
 
-  chaintrap:hh:resolvechoice:
-    dotenv: [".env.hh"]
+        # Creategame publishes the map and the furniture as nft metadata. Here,
+        # we obtain the metadata by finding the most recently created game token
+        # on the arena and reading its map and furniture from the *encrypted*
+        # IPFS data.
+
+        ./cli.js \
+          --codex-password {{.CODEX_PASSWORD}} \
+          --key $KEY \
+        startgame \
+          --starts "{{.STARTS}}"
+
+  game:commitchoice:
+    desc: |
+      MENU
+        0-3 are the side exit menues NORTH, WEST, SOUTH, EAST
+        > 3 selects a placed furniture item menu. openable or usable items just have a single choice input.
+      CHOICE
+        The menu has a fixed number of choices. For side exit menus, there is one choice per exit on the side.
+        For a chest, slecting the only available choice opens the chest and reveals the consequence.
+
+      For CMS3, the test data and start locations place a death trap at the
+      start location.  MENU: 4, CHOICE: 0 will trigger it.
+
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      KEY: '{{.KEY | default ""}}'
+      MENU: '{{.MENU | default "0"}}'
+      CHOICE: '{{.CHOICE | default "0"}}'
+      KEY_ENV_DEFAULT: '{{.KEY_ENV_DEFAULT| default "USER1"}}'
     cmds:
       - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml resolvechoice
+        KEY=$(task -s resolve-key KEY="{{.KEY}}" KEY_ENV_DEFAULT={{.KEY_ENV_DEFAULT}} PROVIDER_ID='{{.PROVIDER_ID}}')
+        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
+        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
+        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
+        ./cli.js \
+          --key $KEY \
+        commitchoice \
+          "{{.MENU}}" \
+          "{{.CHOICE}}"
 
-  # ---
-  # optimism game commands
-  # ---
-  chaintrap:op:creategame:
-    dotenv: [".env.op"]
+  game:commitchoice:user2:
+    desc: same as game:commitchoice, but defaults to key ARENASTATE_USER2_KEY
+    vars:
+      KEY: '{{.KEY | default ""}}'
+      MENU: '{{.MENU | default "0"}}'
+      CHOICE: '{{.CHOICE | default "0"}}'
+    cmds:
+      - task: game:commitchoice
+        vars:
+          {
+            KEY: "{{.KEY}}",
+            MENU: "{{.MENU}}",
+            CHOICE: "{{.CHOICE}}",
+            KEY_ENV_DEFAULT: "USER2",
+          }
+
+  game:resolvechoice:
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      KEY: '{{.KEY | default ""}}'
     cmds:
       - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml creategame
-
-  chaintrap:op:joingame:
-    dotenv: [".env.op"]
-    cmds:
-      - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml joingame
-
-  chaintrap:op:startgame:
-    dotenv: [".env.op"]
-    cmds:
-      - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml startgame
-
-  chaintrap:op:commitchoice:
-    dotenv: [".env.op"]
-    cmds:
-      - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml commitchoice -- {{.CLI_ARGS}}
-
-  chaintrap:op:resolvechoice:
-    dotenv: [".env.op"]
-    cmds:
-      - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml resolvechoice
-
-  # ---
-  # mumbai game commands
-  # ---
-
-  chaintrap:mumbai:creategame:
-    dotenv: [".env.mumbai"]
-    cmds:
-      - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml creategame
-
-  chaintrap:mumbai:joingame:
-    dotenv: [".env.mumbai"]
-    cmds:
-      - |
-        export ARENASTATE_ARENA=$(tusk -q -f tusk-arena.yml diamond-find)
-        echo "arena proxy: $ARENASTATE_ARENA"
-        tusk -f tusk-tests.yml joingame
+        KEY=$(task -s resolve-key KEY="{{.KEY}}" KEY_ENV_DEFAULT="GUARDIAN" PROVIDER_ID='{{.PROVIDER_ID}}')
+        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
+        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
+        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
+        ./cli.js \
+          --codex-password {{.CODEX_PASSWORD}} \
+          --key $KEY \
+          resolvechoice
 
   deploy:
     desc: deploy the contracts to all supported networks
@@ -219,7 +351,33 @@ tasks:
         task op:bridge-eth -- $(cat .local/dev/wallets/wallet-deploy.key) 0.5 --commit
     cmds:
       - |
-        tusk -f tusk-arena.yml op-bridge-eth {{.CLI_ARGS}}
+        echo needs porting from tusk syntax
+        exit 1
+        set -e
+        ${diamond-deploy} \
+          -u "${rpc}" \
+          op-deposit \
+            --l1-url=${l1-url} \
+            --eth-fiat=1453 \
+            --units=${units} \
+            $(${commit} && echo -n '--commit' ) \
+            ${key} ${amount}
+
+  deploy:op:
+    desc: deploy the contracts to polygon mumbai testnet
+    cmds:
+      - task: deploy:up
+        vars:
+          PROVIDER_ID: "opgoerli"
+          GAS_PRICE: "0.001"
+
+  deploy:op-new:
+    desc: deploy the contracts to polygon mumbai testnet
+    cmds:
+      - task: deploy:new
+        vars:
+          PROVIDER_ID: "opgoerli"
+          GAS_PRICE: "0.001"
 
   deploy:mumbai:
     desc: deploy the contracts to polygon mumbai testnet
@@ -237,27 +395,28 @@ tasks:
           PROVIDER_ID: "mumbai"
           GAS_PRICE: "2.6"
 
-  find:mumbai:
-    dotenv: [".env.mumbai"]
-    desc: find the arena on mumbai
-    cmds:
-      - |
-        tusk -f tusk-arena.yml diamond-find
-
   deploy:up:
-    desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
+    desc: |
+      deploy the contracts to the chosen provider
+
+      This command is dry run by default, add '-- --commit' to deploy
     dotenv: [".env.{{.PROVIDER_ID}}"]
     vars:
       PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
-      GAS_PRICE: '{{.GAS_PRICE | default ""}}'
+      GAS_PRICE: '{{.GAS_PRICE | default "0.001"}}'
       DIAMOND_ADDRESS: '{{.DIAMOND_ADDRESS | default ""}}'
       DIAMOND_NONCE: '{{.DIAMOND_NONCE | default ""}}'
+      GAS_LIMIT: '{{.GAS_LIMIT | default ""}}'
+      CUTTER_GAS_LIMIT: '{{.CUTTER_GAS_LIMIT | default ""}}'
+      COMMIT: '{{.COMMIT | default ""}}'
+      FACETS_DEPLOYED: '{{.FACETS_DEPLOYED | default "facets-deployed.json"}}'
+
     cmds:
       - |
         echo "ARENASTATE_DEPLOY_KEY: $ARENASTATE_DEPLOY_KEY"
         echo "PROVIDER_ID {{.PROVIDER_ID}}"
         echo "ARENASTATE_ARENA: $ARENASTATE_ARENA"
-        DIAMOND_ADDRESS=${ARENASTATE_AREANA:-"{{.DIAMOND_ADDRESS}}"}
+        DIAMOND_ADDRESS=${ARENASTATE_ARENA:-"{{.DIAMOND_ADDRESS}}"}
         echo "DIAMOND_ADDRESS: $DIAMOND_ADDRESS"
         DIAMOND_NONCE=${ARENASTATE_DIAMOND_NONCE:-"{{.DIAMOND_NONCE}}"}
         echo "DIAMOND_NONCE: $DIAMOND_NONCE"
@@ -276,6 +435,8 @@ tasks:
             $([ -n '{{.DIAMOND_ADDRESS}}' ] && echo -n '--diamond-address {{.DIAMOND_ADDRESS}}' ) \
             --replace \
             $([ -n '{{.GAS_PRICE}}' ] && echo -n '--gasprice {{.GAS_PRICE}}' ) \
+            $([ -n '{{.GAS_LIMIT}}' ] && echo -n '--gaslimit {{.GAS_LIMIT}}' ) \
+            $([ -n '{{.CUTTER_GAS_LIMIT}}' ] && echo -n '--cutter-gaslimit {{.CUTTER_GAS_LIMIT}}' ) \
             --legacy \
             --diamond-owner-key ${ARENASTATE_OWNER_KEY} \
             --diamond-init-name DiamondNew \
@@ -284,21 +445,38 @@ tasks:
             -f diamond-deploy.json \
             {{.CLI_ARGS}}
 
-          # '-- --commit' (utilising .CLI_ARGS) is the idiomatic way to cause the action to commit
+        if [ ! $(echo '{{.CLI_ARGS}}' | grep '\-\-\commit') ]; then
+          echo "append '-- --commit' to your options to issue the transactions"
+        fi
 
   deploy:new:
     dotenv: [".env.{{.PROVIDER_ID}}"]
     vars:
       PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
-      GAS_PRICE: '{{.GAS_PRICE | default ""}}'
+      GAS_PRICE: '{{.GAS_PRICE | default "0.001"}}'
+      GAS_LIMIT: '{{.GAS_LIMIT | default ""}}'
+      CUTTER_GAS_LIMIT: '{{.CUTTER_GAS_LIMIT | default ""}}'
       COMMIT: '{{.COMMIT | default ""}}'
+      FACETS_DEPLOYED: '{{.FACETS_DEPLOYED | default "facets-deployed.json"}}'
 
-    desc: deploy the contracts to hardhat (assumes the local server is listening on 8545)
+    desc: |
+      deploy the contracts to hardhat (assumes the local server is listening on 8545)
+
+      This command is dry run by default, add '-- --commit' to deploy
+
     cmds:
       - |
-
         echo "PROVIDER_ID {{.PROVIDER_ID}}"
         echo "ARENASTATE_DEPLOY_KEY: $ARENASTATE_DEPLOY_KEY"
+        echo "ARENASTATE_ARENA: $ARENASTATE_ARENA"
+        echo "ARENASTATE_OWNER_KEY: $ARENASTATE_OWNER_KEY"
+
+        FACETS_DEPLOYED="{{.PROVIDER_ID}}.{{.FACETS_DEPLOYED}}"
+
+        [ -z $FACETS_DEPLOYED ] && echo 'A filename for --facets-deployed is required' && exit 1
+        if [ ! -f $FACETS_DEPLOYED ]; then
+          echo '{}' > $FACETS_DEPLOYED
+        fi
 
         {{.DEPLOYCLI}} list \
           -I facet -n Diamond DiamondNew \
@@ -312,18 +490,25 @@ tasks:
           diamond-new \
             --replace \
             $([ -n '{{.GAS_PRICE}}' ] && echo -n '--gasprice {{.GAS_PRICE}}' ) \
+            $([ -n '{{.GAS_LIMIT}}' ] && echo -n '--gaslimit {{.GAS_LIMIT}}' ) \
+            $([ -n '{{.CUTTER_GAS_LIMIT}}' ] && echo -n '--cutter-gaslimit {{.CUTTER_GAS_LIMIT}}' ) \
             --legacy \
             --diamond-owner-key ${ARENASTATE_OWNER_KEY} \
             --diamond-init-name DiamondNew \
             --diamond-init-args \
               '[{"typeURIs": ["GAME_TYPE", "TRANSCRIPT_TYPE", "FURNITURE_TYPE"]}]' \
-            -f diamond-deploy.json \
-            $([ -n '{{.COMMIT}}' ] && echo -n '--commit {{.COMMIT}}' )
+            --facets diamond-deploy.json \
+            --facets-deployed=$FACETS_DEPLOYED \
+            --save-facets-deployed=$FACETS_DEPLOYED \
+            {{.CLI_ARGS}}
+
+        if [ ! $(echo '{{.CLI_ARGS}}' | grep '\-\-\commit') ]; then
+          echo "append '-- --commit' to your options to issue the transactions"
+        fi
 
   find:
     dotenv: [".env.{{.PROVIDER_ID}}"]
     vars:
-      PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
       DIAMOND_NONCE: '{{.DIAMOND_NONCE | default ""}}'
 
     desc: find the arena on the chosen PROVIDER_ID
@@ -353,3 +538,51 @@ tasks:
         set -x
         ls -la {{.TUSKS}}
         tusk -q -f {{.TUSKS}}/tusk-hardhat.yml stop-node -d .local/hh
+
+  resolve-key:
+    desc: |
+      resolve the key to use
+
+      Intended for internal use to fall back to a task specific 'default' named key.
+
+      task file user MAY set KEY
+
+      calling task always sets KEY_ENV_DEFAULT
+
+      If the user hasn't set KEY, then ARENASTATE_<KEY_ENV_DEFAULT>_KEY is used
+
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      # taskfile user sets KEY if they want to override.
+      KEY: '{{.KEY | default ""}}'
+      # calling task sets this un-conditionaly to specify the key to default to
+      KEY_ENV_DEFAULT: '{{.KEY_ENV_DEFAULT | default "GUARDIAN"}}'
+    cmds:
+      - |
+        KEY={{.KEY}}
+        KEY=${KEY:-$ARENASTATE_{{.KEY_ENV_DEFAULT}}_KEY}
+        [ -z "$KEY" ] && echo "failed to resolve key" && exit 1
+        echo $KEY
+
+  resolve-arena:
+    desc: |
+      resolve the arena contract proxy address
+
+      For the hardhat provider we find the latest deployed
+
+      For all other providers we *require* that ARENASTATE_ARENA is set in the
+      env and not empty.
+
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
+    cmds:
+      - |
+        if [ "{{.PROVIDER_ID}}" = "hh" ]; then
+          task -s find PROVIDER_ID={{.PROVIDER_ID}}
+          exit 0
+        elif [ -z "$ARENASTATE_ARENA" ]; then
+          echo "The arena proxy address must be supplied explicitly unless using hardhat"
+          exit 1
+        fi
+        echo $ARENASTATE_ARENA

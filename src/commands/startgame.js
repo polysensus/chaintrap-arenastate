@@ -40,6 +40,9 @@ async function startgame(program, options) {
   guardian.setupTrial(codex, { ikey: 0 });
 
   await guardian.openTranscript(gid);
-  await guardian.startGame(gid, options.starts.split(",").map(parseInt));
+  await guardian.startGame(
+    gid,
+    ...options.starts.split(",").map((s) => parseInt(s))
+  );
   console.log(`started game ${gid.toHexString()}`);
 }

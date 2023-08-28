@@ -12,13 +12,16 @@
       "program": "${workspaceFolder}/cli.js",
       "envFile": "${workspaceFolder}/.env.test",
       "args": [
+        "--map-name",
+        "map02",
         "maptool",
-        "--svg",
-        "map.svg",
+        "--map-load", // read from disc
+        "--map-filename",
+        "data/maps/map02.json",
         "--maptool-url",
         "https://chaintrap.hoy.polysensus.io/chaintrap/maptool/",
         "--codex-filename",
-        "map.blobs.json",
+        "map02.codex.json",
         "--codex-password",
         "very-secret"
       ]
@@ -30,11 +33,11 @@
       "name": "creategame",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
-      "envFile": "${workspaceFolder}/.env.test",
+      "envFile": "${workspaceFolder}/.env.opgoerli",
       "args": [
         // "--map", "${workspaceFolder}/data/maps/map02.json",
         "--codex-filename",
-        "map.blobs.json",
+        "map02.codex.json",
         "--codex-password",
         "very-secret",
         "--map-name",
@@ -46,7 +49,8 @@
         "A chaintrap game created by developer testing",
         "--description",
         "The description of a chaintrap game created by developer testing",
-        "--icon-generate",
+        // "--icon-generate",
+        "--codex-from-disc",
         "--codex-publish",
         "--max-participants",
         "3",
@@ -71,16 +75,18 @@
       "name": "startgame",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
-      "envFile": "${workspaceFolder}/.env.test",
+      "envFile": "${workspaceFolder}/.env.hh",
+      "env": {
+        "ARENASTATE_ARENA": "0xD2cfA0790CcE7dd980699F6F1F4A4f1D13cEBA9F"
+      },
       "args": [
-        // "--codex-filename", "map.blobs.json",
         "--codex-password",
         "very-secret",
-        // "--furniture", "${workspaceFolder}/data/maps/map02-furnishings.json",
-        // "--map-name", "map02",
+        "--map-name",
+        "map02",
         "startgame",
         "--starts",
-        "1"
+        "0,0"
       ]
     },
 

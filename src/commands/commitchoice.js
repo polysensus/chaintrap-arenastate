@@ -32,6 +32,10 @@ async function commitchoice(program, options, side, exit) {
   // super critical just confusing.
 
   await trialist.commitLocationChoice(gid, parseInt(side), parseInt(exit));
-  const sideName = { 0: "north", 1: "west", 2: "south", 3: "east" }[side];
-  console.log(`committed to exit ${exit} on the ${sideName} side`);
+  if (side < 4) {
+    const sideName = { 0: "north", 1: "west", 2: "south", 3: "east" }[side];
+    console.log(`committed to exit ${exit} on the ${sideName} side`);
+  } else {
+    console.log(`committed to choice ${exit} on menue ${side}`);
+  }
 }

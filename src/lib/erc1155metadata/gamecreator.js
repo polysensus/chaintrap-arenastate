@@ -143,6 +143,7 @@ export class GameMetadataCreator {
     metadata.properties = { ...this.properties };
 
     const client = new NFTStorage({ token: this.options.nftstorageApiKey });
+    console.log("----", this.options.nftstorageApiKey);
     const { token, car } = await NFTStorage.encodeNFT(metadata);
     this.ipfs = {
       stored: await client.storeCar(car),
@@ -168,7 +169,9 @@ export class GameMetadataCreator {
       throw new Error(
         "The game metadata must be published to IPFS before minting the game token"
       );
-    const tx = await arena.createGame(this.initArgs);
+    const tx = await arena.createGame(this.initArgs, {
+      type: this.options.networkEIP1559 ? 2 : 0,
+    });
     const r = await tx.wait();
     if (r?.status !== 1) throw new Error("createGame failed");
     return r;

@@ -5,7 +5,7 @@ import { asGid } from "../lib/gid.js";
 import { findGameMetadata, findGids } from "../lib/arenaevent.js";
 import { GameMetadataReader } from "../lib/erc1155metadata/gamereader.js";
 import { Guardian, CODEX_FURNITURE_INDEX } from "../lib/guardian.js";
-import { BlobCodex } from "../lib/chainkit/secretblobs.js";
+import { BlobCodex } from "@polysensus/blobcodex";
 import { ipfsGatewayURL } from "../lib/chainkit/nftstorage.js";
 
 const out = console.log;

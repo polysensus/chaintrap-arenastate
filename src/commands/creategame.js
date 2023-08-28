@@ -42,6 +42,11 @@ export function addCreategame(program) {
       "set to save the AES encrypted blob codex with the map data in the nft metadata"
     )
     .option(
+      "--codex-from-disc",
+      "set to force reading the codex from disc (rather than token metadata)"
+    )
+
+    .option(
       "--icon-generate",
       "use openai/dall-e to generate an icon for the game session"
     )

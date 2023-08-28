@@ -36,6 +36,10 @@ export function addMaptool(program) {
   program.exitOverride();
   const command = program.command("maptool");
   command
+    .option(
+      "--map-load",
+      "Set to read the map from the file indicated by --map-filename. Otherwise a new map is generated"
+    )
     .addOption(
       new Option(
         "--maptool-url <maptool-url>",
@@ -64,7 +68,7 @@ export function addMaptool(program) {
     )
     .option(
       "--map-filename <filename>",
-      "save the generated map to this filename"
+      "read or save the generated map to this filename depending on whether --map-load is set"
     )
     .option(
       "--commit-secrets-filename <filename>",
@@ -97,77 +101,83 @@ export async function maptool(program, options) {
   const codex = new BlobCodex();
   await codex.derivePasswordKeys([password]);
 
-  let params = {}; // generation params
-  if (isFile(options.parameters)) params = readJson(options.parameters);
-  params.model = "tinykeep";
-  for (const [name] of generationOptions) {
-    const option = paramToCamel(name);
-    params[name.split("-").join("_")] = options[option];
+  let map;
+
+  if (!options.mapLoad) {
+    let params = {}; // generation params
+    if (isFile(options.parameters)) params = readJson(options.parameters);
+    params.model = "tinykeep";
+    for (const [name] of generationOptions) {
+      const option = paramToCamel(name);
+      params[name.split("-").join("_")] = options[option];
+    }
+
+    var req = {
+      credentials: "omit",
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        gp: params,
+      }),
+    };
+    info(JSON.stringify(req, null, "  "));
+
+    let baseUrl = options.maptoolUrl;
+    if (!baseUrl.endsWith("/")) baseUrl = baseUrl + "/";
+    let url = `${baseUrl}commit/`;
+    let resp = await fetch(url, req);
+    const committed = await resp.json();
+    if (options.commitSecretsFilename) {
+      fs.writeFileSync(
+        options.commitSecretsFilename,
+        JSON.stringify(committed, null, "  ")
+      );
+    }
+    codex.addItem(codex.dataFromObject(committed), {
+      name: "committed",
+      content_type: "application/json",
+      encrypted: password !== null,
+    });
+
+    req.body = JSON.stringify({
+      public_key: committed.public_key,
+      alpha: committed.alpha,
+      beta: committed.beta,
+      pi: committed.pi,
+    });
+
+    url = `${baseUrl}generate/`;
+    info(`generating for alpha string: ${committed.alpha}`);
+    resp = await fetch(url, req);
+    map = await resp.json();
+    const mapData = JSON.stringify(map, null, "  ");
+    if (options.mapFilename) fs.writeFileSync(options.mapFilename, mapData);
+    if (options.svg) {
+      url = `${url}?svg=true`;
+      resp = await fetch(url, req);
+      const svg = await resp.text();
+      fs.writeFileSync(options.svg, svg);
+      codex.addItem(
+        codex.dataFromObject({
+          filename: path.basename(options.svg),
+          content: svg,
+        }),
+        { name: "svg", content_type: "image/svg+xml" }
+      );
+    }
+  } else {
+    map = readJson(options.mapFilename);
+    const mapName = options.mapName ?? program.opts().mapName;
+    if (mapName) map = map[mapName];
   }
-
-  var req = {
-    credentials: "omit",
-    method: "POST",
-    mode: "cors",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      gp: params,
-    }),
-  };
-  info(JSON.stringify(req, null, "  "));
-
-  let baseUrl = options.maptoolUrl;
-  if (!baseUrl.endsWith("/")) baseUrl = baseUrl + "/";
-  let url = `${baseUrl}commit/`;
-  let resp = await fetch(url, req);
-  const committed = await resp.json();
-  if (options.commitSecretsFilename) {
-    fs.writeFileSync(
-      options.commitSecretsFilename,
-      JSON.stringify(committed, null, "  ")
-    );
-  }
-  codex.addItem(codex.dataFromObject(committed), {
-    name: "committed",
-    content_type: "application/json",
-    encrypted: password !== null,
-  });
-
-  req.body = JSON.stringify({
-    public_key: committed.public_key,
-    alpha: committed.alpha,
-    beta: committed.beta,
-    pi: committed.pi,
-  });
-
-  url = `${baseUrl}generate/`;
-  info(`generating for alpha string: ${committed.alpha}`);
-  resp = await fetch(url, req);
-  const map = await resp.json();
-  const mapData = JSON.stringify(map, null, "  ");
-  out(mapData);
-  if (options.mapFilename) fs.writeFileSync(options.mapFilename, mapData);
   codex.addItem(codex.dataFromObject(map), {
     name: "map",
     content_type: "application/json",
     encrypted: password !== null,
   });
-
-  if (options.svg) {
-    url = `${url}?svg=true`;
-    resp = await fetch(url, req);
-    const svg = await resp.text();
-    fs.writeFileSync(options.svg, svg);
-    codex.addItem(
-      codex.dataFromObject({
-        filename: path.basename(options.svg),
-        content: svg,
-      }),
-      { name: "svg", content_type: "image/svg+xml" }
-    );
-  }
 
   const data = JSON.stringify(codex.serialize(), null, " ");
   if (options.codexFilename) fs.writeFileSync(options.codexFilename, data);
