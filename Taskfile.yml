@@ -7,8 +7,8 @@ vars:
   FACETS_EXCLUDE: node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json
   CHAINTRAP_CONTRACTS_ABI_DIR: node_modules/@polysensus/chaintrap-contracts/abi
   DIAMOND_DEPLOY_JSON: .local/dev/diamond-deploy.json
-  #DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
-  DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/deploycli.js"
+  DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
+  #DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/deploycli.js"
   FURNITURE_FILE: "data/maps/map02-furnishings.json"
   MAP_FILE: "data/maps/map02.json"
   MAP_NAME: "map02"
@@ -53,6 +53,12 @@ tasks:
       - |
         cat .env.example.hh | envsubst > .env.hh
         cat .env.hh | grep ARENASTATE_
+      - task: dev:hh:restart
+      - |
+        task -s deploy:new PROVIDER_ID=hh -- --commit
+        ADDRESS=$(task -s find PROVIDER_ID=hh)
+        echo "# test:prepare:cd resolved the following address after deploying" >> .env.hh
+        echo "export ARENASTATE_ARENA=${ADDRESS}" >> .env.hh
         cp .env.hh .env.test
 
   test:prepare:

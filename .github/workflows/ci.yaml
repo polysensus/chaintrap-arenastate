@@ -91,7 +91,7 @@ jobs:
         run: |
           ! grep -sq CHAINTRAP_CD .env && echo "CHAINTRAP_CD=true" >> .env
           task test:prepare:cd
-          task dev:hh:start
+          cat .env.test | grep ARENASTATE_
 
       - name: test
         working-directory: chaintrap-arenastate
