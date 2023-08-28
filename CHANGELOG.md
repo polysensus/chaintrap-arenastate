@@ -1,0 +1,23 @@
+
+
+## [0.0.26](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.25...v0.0.26) (2023-08-28)
+
+
+### Features
+
+* a chest that kills if opened ([9621b11](https://github.com/polysensus/chaintrap-arenastate/commit/9621b11e2b5bd35af6c789a192bcf35f3e4af5b8))
+* **cms-2:** write up cms2 ([5365db1](https://github.com/polysensus/chaintrap-arenastate/commit/5365db164f61a16a7aa7f7df10705f46195a3718))
+* **fatal-traps:** a chest, as placable furniture, which is fatal if opened ([ab87b1e](https://github.com/polysensus/chaintrap-arenastate/commit/ab87b1ee9e20ee50f7e5e58f5d19ce2fc7c47001))
+* integration tests for cms3 ([c1e22f2](https://github.com/polysensus/chaintrap-arenastate/commit/c1e22f29ca8a023e5bb6f548b4969fad2095e471))
+* **maptool:** cli for mapgeneration, content encryption format ([0dc4b26](https://github.com/polysensus/chaintrap-arenastate/commit/0dc4b26f569323470bed9a6d0afd6f7400e810d9))
+* **nft-friendly-encryption-format:** maptool saves data in an encrypted format ([a19e839](https://github.com/polysensus/chaintrap-arenastate/commit/a19e8391db971b02ce71924774d538cfd155a4f2))
+* **nft-maploader:** guardian.setupTrial (to load a codex) ([586aba5](https://github.com/polysensus/chaintrap-arenastate/commit/586aba551ed3702090e8372409db96a084a92437))
+* **nft-maploader:** refactoring existing openai and ipfs support ([c1e2d6b](https://github.com/polysensus/chaintrap-arenastate/commit/c1e2d6b885ea719d9c048f33697e44b7c7d84b57))
+* **nft-maploader:** refactoring existing openai and ipfs support ([2387716](https://github.com/polysensus/chaintrap-arenastate/commit/238771650ff35cccc65837d322b4fa48c7ad16bf))
+* **nft-maploader:** wip loading map data from ipfs data stored in the blobcodex aes encryption format ([16ee4ac](https://github.com/polysensus/chaintrap-arenastate/commit/16ee4ac4670468efca696635e97651d985c839bc))
+
+
+### Changes
+
+* missing randomenames ([5855407](https://github.com/polysensus/chaintrap-arenastate/commit/58554075a098e2f2765b51df69a5ae5ab45490d2))
+* remove things we no longer need ([bf752a4](https://github.com/polysensus/chaintrap-arenastate/commit/bf752a4f1243032c86406b0496b4fdbea8c354bb))
