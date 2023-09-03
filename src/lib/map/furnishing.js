@@ -6,6 +6,22 @@ import { titleCase } from "../strings.js";
  * All located furniture is instanced with this class. Note, this excludes the finish_exit
  */
 export class Furnishing {
+
+  static isOpenableType(type) {
+    switch (type) {
+      case ObjectType.FatalChestTrap:
+      case ObjectType.ChestTreatGainLife:
+        return true;
+      default:
+        return false;
+    }
+  }
+  static onOpenTransitionType(type) {
+    if (Furnishing.isOpenableType(type))
+      return type;
+    throw new Error(`furniture type ${type} is not openable`);
+  }
+
   /**
    * @param {number} id the identifier the container knows this furnishing by.
    * @param {{

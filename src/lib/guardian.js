@@ -105,9 +105,14 @@ export class Guardian {
         ObjectType.Link2,
         ObjectType.Finish,
         ObjectType.FatalChestTrap,
+        ObjectType.ChestTreatGainLife
       ],
       victoryTransitionTypes: [ObjectType.Finish],
-      haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
+      haltParticipantTransitionTypes: [
+        ObjectType.FatalChestTrap
+      ],
+      livesIncrement: [ObjectType.ChestTreatGainLife],
+      livesDecrement: [ObjectType.FatalChestTrap]
     });
     const r = await this.minter.mint({
       topology: this.topology,
@@ -215,8 +220,18 @@ export class Guardian {
           break;
         }
         case ObjectType.FatalChestTrap: {
-          request.requireLogs(
+          // if the player gained a life, then they can survive the fatal trap
+          request.acceptLogs(
             "TranscriptParticipantHalted(uint256,address,uint256)"
+          );
+          request.requireLogs(
+            "TranscriptParticipantLivesLost(uint256,address,uint256,uint256)"
+          );
+          break;
+        }
+        case ObjectType.ChestTreatGainLife: {
+          request.requireLogs(
+            "TranscriptParticipantLivesAdded(uint256,address,uint256,uint256)"
           );
           break;
         }

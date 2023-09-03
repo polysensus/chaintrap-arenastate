@@ -145,6 +145,73 @@ tasks:
         vars: { MENU: "0", CHOICE: "0" }
       - task: game:resolvechoice
 
+  test:cms4:
+    desc: |
+      Creates a map and game, with a finish and two openable chests. Both chests
+      are placed at the start location. Opening the first chest costs the player
+      a life. Opening the second chest grants the player a life. If the player
+      opens the second chest and then opens the first, they survive. If they
+      open the first chest first, they are halted (die). In this demo, we show
+      the former (surival)
+
+      Run through a short game sequence showing this:
+      * bob choses to open the seoncd chest placed at the start location and gains a life.
+      * bob opens the first chest placed at the start location and loses a life but survives.
+      * alice uses the exit that reaches finish and ownership of the game token is transfered to her.
+
+    cmds:
+      - echo ------------------------------------------------------------
+      - echo "create the map"
+      - echo ------------------------------------------------------------
+      - task: game:maptool
+      - echo ------------------------------------------------------------
+      - echo "create the game token"
+      - echo ------------------------------------------------------------
+      - task: game:creategame
+      - echo ------------------------------------------------------------
+      - echo "trialist 1 joins the game"
+      - echo ------------------------------------------------------------
+      - task: game:joingame:user1
+      - echo ------------------------------------------------------------
+      - echo "trialist 2 joins the game"
+      - echo ------------------------------------------------------------
+      - task: game:joingame:user2
+      - echo ------------------------------------------------------------
+      - echo "guardian starts the game"
+      - echo ------------------------------------------------------------
+      - task: game:startgame
+      - echo ------------------------------------------------------------
+      - echo "trialist 1 takes the first exit on the west side"
+      - echo ------------------------------------------------------------
+      - task: game:commitchoice
+        vars: { MENU: "1", CHOICE: "0" }
+      - task: game:resolvechoice
+      - echo ------------------------------------------------------------
+      - echo "trialist 2 opens the second chest"
+      - echo ------------------------------------------------------------
+      - task: game:commitchoice:user2
+        vars: { MENU: "4", CHOICE: "1" }
+      - task: game:resolvechoice
+      - echo ------------------------------------------------------------
+      - echo "trialist 2 opens the first chest"
+      - echo ------------------------------------------------------------
+      # USER2 opens the chest
+      - task: game:commitchoice:user2
+        vars: { MENU: "4", CHOICE: "0" }
+      - task: game:resolvechoice
+      - echo ------------------------------------------------------------
+      - echo "trialist 2 takes the first exit on the west side"
+      - echo ------------------------------------------------------------
+      - task: game:commitchoice:user2
+        vars: { MENU: "1", CHOICE: "0" }
+      - task: game:resolvechoice
+      - echo ------------------------------------------------------------
+      - echo "trialist 1 uses the finish exit and wins the game token"
+      - echo ------------------------------------------------------------
+      - task: game:commitchoice
+        vars: { MENU: "0", CHOICE: "0" }
+      - task: game:resolvechoice
+
   # ----
   # game commands
   # ----

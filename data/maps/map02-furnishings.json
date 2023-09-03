@@ -31,8 +31,21 @@
         "location": 0
       },
       "meta": {
-        "notes": ["adds a fatal trap to location 0"]
+        "notes": ["adds a fatal trap to location 0, opens with a choice input of 4"]
+      }
+    },
+    {
+      "unique_name": "chest_2",
+      "labels": ["life_bonus_condition"],
+      "choiceType": "open_chest",
+      "type": "chest_treat_gain_life",
+      "data": {
+        "location": 0
+      },
+      "meta": {
+        "notes": ["adds a second chest to location zero, opens with a choice input of 5"]
       }
     }
+
   ]
 }
