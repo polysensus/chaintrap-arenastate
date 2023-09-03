@@ -1,5 +1,18 @@
 
 
+## [0.0.27](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.26...v0.0.27) (2023-09-03)
+
+
+### Features
+
+* trialist state to track lives ([a0c2eea](https://github.com/polysensus/chaintrap-arenastate/commit/a0c2eea3248fa5ff30f273c2d74432e4ecf45c24))
+* trialist state to track lives ([2bc8f02](https://github.com/polysensus/chaintrap-arenastate/commit/2bc8f029afdf00e5c78b275bb70998b312191bd5))
+
+
+### Changes
+
+* test fail due to new events ([0bfd54c](https://github.com/polysensus/chaintrap-arenastate/commit/0bfd54cb981c141ec982a38b13322efbb9e18309))
+
 ## [0.0.26](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.25...v0.0.26) (2023-08-28)
 
 
