@@ -8,7 +8,6 @@ jobs:
     name: ci build & test
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout the arenastate repository
         uses: actions/checkout@v3
         with:
@@ -75,3 +74,9 @@ jobs:
         working-directory: chaintrap-arenastate
         run: |
           task test:cms3
+
+      - name: test cms4
+        working-directory: chaintrap-arenastate
+        run: |
+          task test:cms4
+

@@ -13,6 +13,7 @@ export const defaultGameIconPrompt =
   "A stylised icon representing a turn based random dungeon crawler game";
 
 const defaultMaxParticipants = 5;
+const defaultParticipanInitialLives = 1;
 export const trialSetupPropertyFilename = "trial-setup.json";
 
 /**
@@ -317,6 +318,10 @@ export class GameMetadataCreator {
     // this.initArgs.registrationLimit = ethers.BigNumber.from(options.registrationLimit);
     this.initArgs.registrationLimit =
       options.registrationLimit ?? defaultMaxParticipants;
+    this.initArgs.trialistArgs = {
+      flags: 0,
+      lives: options.initialLives ?? defaultParticipanInitialLives
+    };
     this.initArgs.rootLabels = [
       ethers.utils.formatBytes32String(options.mapRootLabel),
     ];
@@ -328,6 +333,12 @@ export class GameMetadataCreator {
       options.victoryTransitionTypes.map(conditionInput);
     this.initArgs.haltParticipantTransitionTypes = (
       options.haltParticipantTransitionTypes ?? []
+    ).map(conditionInput);
+    this.initArgs.livesIncrement = (
+      options.livesIncrement ?? []
+    ).map(conditionInput);
+    this.initArgs.livesDecrement = (
+      options.livesDecrement ?? []
     ).map(conditionInput);
 
     delete this._pendingOptions["map"];

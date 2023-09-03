@@ -7,4 +7,5 @@ export class ObjectType {
   static Finish = 10;
   static FinishExit = 11;
   static FatalChestTrap = 12;
+  static ChestTreatGainLife = 13;
 }

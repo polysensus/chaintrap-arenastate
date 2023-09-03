@@ -9,6 +9,7 @@ import {
 import { ObjectType } from "./maptrie/objecttypes.js";
 import { LocationChoiceType } from "./maptrie/inputtypes.js";
 import { TranscriptOutcome } from "./abiconst.js";
+import { Furnishing } from "./map/furnishing.js";
 
 const abiCoder = ethers.utils.defaultAbiCoder;
 const hexlify = ethers.utils.hexlify;
@@ -151,11 +152,11 @@ export class Trial {
     // note that the proof for the current location choice is at STACK(0)
     const id = this.topology.furnitureId(locationId, ...inputs);
     const furn = this.topology.furnLeafs[id];
-    if (furn.type !== ObjectType.FatalChestTrap)
-      throw new Error(`furniture type ${furn.type} is not openable`);
+    if (!Furnishing.isOpenableType(furn.type))
+        throw new Error(`furniture type ${furn.type} is not openable`);
 
     prepared = this.topology.furnPrepared[id];
-    if (prepared[0] !== ObjectType.FatalChestTrap)
+    if (!Furnishing.isOpenableType(prepared[0]))
       throw new Error(`OpenChest transition type ${prepared[0]} unsuported`);
 
     proof = this.topology.furnProof[id];
@@ -177,7 +178,7 @@ export class Trial {
       outcome: TranscriptOutcome.Accepted,
       proof: {
         choiceSetType: ObjectType.LocationChoices,
-        transitionType: ObjectType.FatalChestTrap, // this will halt the player
+        transitionType: Furnishing.onOpenTransitionType(prepared[0]),
         stack,
         leaves,
       },

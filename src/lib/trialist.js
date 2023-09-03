@@ -23,7 +23,10 @@ export class Trialist {
     const request = new TransactRequest(this.eventParser, this.initialOptions);
     request
       .method(this.arena.registerTrialist, gid, msgpack.encode(profile))
-      .requireLogs("TranscriptRegistration(uint256,address,bytes)");
+      .requireLogs(
+        "TranscriptRegistration(uint256,address,bytes)",
+        "TranscriptParticipantLivesAdded(uint256,address,uint256,uint256)"
+        );
 
     const result = await request.transact();
     return result;

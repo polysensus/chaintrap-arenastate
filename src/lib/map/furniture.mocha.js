@@ -8,7 +8,7 @@ import furnishings from "../../../data/maps/map02-furnishings.json" assert { typ
 describe("Furniture tests", function () {
   it("Should load furnishings data", async function () {
     const f = new Furniture(furnishings);
-    expect(f.items.length).to.equal(2);
+    expect(f.items.length).to.equal(3);
     expect(f.index?.identified["finish_exit"]).to.exist;
     expect(f.index?.identified["chest_1"]).to.exist;
     expect(f.byName("finish_exit")).to.not.throw;

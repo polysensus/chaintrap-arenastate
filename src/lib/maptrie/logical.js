@@ -433,9 +433,9 @@ export class LogicalTopology {
       case ObjectType.Link2:
         return this.locationExitLinks[id];
       case ObjectType.FinishExit:
-        return this.furnLeafts[id];
       case ObjectType.FatalChestTrap:
-        return this.furnLeafts[id];
+      case ObjectType.ChestTreatGainLife:
+        return this.furnLeafs[id];
     }
     return undefined;
   }

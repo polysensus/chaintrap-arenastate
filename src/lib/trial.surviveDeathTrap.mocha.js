@@ -1,5 +1,8 @@
 // @ts-check
-import { expect } from "chai";
+import { expect, use as chaiUse } from "chai";
+// import * as chaiAsPromised from "chai-as-promised";
+// chaiUse(chaiAsPromised);
+
 import { ethers } from "ethers";
 
 import { Guardian } from "./guardian.js";
@@ -15,8 +18,8 @@ import { Dispatcher } from "./chainkit/dispatcher.js";
 const defaultMaxWait = 4000;
 const defaultInterval = 500;
 
-describe("Game session victory tests", function () {
-  it("Should complete game in two moves", async function () {
+describe("Game session participant ChestTreatGainLife", function () {
+  it("Should show participant surviving death treap", async function () {
     if (!this.gameOptions) {
       this.skip();
     }
@@ -60,7 +63,9 @@ describe("Game session victory tests", function () {
       interval: pollingInterval,
       logBanner: "trialist: ",
     });
-    await trialist.commitLocationChoice(gid, 1, 0); // -> location 8
+
+    // First, open the chest with the life bonus. its the second chest in the room hence input index 5
+    await trialist.commitLocationChoice(gid, 4, 1); // -> open_chest (second at location 0)
 
     await guardian.journal?.waitPendingOutcomes(gid, 1, {
       interval: pollingInterval,
@@ -70,8 +75,22 @@ describe("Game session victory tests", function () {
     expect(resolved.length).to.equal(1);
     await guardian.journal?.waitOutcomeResolutions(gid, resolved);
 
+    // Now open the fatal trap
+
+    await trialist.commitLocationChoice(gid, 4, 0); // -> open_chest (first at location 0)
+
+    await guardian.journal?.waitPendingOutcomes(gid, 1, {
+      interval: pollingInterval,
+      logBanner: "guardian: ",
+    });
+    resolved = await guardian.resolvePending(gid);
+    expect(resolved.length).to.equal(1);
+    await guardian.journal?.waitOutcomeResolutions(gid, resolved);
+
     await trialist.journal?.waitOutcomeResolutions(gid);
-    await trialist.commitLocationChoice(gid, 0, 0); // -> finish_exit
+
+    // Check that the participant can continue
+    await trialist.commitLocationChoice(gid, 1, 0); // -> location 8
 
     await guardian.journal?.waitPendingOutcomes(gid, 1, {
       pollingInterval,
