@@ -10,7 +10,6 @@ The scheme allows the same content to be encrypted under many, password derived 
 
     very-secret
 
-
 Lastly, we have published part 2 of our series on the inspiration and making of chaintrap.
 
 [Blockchain game table stakes, and the tracing paper model](https://robinbryce.medium.com/blockchain-game-table-stakes-and-the-tracing-paper-model-7bcab1ee9be6)
@@ -30,7 +29,7 @@ Its a diamond proxy, and all the facets have also been verified.
 
 ## Deliverables
 
-### A. Support  fatal death traps
+### A. Support fatal death traps
 
 1. traps are minted to the dungeon host on game session creation
 2. Using the javascript library, the dungeon host can place traps before the game session starts.
@@ -45,20 +44,19 @@ The events for the game session with a player 'fatality'
 - https://goerli-optimism.etherscan.io/address/0x018678a99cb89402311f58d503b013ba421d36c5
 - https://goerli-optimism.etherscan.io/tx/0xf02b10b7fcd96afdd4354157873226a2c1df6d02edf33f4df5d56c6cdaced543 (the start of the game session)
 
-
 A Game session NFT, with the map and the furniture stored and encrypted in the metadata
 
-- https://testnets.opensea.io/assets/optimism-goerli/0x018678a99cb89402311f58d503b013ba421d36c5/1361129467683753853853498429727072845826 
+- https://testnets.opensea.io/assets/optimism-goerli/0x018678a99cb89402311f58d503b013ba421d36c5/1361129467683753853853498429727072845826
 
 The public map commitment on the token metadata:
 
 - https://ipfs.io/ipfs/bafyreifjezk7eimjqypt54al374jcl76tde2dsml4dol3nqtuhy73othga/metadata.json
 
 The encrypted map and placed furniture for the session, is referenced from the token metadata in the 'trialsetup' field
+
 - https://ipfs.io/bafybeieqam5xf6aaueyhryweragew6xus6os4l66a7ji2rvirhztmn3vki/trial-setup.json
 
 This is an [example](./data/maps/map02-furnishings.json) of the data used by the client to add a placable death trap to the game session prior to starting play.
-
 
 Hardhat CI/CD test run of the same game sequence
 

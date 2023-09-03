@@ -49,6 +49,11 @@ tasks:
       - task: build:diamond-deploy
 
   test:prepare:cd:
+    desc: start hardhat and deploy contracts for CI/CD
+    cmds:
+      - task: test:prepare
+
+  test:prepare:
     desc: start hardhat and deploy contracts for test:integ
     cmds:
       - |
@@ -61,25 +66,6 @@ tasks:
         echo "# test:prepare:cd resolved the following address after deploying" >> .env.hh
         echo "export ARENASTATE_ARENA=${ADDRESS}" >> .env.hh
         cp .env.hh .env.test
-
-  test:prepare:
-    dotenv: [".env.test"]
-    desc: default preflight for local development
-    cmds:
-      - task: test:prepare:local
-
-  test:prepare:local:
-    desc: start hardhat and deploy contracts for test:integ
-    cmds:
-      - |
-      - task: dev:hh:restart
-      - task: deploy:new
-        vars:
-          PROVIDER_ID: "hh"
-          COMMIT: "yes"
-      - task: find
-        vars:
-          PROVIDER_ID: "hh"
 
   test:
     desc: run the unit tests

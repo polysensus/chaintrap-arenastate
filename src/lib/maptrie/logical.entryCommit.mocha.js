@@ -122,7 +122,10 @@ describe("LogicalTopology entryCommit tests", function () {
         gid,
         msgpack.encode({ nickname: "alice" })
       )
-      .requireLogs("TranscriptRegistration(uint256,address,bytes)")
+      .requireLogs(
+        "TranscriptRegistration(uint256,address,bytes)",
+        "TranscriptParticipantLivesAdded(uint256,address,uint256,uint256)"
+      )
       .method(this.guardianArena.startTranscript, gid, startArgs[0])
       .requireLogs(
         "TranscriptStarted(uint256)",
