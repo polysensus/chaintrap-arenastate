@@ -5,9 +5,23 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import pkg from "./package.json" assert { type: "json" };
 
+const externalxx = [
+  "ethers",
+  "commander",
+  "@msgpack/msgpack",
+  "@eth-optimism/sdk",
+  "@openzeppelin/merkle-tree",
+  "nft.storage",
+  "@polysensus/blobcodex",
+  "@polysensus/chaintrap-contracts",
+  "@polysensus/diamond-deploy",
+  "ethereum-cryptography",
+];
+
 export default [
   {
     input: "src/lib/main.js",
+    external: externalxx,
     output: {
       inlineDynamicImports: true,
       name: pkg.name,
@@ -21,7 +35,7 @@ export default [
     // where possible
     // name: pkg.name,
     input: "src/lib/main.js",
-    external: ["ethers", "commander", "@msgpack/msgpack"],
+    external: externalxx,
     output: [
       {
         inlineDynamicImports: true,
