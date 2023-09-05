@@ -47,8 +47,8 @@ jobs:
           grep chaintrap-contracts package-lock.json
           npm install
 
-          grep version node_modules/@polysensus/chaintrap-contracts/package.json
-          find node_modules/@polysensus/chaintrap-contracts/abi
+          find node_modules/@polysensus/chaintrap-contracts/ -type d
+          find node_modules/@polysensus/chaintrap-contracts/abi -name '*.json'
 
       - name: build
         working-directory: chaintrap-arenastate
