@@ -31,7 +31,9 @@
         "location": 0
       },
       "meta": {
-        "notes": ["adds a fatal trap to location 0, opens with a choice input of 4"]
+        "notes": [
+          "adds a fatal trap to location 0, opens with a choice input of 4"
+        ]
       }
     },
     {
@@ -43,9 +45,10 @@
         "location": 0
       },
       "meta": {
-        "notes": ["adds a second chest to location zero, opens with a choice input of 5"]
+        "notes": [
+          "adds a second chest to location zero, opens with a choice input of 5"
+        ]
       }
     }
-
   ]
 }

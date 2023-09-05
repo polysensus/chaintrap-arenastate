@@ -153,7 +153,7 @@ export class Trial {
     const id = this.topology.furnitureId(locationId, ...inputs);
     const furn = this.topology.furnLeafs[id];
     if (!Furnishing.isOpenableType(furn.type))
-        throw new Error(`furniture type ${furn.type} is not openable`);
+      throw new Error(`furniture type ${furn.type} is not openable`);
 
     prepared = this.topology.furnPrepared[id];
     if (!Furnishing.isOpenableType(prepared[0]))

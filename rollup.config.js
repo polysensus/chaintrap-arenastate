@@ -5,32 +5,26 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import pkg from "./package.json" assert { type: "json" };
 
+const external = [
+  "ethers",
+  "commander",
+  "@msgpack/msgpack",
+  "@eth-optimism/sdk",
+  "@openzeppelin/merkle-tree",
+  "nft.storage",
+  "@polysensus/blobcodex",
+  "@polysensus/chaintrap-contracts",
+  "@polysensus/diamond-deploy",
+  "ethereum-cryptography",
+];
+
 export default [
   {
     input: "src/lib/main.js",
-    output: {
-      inlineDynamicImports: true,
-      name: pkg.name,
-      file: pkg.browser,
-      format: "umd",
-    },
-    plugins: [json(), resolve(), commonjs(), nodePolyfills()],
-  },
-  {
-    // Note: it is faster to generate multiple builds from the same config
-    // where possible
-    // name: pkg.name,
-    input: "src/lib/main.js",
-    external: ["ethers", "commander", "@msgpack/msgpack"],
+    external,
     output: [
       {
-        inlineDynamicImports: true,
-        file: pkg.main,
-        format: "cjs",
-        sourcemap: true,
-      },
-      {
-        inlineDynamicImports: true,
+        inlineDynamicImports: false,
         file: pkg.module,
         format: "es",
         sourcemap: true,

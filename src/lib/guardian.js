@@ -105,14 +105,12 @@ export class Guardian {
         ObjectType.Link2,
         ObjectType.Finish,
         ObjectType.FatalChestTrap,
-        ObjectType.ChestTreatGainLife
+        ObjectType.ChestTreatGainLife,
       ],
       victoryTransitionTypes: [ObjectType.Finish],
-      haltParticipantTransitionTypes: [
-        ObjectType.FatalChestTrap
-      ],
+      haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
       livesIncrement: [ObjectType.ChestTreatGainLife],
-      livesDecrement: [ObjectType.FatalChestTrap]
+      livesDecrement: [ObjectType.FatalChestTrap],
     });
     const r = await this.minter.mint({
       topology: this.topology,
