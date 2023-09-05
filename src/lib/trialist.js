@@ -26,7 +26,7 @@ export class Trialist {
       .requireLogs(
         "TranscriptRegistration(uint256,address,bytes)",
         "TranscriptParticipantLivesAdded(uint256,address,uint256,uint256)"
-        );
+      );
 
     const result = await request.transact();
     return result;

@@ -320,7 +320,7 @@ export class GameMetadataCreator {
       options.registrationLimit ?? defaultMaxParticipants;
     this.initArgs.trialistArgs = {
       flags: 0,
-      lives: options.initialLives ?? defaultParticipanInitialLives
+      lives: options.initialLives ?? defaultParticipanInitialLives,
     };
     this.initArgs.rootLabels = [
       ethers.utils.formatBytes32String(options.mapRootLabel),
@@ -334,12 +334,12 @@ export class GameMetadataCreator {
     this.initArgs.haltParticipantTransitionTypes = (
       options.haltParticipantTransitionTypes ?? []
     ).map(conditionInput);
-    this.initArgs.livesIncrement = (
-      options.livesIncrement ?? []
-    ).map(conditionInput);
-    this.initArgs.livesDecrement = (
-      options.livesDecrement ?? []
-    ).map(conditionInput);
+    this.initArgs.livesIncrement = (options.livesIncrement ?? []).map(
+      conditionInput
+    );
+    this.initArgs.livesDecrement = (options.livesDecrement ?? []).map(
+      conditionInput
+    );
 
     delete this._pendingOptions["map"];
   }

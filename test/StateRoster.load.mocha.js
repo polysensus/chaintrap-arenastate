@@ -98,7 +98,7 @@ describe("StateRoster# load", async function () {
       .requireLogs(
         "TranscriptRegistration(uint256,address,bytes)",
         "TranscriptParticipantLivesAdded(uint256,address,uint256,uint256)"
-        )
+      )
       .method(this.guardianArena.startTranscript, gid, startArgs)
       .requireLogs(
         "TranscriptStarted(uint256)",

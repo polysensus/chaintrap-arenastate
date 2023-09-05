@@ -5,7 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import pkg from "./package.json" assert { type: "json" };
 
-const externalxx = [
+const external = [
   "ethers",
   "commander",
   "@msgpack/msgpack",
@@ -21,30 +21,10 @@ const externalxx = [
 export default [
   {
     input: "src/lib/main.js",
-    external: externalxx,
-    output: {
-      inlineDynamicImports: true,
-      name: pkg.name,
-      file: pkg.browser,
-      format: "umd",
-    },
-    plugins: [json(), resolve(), commonjs(), nodePolyfills()],
-  },
-  {
-    // Note: it is faster to generate multiple builds from the same config
-    // where possible
-    // name: pkg.name,
-    input: "src/lib/main.js",
-    external: externalxx,
+    external,
     output: [
       {
-        inlineDynamicImports: true,
-        file: pkg.main,
-        format: "cjs",
-        sourcemap: true,
-      },
-      {
-        inlineDynamicImports: true,
+        inlineDynamicImports: false,
         file: pkg.module,
         format: "es",
         sourcemap: true,

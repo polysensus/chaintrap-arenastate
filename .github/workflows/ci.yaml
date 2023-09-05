@@ -79,4 +79,3 @@ jobs:
         working-directory: chaintrap-arenastate
         run: |
           task test:cms4
-
