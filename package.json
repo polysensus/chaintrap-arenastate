@@ -99,9 +99,9 @@
     "@eth-optimism/sdk": "^2.0.2",
     "@msgpack/msgpack": "^2.8.0",
     "@openzeppelin/merkle-tree": "^1.0.5",
-    "@polysensus/blobcodex": "file:../blobcodex",
-    "@polysensus/chaintrap-contracts": "file:../chaintrap-contracts",
-    "@polysensus/diamond-deploy": "file:../diamond-deploy",
+    "@polysensus/blobcodex": "^0.0.10",
+    "@polysensus/chaintrap-contracts": "^0.3.7",
+    "@polysensus/diamond-deploy": "^0.3.3",
     "commander": "^9.4.1",
     "loglevel": "^1.8.1",
     "nft.storage": "^7.0.0"
