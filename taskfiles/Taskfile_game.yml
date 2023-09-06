@@ -1,0 +1,132 @@
+---
+version: "3"
+
+vars:
+  PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
+
+tasks:
+  create:
+    desc: mint a new game
+    dotenv: ['.env.{{.PROVIDER_ID | default "hh"}}']
+    vars:
+      KEY:
+        sh: task -s resolve-key KEY={{.KEY | default ""}} KEY_ENV_DEFAULT=GUARDIAN PROVIDER_ID='{{.PROVIDER_ID}}'
+      ARENASTATE_ARENA:
+        sh: task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID | default "hh"}}'
+
+    cmds:
+      - |
+        export ARENASTATE_ARENA={{.ARENASTATE_ARENA}}
+        echo "KEY: {{.KEY}}"
+        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
+
+        ./cli.js \
+          --codex-filename {{.CODEX_FILENAME}} \
+          --codex-password {{.CODEX_PASSWORD}} \
+          --map-name map02 \
+          --key {{.KEY}} \
+          --furniture {{.FURNITURE_FILE}} \
+            creategame \
+              --codex-publish \
+              --codex-from-disc \
+              --name "A chaintrap game created by automated testing" \
+              --description \
+                "The description of a chaintrap game created by developer testing" \
+              --max-participants 3 \
+              --openai-image-prompt '{{.OPENAI_IMAGE_PROMPT}}'
+
+  join:
+    desc: join a game as a trialist
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      USER_ID: '{{.USER_ID | default "1"}}'
+      KEY:
+        sh: task -s resolve-key KEY={{.KEY | default ""}} KEY_ENV_DEFAULT='USER{{.USER_ID}}' PROVIDER_ID='{{.PROVIDER_ID}}'
+      ARENASTATE_ARENA:
+        sh: task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID | default "hh"}}'
+      NICKNAME: '{{.NICKNAME | default "alice" }}'
+    cmds:
+      - |
+        export ARENASTATE_ARENA={{.ARENASTATE_ARENA}}
+        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
+
+        ./cli.js --key {{.KEY}} joingame --nickname {{.NICKNAME}}
+
+  start:
+    desc: start a game, default expects two trialists
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      STARTS: '{{.STARTS | default "0,0"}}'
+      KEY:
+        sh: task -s resolve-key KEY={{.KEY | default ""}} KEY_ENV_DEFAULT=GUARDIAN PROVIDER_ID='{{.PROVIDER_ID}}'
+      ARENASTATE_ARENA:
+        sh: task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID | default "hh"}}'
+
+    cmds:
+      - |
+        export ARENASTATE_ARENA={{.ARENASTATE_ARENA}}
+        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
+        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
+
+        # Creategame publishes the map and the furniture as nft metadata. Here,
+        # we obtain the metadata by finding the most recently created game token
+        # on the arena and reading its map and furniture from the *encrypted*
+        # IPFS data.
+
+        ./cli.js \
+          --codex-password {{.CODEX_PASSWORD}} \
+          --key {{.KEY}} \
+        startgame \
+          --starts "{{.STARTS}}"
+
+  commit:
+    desc: |
+      MENU
+        0-3 are the side exit menues NORTH, WEST, SOUTH, EAST
+        > 3 selects a placed furniture item menu. openable or usable items just have a single choice input.
+      CHOICE
+        The menu has a fixed number of choices. For side exit menus, there is one choice per exit on the side.
+        For a chest, slecting the only available choice opens the chest and reveals the consequence.
+
+      For CMS3, the test data and start locations place a death trap at the
+      start location.  MENU: 4, CHOICE: 0 will trigger it.
+
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      USER_ID: '{{.USER_ID | default "1"}}'
+      MENU: '{{.MENU | default "0"}}'
+      CHOICE: '{{.CHOICE | default "0"}}'
+      KEY:
+        sh: task -s resolve-key KEY={{.KEY | default ""}} KEY_ENV_DEFAULT='USER{{.USER_ID}}' PROVIDER_ID='{{.PROVIDER_ID}}'
+      ARENASTATE_ARENA:
+        sh: task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID | default "hh"}}'
+    cmds:
+      - |
+        export ARENASTATE_ARENA={{.ARENASTATE_ARENA}}
+        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
+        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
+
+        ./cli.js \
+          --key {{.KEY}} \
+        commitchoice \
+          "{{.MENU}}" \
+          "{{.CHOICE}}"
+
+  reveal:
+    dotenv: [".env.{{.PROVIDER_ID}}"]
+    vars:
+      STARTS: '{{.STARTS | default "0,0"}}'
+      KEY:
+        sh: task -s resolve-key KEY={{.KEY | default ""}} KEY_ENV_DEFAULT=GUARDIAN PROVIDER_ID='{{.PROVIDER_ID}}'
+      ARENASTATE_ARENA:
+        sh: task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID | default "hh"}}'
+
+    cmds:
+      - |
+        export ARENASTATE_ARENA={{.ARENASTATE_ARENA}}
+        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
+        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
+        ./cli.js \
+          --codex-password {{.CODEX_PASSWORD}} \
+          --key {{.KEY}} \
+          resolvechoice

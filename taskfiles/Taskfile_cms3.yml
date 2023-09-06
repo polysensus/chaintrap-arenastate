@@ -1,0 +1,70 @@
+---
+version: "3"
+
+vars:
+  PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
+
+tasks:
+  test:
+    desc: |
+      Creates a map and game, with a finish and an openable chest. The chest kills the
+      trialist that opens it.
+
+      Run through a short game sequence showing this:
+      * bob choses to open the chest placed at the start location and is halted.
+      * alice uses the exit that reaches finish and ownership of the game token is transfered to her.
+    cmds:
+      - |
+        echo "FURNITURE_FILE: {{.FURNITURE_FILE}}"
+        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
+        echo "ROOT_DIR: {{.ROOT_DIR}}"
+        echo "TASKFILE_DIR: {{.TASKFILE_DIR}}"
+        echo "USER_WORKING_DIR: {{.USER_WORKING_DIR}}"
+
+      - echo ------------------------------------------------------------
+      - echo "create the map"
+      - echo ------------------------------------------------------------
+      - task: :game:maptool
+
+      - echo ------------------------------------------------------------
+      - echo "create the game token"
+      - echo ------------------------------------------------------------
+      - task: ':{{.PROVIDER_ID}}:game:create'
+
+      - echo ------------------------------------------------------------
+      - echo "trialist 1 joins the game"
+      - echo ------------------------------------------------------------
+      - task: ':{{.PROVIDER_ID}}:game:join'
+        vars: { USER_ID: "1" }
+
+      - echo ------------------------------------------------------------
+      - echo "trialist 2 joins the game"
+      - echo ------------------------------------------------------------
+      - task: ':{{.PROVIDER_ID}}:game:join'
+        vars: { USER_ID: "2" }
+
+      - echo ------------------------------------------------------------
+      - echo "guardian starts the game"
+      - echo ------------------------------------------------------------
+      - task: ':{{.PROVIDER_ID}}:game:start'
+
+      - echo ------------------------------------------------------------
+      - echo "trialist 1 takes the first exit on the west side"
+      - echo ------------------------------------------------------------
+      - task: ':{{.PROVIDER_ID}}:game:commit'
+        vars: { USER_ID: "1", MENU: "1", CHOICE: "0" }
+      - task: ':{{.PROVIDER_ID}}:game:reveal'
+
+      - echo ------------------------------------------------------------
+      - echo "trialist 2 opens the chest"
+      - echo ------------------------------------------------------------
+      - task: ':{{.PROVIDER_ID}}:game:commit'
+        vars: { USER_ID: "2", MENU: "4", CHOICE: "0" }
+      - task: ':{{.PROVIDER_ID}}:game:reveal'
+
+      - echo ------------------------------------------------------------
+      - echo "trialist 1 uses the finish exit and wins the game token"
+      - echo ------------------------------------------------------------
+      - task: ':{{.PROVIDER_ID}}:game:commit'
+        vars: { MENU: "0", CHOICE: "0" }
+      - task: ':{{.PROVIDER_ID}}:game:reveal'

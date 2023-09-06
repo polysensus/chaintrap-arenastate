@@ -73,9 +73,9 @@ jobs:
       - name: test cms3
         working-directory: chaintrap-arenastate
         run: |
-          task test:cms3
+          task hh:test:cms3
 
       - name: test cms4
         working-directory: chaintrap-arenastate
         run: |
-          task test:cms4
+          task hh:test:cms4
