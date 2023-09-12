@@ -3,20 +3,51 @@ version: "3"
 
 vars:
   CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
-  TUSKS: ".local/dev"
-  FACETS_EXCLUDE: node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json
+  TUSKS: "{{.ROOT_DIR}}/.local/dev"
+  FACETS_EXCLUDE: "{{.ROOT_DIR}}/node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json"
   FACETS_DEPLOYED: "facets-deployed.json"
-  CHAINTRAP_CONTRACTS_ABI_DIR: node_modules/@polysensus/chaintrap-contracts/abi
-  DIAMOND_DEPLOY_JSON: .local/dev/diamond-deploy.json
-  DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
+  CHAINTRAP_CONTRACTS_ABI_DIR: "{{.ROOT_DIR}}/node_modules/@polysensus/chaintrap-contracts/abi"
+  DIAMOND_DEPLOY_JSON: "{{.ROOT_DIR}}/.local/dev/diamond-deploy.json"
+  DEPLOYCLI: "node {{.ROOT_DIR}}/node_modules/@polysensus/diamond-deploy/dist/deploycli.esm.js"
   #DEPLOYCLI: "node node_modules/@polysensus/diamond-deploy/deploycli.js"
-  FURNITURE_FILE: "data/maps/map02-furnishings.json"
-  MAP_FILE: "data/maps/map02.json"
+  FURNITURE_FILE: "{{.ROOT_DIR}}/data/maps/map02-furnishings.json"
+  MAP_FILE: "{{.ROOT_DIR}}/data/maps/map02.json"
   MAP_NAME: "map02"
   CODEX_FILENAME: "map02.codex.json"
   CODEX_PASSWORD: "very-secret"
   OPENAI_IMAGE_PROMPT: "A stylised icon representing a turn based random dungeon crawler game"
   PROVIDER_ID: '{{.PROVIDER_ID | default "hh"}}'
+
+includes:
+  op:game:
+    taskfile: ./taskfiles/Taskfile_game.yml
+    vars:
+      PROVIDER_ID: "opgoerli"
+  hh:game:
+    taskfile: ./taskfiles/Taskfile_game.yml
+    vars:
+      PROVIDER_ID: "hh"
+
+  # ----
+  # Milestone demos
+  # ----
+  hh:cms3:
+    taskfile: ./taskfiles/Taskfile_cms3.yml
+    vars:
+      PROVIDER_ID: "hh"
+  op:cms3:
+    taskfile: ./taskfiles/Taskfile_cms3.yml
+    vars:
+      PROVIDER_ID: "op"
+
+  hh:cms4:
+    taskfile: ./taskfiles/Taskfile_cms3.yml
+    vars:
+      PROVIDER_ID: "hh"
+  op:cms4:
+    taskfile: ./taskfiles/Taskfile_cms4.yml
+    vars:
+      PROVIDER_ID: "op"
 
 tasks:
   bootstrap:
@@ -91,128 +122,6 @@ tasks:
           --format json | tee {{.DIAMOND_DEPLOY_JSON}}
 
   # ----
-  # Milestone demos
-  # ----
-  test:cms3:
-    desc: |
-      Creates a map and game, with a finish and an openable chest. The chest kills the
-      trialist that opens it.
-
-      Run through a short game sequence showing this:
-      * bob choses to open the chest placed at the start location and is halted.
-      * alice uses the exit that reaches finish and ownership of the game token is transfered to her.
-
-    cmds:
-      - echo ------------------------------------------------------------
-      - echo "create the map"
-      - echo ------------------------------------------------------------
-      - task: game:maptool
-      - echo ------------------------------------------------------------
-      - echo "create the game token"
-      - echo ------------------------------------------------------------
-      - task: game:creategame
-      - echo ------------------------------------------------------------
-      - echo "trialist 1 joins the game"
-      - echo ------------------------------------------------------------
-      - task: game:joingame:user1
-      - echo ------------------------------------------------------------
-      - echo "trialist 2 joins the game"
-      - echo ------------------------------------------------------------
-      - task: game:joingame:user2
-      - echo ------------------------------------------------------------
-      - echo "guardian starts the game"
-      - echo ------------------------------------------------------------
-      - task: game:startgame
-      - echo ------------------------------------------------------------
-      - echo "trialist 1 takes the first exit on the west side"
-      - echo ------------------------------------------------------------
-      # USER1 uses the first exit on the west
-      - task: game:commitchoice
-        vars: { MENU: "1", CHOICE: "0" }
-      - task: game:resolvechoice
-      - echo ------------------------------------------------------------
-      - echo "trialist 2 opens the chest"
-      - echo ------------------------------------------------------------
-      # USER2 opens the chest
-      - task: game:commitchoice:user2
-        vars: { MENU: "4", CHOICE: "0" }
-      - task: game:resolvechoice
-      # USER1 uses the finish exit on the north side
-      - echo ------------------------------------------------------------
-      - echo "trialist 1 uses the finish exit and wins the game token"
-      - echo ------------------------------------------------------------
-      - task: game:commitchoice
-        vars: { MENU: "0", CHOICE: "0" }
-      - task: game:resolvechoice
-
-  test:cms4:
-    desc: |
-      Creates a map and game, with a finish and two openable chests. Both chests
-      are placed at the start location. Opening the first chest costs the player
-      a life. Opening the second chest grants the player a life. If the player
-      opens the second chest and then opens the first, they survive. If they
-      open the first chest first, they are halted (die). In this demo, we show
-      the former (surival)
-
-      Run through a short game sequence showing this:
-      * bob choses to open the seoncd chest placed at the start location and gains a life.
-      * bob opens the first chest placed at the start location and loses a life but survives.
-      * alice uses the exit that reaches finish and ownership of the game token is transfered to her.
-
-    cmds:
-      - echo ------------------------------------------------------------
-      - echo "create the map"
-      - echo ------------------------------------------------------------
-      - task: game:maptool
-      - echo ------------------------------------------------------------
-      - echo "create the game token"
-      - echo ------------------------------------------------------------
-      - task: game:creategame
-      - echo ------------------------------------------------------------
-      - echo "trialist 1 joins the game"
-      - echo ------------------------------------------------------------
-      - task: game:joingame:user1
-      - echo ------------------------------------------------------------
-      - echo "trialist 2 joins the game"
-      - echo ------------------------------------------------------------
-      - task: game:joingame:user2
-      - echo ------------------------------------------------------------
-      - echo "guardian starts the game"
-      - echo ------------------------------------------------------------
-      - task: game:startgame
-      - echo ------------------------------------------------------------
-      - echo "trialist 1 takes the first exit on the west side"
-      - echo ------------------------------------------------------------
-      - task: game:commitchoice
-        vars: { MENU: "1", CHOICE: "0" }
-      - task: game:resolvechoice
-      - echo ------------------------------------------------------------
-      - echo "trialist 2 opens the second chest"
-      - echo ------------------------------------------------------------
-      - task: game:commitchoice:user2
-        vars: { MENU: "4", CHOICE: "1" }
-      - task: game:resolvechoice
-      - echo ------------------------------------------------------------
-      - echo "trialist 2 opens the first chest"
-      - echo ------------------------------------------------------------
-      # USER2 opens the chest
-      - task: game:commitchoice:user2
-        vars: { MENU: "4", CHOICE: "0" }
-      - task: game:resolvechoice
-      - echo ------------------------------------------------------------
-      - echo "trialist 2 takes the first exit on the west side"
-      - echo ------------------------------------------------------------
-      - task: game:commitchoice:user2
-        vars: { MENU: "1", CHOICE: "0" }
-      - task: game:resolvechoice
-      - echo ------------------------------------------------------------
-      - echo "trialist 1 uses the finish exit and wins the game token"
-      - echo ------------------------------------------------------------
-      - task: game:commitchoice
-        vars: { MENU: "0", CHOICE: "0" }
-      - task: game:resolvechoice
-
-  # ----
   # game commands
   # ----
   game:maptool:
@@ -228,164 +137,6 @@ tasks:
             --map-filename {{.MAP_FILE}} \
             --codex-filename {{.CODEX_FILENAME}} \
             --codex-password {{.CODEX_PASSWORD}}
-
-  game:creategame:
-    desc: mint a new game
-    dotenv: [".env.{{.PROVIDER_ID}}"]
-    vars:
-      KEY: '{{.KEY | default ""}}'
-
-    cmds:
-      - |
-
-        KEY=$(task -s resolve-key KEY={{.KEY}} KEY_ENV_DEFAULT=GUARDIAN PROVIDER_ID='{{.PROVIDER_ID}}')
-        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
-        echo "creategame ARENASTATE_ARENA=$ARENASTATE_ARENA"
-
-        ./cli.js \
-          --codex-filename {{.CODEX_FILENAME}} \
-          --codex-password {{.CODEX_PASSWORD}} \
-          --map-name map02 \
-          --key $KEY \
-          --furniture {{.FURNITURE_FILE}} \
-            creategame \
-              --codex-publish \
-              --codex-from-disc \
-              --name "A chaintrap game created by automated testing" \
-              --description \
-                "The description of a chaintrap game created by developer testing" \
-              --max-participants 3 \
-              --openai-image-prompt '{{.OPENAI_IMAGE_PROMPT}}'
-
-  game:joingame:
-    desc: join a game as a trialist
-    dotenv: [".env.{{.PROVIDER_ID}}"]
-    vars:
-      NICKNAME: '{{.NICKNAME | default "alice" }}'
-      KEY: '{{.KEY | default ""}}'
-      KEY_ENV_DEFAULT: '{{.KEY_ENV_DEFAULT | default "USER1"}}'
-    cmds:
-      - |
-        KEY=$(task -s resolve-key KEY={{.KEY}} KEY_ENV_DEFAULT={{.KEY_ENV_DEFAULT}} PROVIDER_ID='{{.PROVIDER_ID}}')
-        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
-        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
-
-        ./cli.js --key $KEY joingame --nickname {{.NICKNAME}}
-
-  game:joingame:user1:
-    dotenv: [".env.{{.PROVIDER_ID}}"]
-    desc: join a game as a trialist, default to the user1 key
-    vars:
-      NICKNAME: '{{.NICKNAME | default "alice" }}'
-      KEY: '{{.KEY | default ""}}'
-    cmds:
-      - task: game:joingame
-        vars:
-          {
-            NICKNAME: "{{.NICKNAME}}",
-            KEY: "{{.KEY}}",
-            KEY_ENV_DEFAULT: "USER1",
-          }
-
-  game:joingame:user2:
-    desc: join a game as a trialist, default to the user2 key
-    dotenv: [".env.{{.PROVIDER_ID}}"]
-    vars:
-      NICKNAME: '{{.NICKNAME | default "bob" }}'
-      KEY: '{{.KEY | default ""}}'
-    cmds:
-      - task: game:joingame
-        vars:
-          {
-            NICKNAME: "{{.NICKNAME}}",
-            KEY: "{{.KEY}}",
-            KEY_ENV_DEFAULT: "USER2",
-          }
-
-  game:startgame:
-    desc: start a game, default expects two trialists
-    dotenv: [".env.{{.PROVIDER_ID}}"]
-    vars:
-      STARTS: '{{.STARTS | default "0,0"}}'
-      KEY: '{{.KEY | default ""}}'
-    cmds:
-      - |
-        KEY=$(task -s resolve-key KEY="{{.KEY}}" KEY_ENV_DEFAULT="GUARDIAN" PROVIDER_ID='{{.PROVIDER_ID}}')
-        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
-        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
-        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
-
-        # Creategame publishes the map and the furniture as nft metadata. Here,
-        # we obtain the metadata by finding the most recently created game token
-        # on the arena and reading its map and furniture from the *encrypted*
-        # IPFS data.
-
-        ./cli.js \
-          --codex-password {{.CODEX_PASSWORD}} \
-          --key $KEY \
-        startgame \
-          --starts "{{.STARTS}}"
-
-  game:commitchoice:
-    desc: |
-      MENU
-        0-3 are the side exit menues NORTH, WEST, SOUTH, EAST
-        > 3 selects a placed furniture item menu. openable or usable items just have a single choice input.
-      CHOICE
-        The menu has a fixed number of choices. For side exit menus, there is one choice per exit on the side.
-        For a chest, slecting the only available choice opens the chest and reveals the consequence.
-
-      For CMS3, the test data and start locations place a death trap at the
-      start location.  MENU: 4, CHOICE: 0 will trigger it.
-
-    dotenv: [".env.{{.PROVIDER_ID}}"]
-    vars:
-      KEY: '{{.KEY | default ""}}'
-      MENU: '{{.MENU | default "0"}}'
-      CHOICE: '{{.CHOICE | default "0"}}'
-      KEY_ENV_DEFAULT: '{{.KEY_ENV_DEFAULT| default "USER1"}}'
-    cmds:
-      - |
-        KEY=$(task -s resolve-key KEY="{{.KEY}}" KEY_ENV_DEFAULT={{.KEY_ENV_DEFAULT}} PROVIDER_ID='{{.PROVIDER_ID}}')
-        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
-        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
-        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
-        ./cli.js \
-          --key $KEY \
-        commitchoice \
-          "{{.MENU}}" \
-          "{{.CHOICE}}"
-
-  game:commitchoice:user2:
-    desc: same as game:commitchoice, but defaults to key ARENASTATE_USER2_KEY
-    vars:
-      KEY: '{{.KEY | default ""}}'
-      MENU: '{{.MENU | default "0"}}'
-      CHOICE: '{{.CHOICE | default "0"}}'
-    cmds:
-      - task: game:commitchoice
-        vars:
-          {
-            KEY: "{{.KEY}}",
-            MENU: "{{.MENU}}",
-            CHOICE: "{{.CHOICE}}",
-            KEY_ENV_DEFAULT: "USER2",
-          }
-
-  game:resolvechoice:
-    dotenv: [".env.{{.PROVIDER_ID}}"]
-    vars:
-      KEY: '{{.KEY | default ""}}'
-    cmds:
-      - |
-        KEY=$(task -s resolve-key KEY="{{.KEY}}" KEY_ENV_DEFAULT="GUARDIAN" PROVIDER_ID='{{.PROVIDER_ID}}')
-        export ARENASTATE_ARENA=$(task -s resolve-arena PROVIDER_ID='{{.PROVIDER_ID}}')
-        echo "PROVIDER_ID: {{.PROVIDER_ID}}"
-        echo "ARENASTATE_ARENA=$ARENASTATE_ARENA"
-        ./cli.js \
-          --codex-password {{.CODEX_PASSWORD}} \
-          --key $KEY \
-          resolvechoice
 
   deploy:
     desc: deploy the contracts to all supported networks
@@ -525,6 +276,7 @@ tasks:
 
     cmds:
       - |
+        # source .env.{{.PROVIDER_ID}}
         echo "PROVIDER_ID {{.PROVIDER_ID}}"
         echo "PROVIDER_URL: $ARENASTATE_PROVIDER_URL"
         echo "ARENASTATE_DEPLOY_KEY: $ARENASTATE_DEPLOY_KEY"
