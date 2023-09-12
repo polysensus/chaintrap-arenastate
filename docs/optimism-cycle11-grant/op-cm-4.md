@@ -32,7 +32,7 @@ For 1, we have chosen not to model the treats as NFT's for now, we might revisit
 
 The on chain proof was created with this test script:
 
-- https://github.com/polysensus/chaintrap-arenastate/taskfiles/Taskfile_cms4.yml
+- https://github.com/polysensus/chaintrap-arenastate/blob/main/taskfiles/Taskfile_cms4.yml
 
 The output from this script, running for hardhat, can be found on the CI test run here: https://github.com/polysensus/chaintrap-arenastate/actions/runs/6066677115/job/16457534009
 
