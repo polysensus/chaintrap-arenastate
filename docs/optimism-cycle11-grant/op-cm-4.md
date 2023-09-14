@@ -1,9 +1,9 @@
 # Critical Milestone 4, Chaintrap, builders, cycle 11
 
 Our focus for this milestone has been introducing the first bonus item (treat)
-to the gam and adding the necessary per player state.
+to the game and adding the necessary per player state.
 
-We have added our first type of bonus confering placable item. As with the deadly traps introduced in MS3, the bonus item is an openable chest. Now when a player encounteres a chest it could be *either* instant death or a bonus life. The bonus life allows the player to survive a single deadly trap.
+We have added our first type of bonus confering placable item. As with the deadly traps introduced in CMS3, the bonus item is an openable chest. Now when a player encounteres a chest it could be *either* instant death or a bonus life. The bonus life allows the player to survive a single deadly trap.
 
 ## release info for this CMD
 
