@@ -7,6 +7,7 @@ import { LogicalTopology } from "./maptrie/logical.js";
 //
 // import maps from "../../../data/maps/map02.json" assert { type: "json" };
 // const { map02 } = maps;
+import { readBinaryData } from "../commands/data.js";
 
 import { Trial } from "./trial.js";
 import { getGameCreated } from "./arenaevent.js";
@@ -49,8 +50,11 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     topo.placeFinish(furniture.byName("finish_exit"));
     const trie = topo.commit();
 
+    const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
     // mint without publishing nft metadata
     this.minter.applyOptions({
+      gameIconBytes,
+      fetch,
       choiceInputTypes: [ObjectType.LocationChoices],
       transitionTypes: [ObjectType.Link2, ObjectType.Finish],
       victoryTransitionTypes: [ObjectType.Finish],

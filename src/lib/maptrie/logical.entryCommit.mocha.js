@@ -15,6 +15,7 @@ import { LogicalTopology } from "./logical.js";
 import maps from "../../../data/maps/map02.json" assert { type: "json" };
 import { LeafObject, leafHash, conditionInputs } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
+import { readBinaryData } from "../../commands/data.js";
 
 import { getGameCreated, getSetMerkleRoot } from "../arenaevent.js";
 import { ArenaEvent } from "../arenaevent.js";
@@ -50,9 +51,12 @@ describe("LogicalTopology entryCommit tests", function () {
     });
     topo.placeFurniture(furniture);
     const trie = topo.commit();
+    const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
 
     // mint without publishing nft metadata
     this.minter.applyOptions({
+      gameIconBytes,
+      fetch,
       choiceInputTypes: [ObjectType.LocationChoices],
       transitionTypes: [
         ObjectType.Link2,
@@ -62,6 +66,7 @@ describe("LogicalTopology entryCommit tests", function () {
       victoryTransitionTypes: [ObjectType.Finish],
       haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
     });
+
     let r = await this.mintGame({ topology: topo, trie });
 
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);

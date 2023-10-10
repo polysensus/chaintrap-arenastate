@@ -20,6 +20,10 @@ import { ObjectType } from "../src/lib/maptrie/objecttypes.js";
 import { Trial } from "../src/lib/trial.js";
 
 import { ABIName } from "../src/lib/abiconst.js";
+
+import { readBinaryData } from "./support/data.js";
+const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+
 describe("StateRoster# load", async function () {
   it("Should start single player game and prove first move", async function () {
     if (!this.gameOptions || !this.mintGame) {
@@ -50,6 +54,8 @@ describe("StateRoster# load", async function () {
 
     // mint without publishing nft metadata
     this.minter.applyOptions({
+      gameIconBytes,
+      fetch,
       choiceInputTypes: [ObjectType.LocationChoices],
       transitionTypes: [ObjectType.Link2, ObjectType.Finish],
       victoryTransitionTypes: [ObjectType.Finish],

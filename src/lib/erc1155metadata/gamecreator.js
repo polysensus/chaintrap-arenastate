@@ -8,6 +8,7 @@ import { generateIconBinary } from "../openai/imageprompt.js";
 import { NFTStorage } from "nft.storage";
 
 import { conditionInput } from "../maptrie/objects.js";
+import { rootLabel } from "../maptrie/logical.js";
 
 export const defaultGameIconPrompt =
   "A stylised icon representing a turn based random dungeon crawler game";
@@ -15,6 +16,21 @@ export const defaultGameIconPrompt =
 const defaultMaxParticipants = 5;
 const defaultParticipanInitialLives = 1;
 export const trialSetupPropertyFilename = "trial-setup.json";
+
+export function newGameMetadataCreator(options) {
+  if (!options?.gameIconBytes) throw new Error(`gameIconBytes is required`);
+  if (!options?.name) options.name = "A chaintrap game transcript";
+  if (!options?.description)
+    options.description =
+      "A chaintrap game, find polysensus on discord for more info";
+  if (!options?.mapRootLabel) options.mapRootLabel = "chaintrap-dungeon:static";
+
+  creator = new GameMetadataCreator();
+  creator.configureMetadataOptions(this.options);
+  creator.configureNFTStorageOptions(this.options);
+  creator.configureGameIconOptions(this.options);
+  creator.configureMaptoolOptions(this.options);
+}
 
 /**
  * Support class for minting games. Minting a game is accomplished by creating a
@@ -155,7 +171,11 @@ export class GameMetadataCreator {
     return this.initArgs.tokenURI;
   }
 
-  async mint(arena) {
+  /**
+   * Returns the exact arguments required for arena createGame
+   * @returns {{initArgs:object,object}}
+   */
+  createGameArgs() {
     if (!this.allOptionsConfigured())
       throw new Error(
         `required configuration is missing ${Object.keys(
@@ -170,9 +190,16 @@ export class GameMetadataCreator {
       throw new Error(
         "The game metadata must be published to IPFS before minting the game token"
       );
-    const tx = await arena.createGame(this.initArgs, {
-      type: this.options.networkEIP1559 ? 2 : 0,
-    });
+    return [
+      this.initArgs,
+      {
+        type: this.options.networkEIP1559 ? 2 : 0,
+      },
+    ];
+  }
+
+  async mint(arena) {
+    const tx = await arena.createGame(...this.createGameArgs());
     const r = await tx.wait();
     if (r?.status !== 1) throw new Error("createGame failed");
     return r;

@@ -8,6 +8,7 @@ import * as msgpack from "@msgpack/msgpack";
 import { LogicalTopology } from "./logical.js";
 //
 import maps from "../../../data/maps/map02.json" assert { type: "json" };
+import { readBinaryData } from "../../commands/data.js";
 
 import { getGameCreated } from "../arenaevent.js";
 import { ArenaEvent } from "../arenaevent.js";
@@ -56,8 +57,11 @@ describe("LogicalTopology setStart tests", function () {
 
     const trie = topo.commit();
 
+    const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
     // mint without publishing nft metadata
     this.minter.applyOptions({
+      gameIconBytes,
+      fetch,
       choiceInputTypes: [ObjectType.LocationChoices],
       transitionTypes: [
         ObjectType.Link2,

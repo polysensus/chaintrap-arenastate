@@ -29,16 +29,16 @@ export class Guardian {
     if (options) this.initialOptions = { ...options };
 
     if (eventParser) this.eventParser = eventParser;
-    this.arena = this.eventParser.contract;
+    this.arena = this.eventParser?.contract;
 
-    this.minter = new Minter(this.arena, this.initialOptions);
-    this.journal = new Journal(this.eventParser, options);
+    if (this.arena) this.minter = new Minter(this.arena, this.initialOptions);
+    if (this.eventParser) this.journal = new Journal(this.eventParser, options);
+
     this.trials = {};
 
     this.lastMintedGID = undefined;
     this._preparingDungeon = false;
     this._dungeonPrepared = false;
-    this._lastMinted = undefined;
 
     this.topology = undefined;
     this.trie = undefined;
@@ -95,6 +95,7 @@ export class Guardian {
     if (!this._dungeonPrepared) throw new Error("dungeon not prepared");
 
     options = { ...options };
+
     if (!options.mapRootLabel) options.mapRootLabel = rootLabel(this.map);
 
     this.minter.applyOptions({
@@ -130,13 +131,38 @@ export class Guardian {
 
     const created = result.eventByName("TranscriptCreated");
 
-    this._lastMinted = {
+    return {
       gid: created.gid,
       creator: created.parsedLog.args.creator,
       registrationLimit: created.parsedLog.args.registrationLimit,
       result,
     };
-    return this._lastMinted;
+  }
+
+  async createGame(initArgs, transactOpts) {
+    const tx = await this.arena.createGame(initArgs, transactOpts);
+    const r = await tx.wait();
+    if (r?.status !== 1) throw new Error("createGame failed");
+
+    const collector = new TransactRequest(this.eventParser);
+    const result = collector
+      .requireLogs(
+        "TransferSingle(address,address,address,uint256,uint256)",
+        // Only sets one root
+        "TranscriptMerkleRootSet(uint256,bytes32,bytes32)",
+        "TranscriptCreated(uint256,address,uint256)"
+      )
+      .acceptLogs("URI(string,uint256)")
+      .collect(r);
+
+    const created = result.eventByName("TranscriptCreated");
+
+    return {
+      gid: created.gid,
+      creator: created.parsedLog.args.creator,
+      registrationLimit: created.parsedLog.args.registrationLimit,
+      result,
+    };
   }
 
   async startListening(gid, options) {

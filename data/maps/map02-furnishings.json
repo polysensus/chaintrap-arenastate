@@ -8,6 +8,7 @@
       "unique_name": "finish_exit",
       "labels": ["victory_condition"],
       "type": "finish_exit",
+      "choiceType": "finish_exit",
       "data": {
         "location": 8,
         "side": 0,

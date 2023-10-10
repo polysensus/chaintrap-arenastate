@@ -9,6 +9,8 @@ import furnishings from "../../data/maps/map02-furnishings.json" assert { type: 
 //
 import maps from "../../data/maps/map02.json" assert { type: "json" };
 
+import { readBinaryData } from "../commands/data.js";
+
 describe("Guardian mintGame tests", function () {
   it("Should mint a game", async function () {
     if (!this.gameOptions) {
@@ -23,6 +25,7 @@ describe("Guardian mintGame tests", function () {
     guardian.prepareDungeon(maps["map02"]);
     guardian.furnishDungeon(furnishings);
     guardian.finalizeDungeon();
-    await guardian.mintGame();
+    const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+    await guardian.mintGame({ gameIconBytes, fetch });
   });
 });

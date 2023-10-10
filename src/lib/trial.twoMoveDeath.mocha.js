@@ -12,6 +12,9 @@ import { EventParser } from "./chainkit/eventparser.js";
 
 //
 import maps from "../../data/maps/map02.json" assert { type: "json" };
+import { readBinaryData } from "../commands/data.js";
+const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+
 import furnishings from "../../data/maps/map02-furnishings.json" assert { type: "json" };
 import { Dispatcher } from "./chainkit/dispatcher.js";
 
@@ -40,7 +43,7 @@ describe("Game session participant halt tests", function () {
     guardian.prepareDungeon(maps["map02"]);
     guardian.furnishDungeon(furnishings);
     guardian.finalizeDungeon();
-    const gid = (await guardian.mintGame()).gid;
+    const gid = (await guardian.mintGame({ gameIconBytes, fetch })).gid;
     const gidHex = gid.toHexString();
     await guardian.startListening(gid);
 

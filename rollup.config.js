@@ -19,12 +19,28 @@ const external = [
 ];
 
 export default [
+  /* doesn't work yet
   {
-    input: "src/lib/main.js",
+    input: "cli.js",
+    output: [
+      {
+        inlineDynamicImports: true,
+        file: pkg.main,
+        format: "cjs",
+      },
+    ],
+    plugins: [
+      json(),
+      resolve({ preferBuiltins: true }),
+      commonjs({ ignoreDynamicRequires: true }),
+    ],
+  },*/
+  {
+    input: "src/lib/index-browser.js",
     external,
     output: [
       {
-        inlineDynamicImports: false,
+        inlineDynamicImports: true,
         file: pkg.module,
         format: "es",
         sourcemap: true,

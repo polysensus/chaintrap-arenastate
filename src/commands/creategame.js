@@ -13,7 +13,7 @@ import { ABIName } from "../lib/abiconst.js";
 import { defaultGameIconPrompt } from "../lib/erc1155metadata/gamecreator.js";
 import { generateImageBinary } from "../lib/openai/imageprompt.js";
 import { openaiImagesURL } from "../lib/openai/config.js";
-import { readBinaryData } from "../lib/data.js";
+import { readBinaryData } from "./data.js";
 
 export function addCreategame(program) {
   program
