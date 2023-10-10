@@ -8,6 +8,7 @@ import { LogicalTopology } from "./maptrie/logical.js";
 // import maps from "../../../data/maps/map02.json" assert { type: "json" };
 // const { map02 } = maps;
 import { readBinaryData } from "../commands/data.js";
+import { readBinaryData } from "../commands/data.js";
 
 import { Trial } from "./trial.js";
 import { getGameCreated } from "./arenaevent.js";

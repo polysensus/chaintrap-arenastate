@@ -14,6 +14,8 @@ import { EventParser } from "./chainkit/eventparser.js";
 import maps from "../../data/maps/map02.json" assert { type: "json" };
 import { readBinaryData } from "../commands/data.js";
 
+import { readBinaryData } from "../commands/data.js";
+
 import furnishings from "../../data/maps/map02-furnishings.json" assert { type: "json" };
 import { Dispatcher } from "./chainkit/dispatcher.js";
 

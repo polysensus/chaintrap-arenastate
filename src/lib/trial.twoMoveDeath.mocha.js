@@ -15,6 +15,9 @@ import maps from "../../data/maps/map02.json" assert { type: "json" };
 import { readBinaryData } from "../commands/data.js";
 const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
 
+import { readBinaryData } from "../commands/data.js";
+const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+
 import furnishings from "../../data/maps/map02-furnishings.json" assert { type: "json" };
 import { Dispatcher } from "./chainkit/dispatcher.js";
 

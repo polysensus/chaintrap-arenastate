@@ -16,6 +16,7 @@ import maps from "../../../data/maps/map02.json" assert { type: "json" };
 import { LeafObject, leafHash, conditionInputs } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
 import { readBinaryData } from "../../commands/data.js";
+import { readBinaryData } from "../../commands/data.js";
 
 import { getGameCreated, getSetMerkleRoot } from "../arenaevent.js";
 import { ArenaEvent } from "../arenaevent.js";
@@ -52,6 +53,7 @@ describe("LogicalTopology entryCommit tests", function () {
     });
     topo.placeFurniture(furniture);
     const trie = topo.commit();
+    const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
 
     let r = await this.mintGame({ topology: topo, trie });
 

@@ -24,6 +24,10 @@ import { ABIName } from "../src/lib/abiconst.js";
 import { readBinaryData } from "./support/data.js";
 const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
 
+
+import { readBinaryData } from "./support/data.js";
+const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+
 describe("StateRoster# load", async function () {
   it("Should start single player game and prove first move", async function () {
     if (!this.gameOptions || !this.mintGame) {
