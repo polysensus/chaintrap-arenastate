@@ -203,6 +203,30 @@ export class Journal {
     }
   }
 
+  /**
+   * Stop all listeners associated with the listed gids
+   *
+   * If gids is undefined (or ommitted), stop all current listeners.
+   * @param {undefined|ethers.BigNumber[]} gids
+   */
+  stopListening(gids = undefined) {
+    let gidsHex = [];
+    if (typeof gids === undefined)
+      for (const gidHex of Object.keys(this.listening)) gidsHex.push(gidHex);
+    else for (const gid of gids) gidsHex.push(gid.toHexString());
+
+    for (const gidHex of gidsHex) {
+      const gidHex = gid.toHexString();
+      if (!this.listening[gidHex]) continue;
+
+      for (const name of TRANSCRIPT_EVENT_NAMES) {
+        const id = this.handlerKey(name, gidHex);
+        this.dispatcher.removeHandler(id);
+      }
+      delete this.listening[gidHex];
+    }
+  }
+
   pendingOutcomes(gid) {
     return this.transcripts[gid.toHexString()].pendingOutcomes();
   }

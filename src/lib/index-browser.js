@@ -12,6 +12,7 @@ export {
 } from "./envopts/nftstorage.js";
 
 export * from "./erc1155metadata/metadataprepare.js";
+export * from "./erc1155metadata/gamereader.js";
 export * from "./chainkit/eventparser.js";
 export * from "./chainkit/transactor.js";
 export * from "./chainkit/secretblobsipfs.js";
@@ -42,3 +43,4 @@ export {
   CODEX_COMMITTED_INDEX,
   CODEX_INDEXED_ITEMS,
 } from "./guardian.js";
+export { Trialist } from "./trialist.js";

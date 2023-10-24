@@ -57,25 +57,12 @@ describe("LogicalTopology setStart tests", function () {
 
     const trie = topo.commit();
 
-    const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
-    // mint without publishing nft metadata
-    this.minter.applyOptions({
-      gameIconBytes,
-      fetch,
-      choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [
-        ObjectType.Link2,
-        ObjectType.Finish,
-        ObjectType.FatalChestTrap,
-      ],
-      victoryTransitionTypes: [ObjectType.Finish],
-      haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
-    });
-    let r = await this.mintGame({ topology: topo, trie: trie });
+    let r = await this.mintGame(
+      {topology: topo, trie: trie });
 
     const trial = new Trial(
       ethers.BigNumber.from(1),
-      this.minter.options.mapRootLabel,
+      this.mapRootLabel,
       {
         map: undefined,
         topology: topo,

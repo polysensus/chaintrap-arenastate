@@ -45,7 +45,7 @@ describe("Game session participant halt tests", function () {
     guardian.finalizeDungeon();
     const gid = (await guardian.mintGame({ gameIconBytes, fetch })).gid;
     const gidHex = gid.toHexString();
-    await guardian.startListening(gid);
+    await guardian.preparedStartListening(gid);
 
     const trialist = new Trialist(eventParser, { dispatcher });
 

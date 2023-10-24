@@ -51,7 +51,7 @@ describe("Game session participant ChestTreatGainLife", function () {
       })
     ).gid;
     const gidHex = gid.toHexString();
-    await guardian.startListening(gid);
+    await guardian.preparedStartListening(gid);
 
     const trialist = new Trialist(eventParser, { dispatcher });
 

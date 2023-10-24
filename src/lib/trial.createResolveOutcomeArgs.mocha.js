@@ -37,7 +37,7 @@ describe("Trial createResolveOutcomeArgs tests", function () {
       { sides: [[], [0], [], []], flags: {} },
     ]);
     const furniture = new Furniture({
-      map: { name: "test", beta: "0x" },
+      map: { name: "test", beta: "0x", vrf_inputs: {} },
       items: [
         {
           unique_name: "finish_exit",
@@ -51,22 +51,14 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     const trie = topo.commit();
 
     const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
-    // mint without publishing nft metadata
-    this.minter.applyOptions({
-      gameIconBytes,
-      fetch,
-      choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
-      victoryTransitionTypes: [ObjectType.Finish],
-    });
 
-    let r = await this.mintGame({ topology: topo, trie: trie });
+    let r = await this.mintGame({ gameIconBytes, topology: topo, trie: trie });
 
     const startLocationId = 0;
 
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
-    const trial = new Trial(gid, this.minter.options.mapRootLabel, {
+    const trial = new Trial(gid, this.mapRootLabel, {
       map: undefined,
       topology: topo,
       trie,
@@ -99,7 +91,7 @@ describe("Trial createResolveOutcomeArgs tests", function () {
         "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
       )
       .method(this.user1Arena.transcriptEntryCommit, gid, {
-        rootLabel: this.minter.minter.initArgs.rootLabels[0],
+        rootLabel: this.gameInitArgs.rootLabels[0],
         input: choice,
         data: "0x",
       })

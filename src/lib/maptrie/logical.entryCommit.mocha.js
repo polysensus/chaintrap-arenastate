@@ -22,6 +22,7 @@ import { ArenaEvent } from "../arenaevent.js";
 import { EventParser } from "../chainkit/eventparser.js";
 import { Transactor } from "../chainkit/transactor.js";
 import { Furniture } from "../map/furniture.js";
+import { Guardian } from "../guardian.js";
 
 const { map02 } = maps;
 
@@ -51,21 +52,6 @@ describe("LogicalTopology entryCommit tests", function () {
     });
     topo.placeFurniture(furniture);
     const trie = topo.commit();
-    const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
-
-    // mint without publishing nft metadata
-    this.minter.applyOptions({
-      gameIconBytes,
-      fetch,
-      choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [
-        ObjectType.Link2,
-        ObjectType.Finish,
-        ObjectType.FatalChestTrap,
-      ],
-      victoryTransitionTypes: [ObjectType.Finish],
-      haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
-    });
 
     let r = await this.mintGame({ topology: topo, trie });
 
@@ -111,7 +97,7 @@ describe("LogicalTopology entryCommit tests", function () {
 
     const startArgs = [
       {
-        rootLabel: this.minter.minter.initArgs.rootLabels[0],
+        rootLabel: this.gameInitArgs.rootLabels[0],
         choices: egressChoices,
         proofs: egressProofs,
         data: [msgpack.encode({ sides: [[], [], [], [0]] })],
@@ -137,7 +123,7 @@ describe("LogicalTopology entryCommit tests", function () {
         "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
       )
       .method(this.user1Arena.transcriptEntryCommit, gid, {
-        rootLabel: this.minter.minter.initArgs.rootLabels[0],
+        rootLabel: this.gameInitArgs.rootLabels[0],
         input: choice,
         data: "0x",
       })
@@ -174,7 +160,7 @@ describe("LogicalTopology entryCommit tests", function () {
     stack.push({
       inputRefs: [],
       proofRefs: [],
-      rootLabel: this.minter.minter.initArgs.rootLabels[0],
+      rootLabel: this.gameInitArgs.rootLabels[0],
       proof: location0Proof,
     });
 
@@ -192,7 +178,7 @@ describe("LogicalTopology entryCommit tests", function () {
     stack.push({
       inputRefs: [0],
       proofRefs: [],
-      rootLabel: this.minter.minter.initArgs.rootLabels[0],
+      rootLabel: this.gameInitArgs.rootLabels[0],
       proof: location0ExitProof,
     });
 
@@ -206,7 +192,7 @@ describe("LogicalTopology entryCommit tests", function () {
     stack.push({
       inputRefs: [],
       proofRefs: [],
-      rootLabel: this.minter.minter.initArgs.rootLabels[0],
+      rootLabel: this.gameInitArgs.rootLabels[0],
       proof: location1Proof,
     });
 
@@ -220,7 +206,7 @@ describe("LogicalTopology entryCommit tests", function () {
     stack.push({
       inputRefs: [0],
       proofRefs: [],
-      rootLabel: this.minter.minter.initArgs.rootLabels[0],
+      rootLabel: this.gameInitArgs.rootLabels[0],
       proof: location1ExitProof,
     });
 
@@ -235,7 +221,7 @@ describe("LogicalTopology entryCommit tests", function () {
     stack.push({
       inputRefs: [],
       proofRefs: [0, 1],
-      rootLabel: this.minter.minter.initArgs.rootLabels[0],
+      rootLabel: this.gameInitArgs.rootLabels[0],
       proof: linkProof,
     });
 

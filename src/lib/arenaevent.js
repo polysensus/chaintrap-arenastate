@@ -168,7 +168,6 @@ export function arenaEventFilter(arena, nameOrSignature, ...args) {
   try {
     return arena.getFilter(nameOrSignature, ...args);
   } catch (e) {
-    log.debug(`${e}`);
     throw e;
   }
 }
@@ -187,19 +186,30 @@ export function gameEventFilter(arena, gid) {
   };
 }
 
-export async function findGameCreated(arena, gid) {
-  const filter = transcriptEventFilter(arena, ABIName.TranscriptCreated, gid);
+export async function findTranscriptEvent(arena, gid, abiName, options = {}) {
+  const filter = transcriptEventFilter(arena, abiName, gid);
   const found = await arena.queryFilter(filter);
 
   if (found.length == 0) {
-    log.warn("error: game not found");
-    return undefined;
+    return options?.unique ? undefined : [];
   }
-  if (found.length > 1) {
+  if (found.length > 1 && options?.unique) {
     throw Error(`duplicate TranscriptCreated events for gid: ${gid}`);
   }
 
-  return found[0];
+  return options?.unique ? found[0] : found;
+}
+
+export async function findGameCreated(arena, gid) {
+  return await findTranscriptEvent(arena, gid, ABIName.TranscriptCreated, {
+    unique: true,
+  });
+}
+
+export async function findGameCompleted(arena, gid) {
+  return await findTranscriptEvent(arena, gid, ABIName.TranscriptCompleted, {
+    unique: true,
+  });
 }
 
 export async function findGameMetadata(arena, gid) {

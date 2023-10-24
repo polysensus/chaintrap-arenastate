@@ -52,14 +52,6 @@ describe("StateRoster# load", async function () {
 
     const trie = topo.commit();
 
-    // mint without publishing nft metadata
-    this.minter.applyOptions({
-      gameIconBytes,
-      fetch,
-      choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
-      victoryTransitionTypes: [ObjectType.Finish],
-    });
     let r = await this.mintGame({ topology: topo, trie: trie });
 
     const startLocationId = 0;
@@ -78,7 +70,7 @@ describe("StateRoster# load", async function () {
 
     const trial = new Trial(
       ethers.BigNumber.from(1),
-      this.minter.options.mapRootLabel,
+      this.mapRootLabel,
       {
         map: undefined,
         topology: topo,

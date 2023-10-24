@@ -28,7 +28,7 @@ async function resolvechoice(program, options) {
 
   guardian.setupTrial(codex, { ikey: 0 });
 
-  await guardian.startListening(gid);
+  await guardian.startListening2(gid, guardian.preparedDungeon());
   const resolved = await guardian.resolvePending(gid);
   if (resolved.length === 0)
     console.log(`no pending choices for ${gid.toHexString()}`);

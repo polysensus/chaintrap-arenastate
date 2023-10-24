@@ -1,10 +1,14 @@
 import { Furniture } from "./map/furniture.js";
 import { rootLabel, LogicalTopology } from "./maptrie/logical.js";
-import { Minter } from "./minter.js";
 import { TransactRequest } from "./chainkit/transactor.js";
 import { Journal } from "./journal.js";
 import { Trial } from "./trial.js";
 import { ObjectType } from "./maptrie/objecttypes.js";
+
+import { chaintrapGameDefaults } from "./erc1155metadata/metadataprepare.js";
+import { prepareTrialMetadata } from "./erc1155metadata/metadataprepare.js";
+import { prepareTrialInitArgs } from "./erc1155metadata/metadataprepare.js";
+import { publishTrialMetadata } from "./erc1155metadata/metadataprepare.js";
 
 export const FINISH_EXIT_NAME = "finish_exit";
 
@@ -27,11 +31,11 @@ export class Guardian {
 
   init(eventParser, options) {
     if (options) this.initialOptions = { ...options };
+    this.setupOptions = undefined;
 
     if (eventParser) this.eventParser = eventParser;
     this.arena = this.eventParser?.contract;
 
-    if (this.arena) this.minter = new Minter(this.arena, this.initialOptions);
     if (this.eventParser) this.journal = new Journal(this.eventParser, options);
 
     this.trials = {};
@@ -47,12 +51,15 @@ export class Guardian {
   }
 
   setupTrial(codex, options = {}) {
+    this.setupOptions = { ...this.initialOptions, ...options };
     this.trialSetupCodex = codex; // The map data, AES encrypted via a PBKDF
 
     // the map and furniture are added as well known singletons in the trial setup codices.
-    const map = JSON.parse(codex.getIndexedItem(CODEX_MAP_INDEX, options));
+    const map = JSON.parse(
+      codex.getIndexedItem(CODEX_MAP_INDEX, this.setupOptions)
+    );
     const furnishings = JSON.parse(
-      codex.getIndexedItem(CODEX_FURNITURE_INDEX, options)
+      codex.getIndexedItem(CODEX_FURNITURE_INDEX, this.setupOptions)
     );
     this.prepareDungeon(map);
     this.furnishDungeon(furnishings);
@@ -94,49 +101,37 @@ export class Guardian {
       throw new Error(`topology must be committed before minting`);
     if (!this._dungeonPrepared) throw new Error("dungeon not prepared");
 
-    options = { ...options };
+    // Note that without a codex the game is not playable, its absence is
+    // permited as a concession to testing.
+    options = { trialSetupCodex: this.trialSetupCodex, ...this.setupOptions, ...options };
+
+    if (!options.gameIconBytes)
+      throw new Error("gameIconBytes is a required option");
 
     if (!options.mapRootLabel) options.mapRootLabel = rootLabel(this.map);
 
-    this.minter.applyOptions({
-      ...options,
-      trialSetupCodex: options.codexPublish ? this.trialSetupCodex : undefined,
-      choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [
-        ObjectType.Link2,
-        ObjectType.Finish,
-        ObjectType.FatalChestTrap,
-        ObjectType.ChestTreatGainLife,
-      ],
-      victoryTransitionTypes: [ObjectType.Finish],
-      haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
-      livesIncrement: [ObjectType.ChestTreatGainLife],
-      livesDecrement: [ObjectType.FatalChestTrap],
-    });
-    const r = await this.minter.mint({
-      topology: this.topology,
-      map: this.map,
-      trie: this.trie,
-    });
-    const collector = new TransactRequest(this.eventParser);
-    const result = collector
-      .requireLogs(
-        "TransferSingle(address,address,address,uint256,uint256)",
-        // Only sets one root
-        "TranscriptMerkleRootSet(uint256,bytes32,bytes32)",
-        "TranscriptCreated(uint256,address,uint256)"
-      )
-      .acceptLogs("URI(string,uint256)")
-      .collect(r);
+    const metadata = prepareTrialMetadata(
+      this.map, this.trie, {name:options.name, description:options.description, ...options}
+      );
 
-    const created = result.eventByName("TranscriptCreated");
+    let tokenURI = 'meta-data-not-published';
 
-    return {
-      gid: created.gid,
-      creator: created.parsedLog.args.creator,
-      registrationLimit: created.parsedLog.args.registrationLimit,
-      result,
-    };
+    if (!options.noMetadataPublish) { // testing concesion
+      const tokenURI = (await publishTrialMetadata(
+        metadata, {
+          ...options,
+          imageBytes: options.gameIconBytes, imageContentType:"image/png",
+          imageFilename: options.nftstorageGameIconFilename,
+        }))?.token.url;
+    }
+    console.log(`tokenURI: ${tokenURI}`);
+
+    const args = prepareTrialInitArgs(metadata.properties, {
+      ...chaintrapGameDefaults, registrationLimit: options.maxParticipants, tokenURI,
+      networkEIP1559: options?.networkEIP1559
+    });
+
+    return await this.createGame(...args);
   }
 
   async createGame(initArgs, transactOpts) {
@@ -165,15 +160,31 @@ export class Guardian {
     };
   }
 
+  /** start listening to the dungeon just prepared by the guardian */
+  async preparedStartListening(gid, options) {
+    return this.startListening2(gid, this.preparedDungeon(), options);
+  }
+
   async startListening(gid, options) {
+    return this.startListening2(gid, this.preparedDungeon(), options);
+  }
+
+  /**
+   * @param {ethers.BigNumber} gid 
+   * @param {{map,topology,trie}} prepared 
+   * @param {*} options 
+   * @returns 
+   */
+  async startListening2(gid, prepared, options) {
     const staticRootLabel = (await this.journal.findStaticRoot(gid)).rootLabel;
     this.trials[gid.toHexString()] = new Trial(
       gid,
       staticRootLabel,
-      this.preparedDungeon()
+      prepared
     );
     return await this.journal.startListening([gid], options);
   }
+
 
   async openTranscript(gid) {
     const staticRootLabel = (await this.journal.findStaticRoot(gid)).rootLabel;
