@@ -1,3 +1,4 @@
+export * from "./tokenid.js";
 export * from "./trial.js";
 export * from "./abiconst.js";
 export * from "./arenaabi.js";
@@ -35,12 +36,13 @@ export { etherrmsg } from "./idioms.js";
 export { TrialistState } from "./trialiststate.js";
 export { StateRoster, loadRoster } from "./stateroster.js";
 export { TransactionHorizon } from "./chainkit/transactionhorizon.js";
+export { Guardian } from "./guardian.js";
 export {
-  Guardian,
   CODEX_MAP_INDEX,
   CODEX_FURNITURE_INDEX,
   CODEX_SVG_INDEX,
   CODEX_COMMITTED_INDEX,
   CODEX_INDEXED_ITEMS,
-} from "./guardian.js";
+} from "./trial.js";
+
 export { Trialist } from "./trialist.js";

@@ -15,15 +15,13 @@ const defaultMaxParticipants = 5;
 const defaultParticipanInitialLives = 1;
 
 export async function publishTrialMetadata(metadata, options) {
+  if (!options.imageBytes) throw new Error("option imageBytes is mandatory");
 
-  if (!options.imageBytes)
-    throw new Error('option imageBytes is mandatory')
-
-    metadata.image = fileObjectFromBinary(
-      options.imageBytes,
-      options.imageFilename ?? 'game-icon.png',
-      "image/png"
-    );
+  metadata.image = fileObjectFromBinary(
+    options.imageBytes,
+    options.imageFilename ?? "game-icon.png",
+    "image/png"
+  );
 
   const client = new NFTStorage({ token: options.nftstorageApiKey });
   const { token, car } = await NFTStorage.encodeNFT(metadata);

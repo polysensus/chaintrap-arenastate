@@ -35,7 +35,6 @@ describe("Game session participant ChestTreatGainLife", function () {
     const dispatcher = new Dispatcher(eventParser);
     const guardian = new Guardian(eventParser, {
       ...this.gameOptions,
-      noMETADATA: true,
       dispatcher,
     });
 
@@ -46,6 +45,9 @@ describe("Game session participant ChestTreatGainLife", function () {
     const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
     const gid = (
       await guardian.mintGame({
+        name: "game1",
+        description: "a test game of chaintrap",
+        noMetadataPublish: true,
         gameIconBytes,
         fetch,
       })

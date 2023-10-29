@@ -68,15 +68,11 @@ describe("StateRoster# load", async function () {
     const gid = getGameCreated(r, arenaEvents).gid;
     const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedLog.args.label;
 
-    const trial = new Trial(
-      ethers.BigNumber.from(1),
-      this.mapRootLabel,
-      {
-        map: undefined,
-        topology: topo,
-        trie,
-      }
-    );
+    const trial = new Trial(ethers.BigNumber.from(1), this.mapRootLabel, {
+      map: undefined,
+      topology: topo,
+      trie,
+    });
 
     const startArgs = trial.createStartGameArgs([startLocationId]);
 

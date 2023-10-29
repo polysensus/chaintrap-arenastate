@@ -55,6 +55,9 @@ export class StateRoster {
     switch (event.name) {
       case ABIName.TranscriptRegistration:
         this.trialists[event.subject] = new TrialistState(event.subject);
+        this.trialists[event.subject].setIndex(
+          Object.keys(this.trialists).length - 1
+        );
         break;
     }
     if (!TrialistState.handlesEvent(event.name)) return;

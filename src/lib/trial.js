@@ -10,6 +10,19 @@ import { ObjectType } from "./maptrie/objecttypes.js";
 import { LocationChoiceType } from "./maptrie/inputtypes.js";
 import { TranscriptOutcome } from "./abiconst.js";
 import { Furnishing } from "./map/furnishing.js";
+import { Furniture } from "./map/furniture.js";
+import { LogicalTopology, rootLabel } from "./maptrie/logical.js";
+
+export const CODEX_MAP_INDEX = "map";
+export const CODEX_FURNITURE_INDEX = "furniture";
+export const CODEX_SVG_INDEX = "svg";
+export const CODEX_COMMITTED_INDEX = "committed";
+export const CODEX_INDEXED_ITEMS = [
+  CODEX_MAP_INDEX,
+  CODEX_FURNITURE_INDEX,
+  CODEX_COMMITTED_INDEX,
+  CODEX_SVG_INDEX,
+];
 
 const abiCoder = ethers.utils.defaultAbiCoder;
 const hexlify = ethers.utils.hexlify;
@@ -23,13 +36,47 @@ function logProof(name, prepared, proof) {
   console.log("");
 }
 
+/**
+ *
+ * @param {{getIndexedItem:Function}} codex
+ * @param {ikeys?:number[]} options
+ */
+export function codexTrialDetails(codex, options = {}) {
+  const map = JSON.parse(codex.getIndexedItem(CODEX_MAP_INDEX, options));
+  const staticRootLabel = rootLabel(map);
+  const furnishings = JSON.parse(
+    codex.getIndexedItem(CODEX_FURNITURE_INDEX, options)
+  );
+  const topology = LogicalTopology.fromMapJSON(map);
+  topology.placeFurniture(new Furniture(furnishings));
+  return {
+    staticRootLabel,
+    map,
+    topology,
+    trie: topology.commit(),
+    furnishings,
+  };
+}
+
 export class Trial {
+  /**
+   *
+   * @param {and} codex
+   * @param {ikeys?:number[]} options
+   */
+  static fromCodex(codex, gid, options = {}) {
+    const { staticRootLabel, map, topology, trie } = codexTrialDetails(
+      codex,
+      options
+    );
+    return new Trial(gid, staticRootLabel, { map, topology, trie });
+  }
+
   /**
    * @constructor
    * @param {object} map
    */
-  constructor(gid, staticRootLabel, dungeon, options = undefined) {
-    this.options = { ...options };
+  constructor(gid, staticRootLabel, dungeon) {
     this.gid = gid;
     this.staticRootLabel = ethers.utils.formatBytes32String(staticRootLabel);
     this.map = dungeon.map;

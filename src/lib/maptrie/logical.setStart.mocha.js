@@ -57,18 +57,13 @@ describe("LogicalTopology setStart tests", function () {
 
     const trie = topo.commit();
 
-    let r = await this.mintGame(
-      {topology: topo, trie: trie });
+    let r = await this.mintGame({ topology: topo, trie: trie });
 
-    const trial = new Trial(
-      ethers.BigNumber.from(1),
-      this.mapRootLabel,
-      {
-        map: undefined,
-        topology: topo,
-        trie,
-      }
-    );
+    const trial = new Trial(ethers.BigNumber.from(1), this.mapRootLabel, {
+      map: undefined,
+      topology: topo,
+      trie,
+    });
 
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;

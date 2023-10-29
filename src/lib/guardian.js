@@ -2,7 +2,7 @@ import { Furniture } from "./map/furniture.js";
 import { rootLabel, LogicalTopology } from "./maptrie/logical.js";
 import { TransactRequest } from "./chainkit/transactor.js";
 import { Journal } from "./journal.js";
-import { Trial } from "./trial.js";
+import { Trial, codexTrialDetails } from "./trial.js";
 import { ObjectType } from "./maptrie/objecttypes.js";
 
 import { chaintrapGameDefaults } from "./erc1155metadata/metadataprepare.js";
@@ -12,18 +12,9 @@ import { publishTrialMetadata } from "./erc1155metadata/metadataprepare.js";
 
 export const FINISH_EXIT_NAME = "finish_exit";
 
-// Everything we put in the secretblobs blobcodex on the game nft metadata.
-export const CODEX_MAP_INDEX = "map";
-export const CODEX_FURNITURE_INDEX = "furniture";
-export const CODEX_SVG_INDEX = "svg";
-export const CODEX_COMMITTED_INDEX = "committed";
-export const CODEX_INDEXED_ITEMS = [
-  CODEX_MAP_INDEX,
-  CODEX_FURNITURE_INDEX,
-  CODEX_COMMITTED_INDEX,
-  CODEX_SVG_INDEX,
-];
-
+/**
+ * A Guardian creates games and operates existing games
+ */
 export class Guardian {
   constructor(eventParser, options) {
     this.init(eventParser, options);
@@ -53,17 +44,16 @@ export class Guardian {
   setupTrial(codex, options = {}) {
     this.setupOptions = { ...this.initialOptions, ...options };
     this.trialSetupCodex = codex; // The map data, AES encrypted via a PBKDF
+    const { staticRootLabel, map, topology, trie } = codexTrialDetails(codex, {
+      ikeys: options?.ikeys,
+    });
 
-    // the map and furniture are added as well known singletons in the trial setup codices.
-    const map = JSON.parse(
-      codex.getIndexedItem(CODEX_MAP_INDEX, this.setupOptions)
-    );
-    const furnishings = JSON.parse(
-      codex.getIndexedItem(CODEX_FURNITURE_INDEX, this.setupOptions)
-    );
-    this.prepareDungeon(map);
-    this.furnishDungeon(furnishings);
-    this.finalizeDungeon();
+    this.map = map;
+    this.topology = topology;
+    this.trie = trie;
+    this._mapLoaded = true;
+    this._topologyCommitted = true;
+    this._dungeonPrepared = true;
   }
 
   prepareDungeon(map) {
@@ -103,32 +93,43 @@ export class Guardian {
 
     // Note that without a codex the game is not playable, its absence is
     // permited as a concession to testing.
-    options = { trialSetupCodex: this.trialSetupCodex, ...this.setupOptions, ...options };
+    options = {
+      trialSetupCodex: this.trialSetupCodex,
+      ...this.setupOptions,
+      ...options,
+    };
 
     if (!options.gameIconBytes)
       throw new Error("gameIconBytes is a required option");
 
     if (!options.mapRootLabel) options.mapRootLabel = rootLabel(this.map);
 
-    const metadata = prepareTrialMetadata(
-      this.map, this.trie, {name:options.name, description:options.description, ...options}
-      );
+    const metadata = prepareTrialMetadata(this.map, this.trie, {
+      name: options.name,
+      description: options.description,
+      ...options,
+    });
 
-    let tokenURI = 'meta-data-not-published';
+    let tokenURI = "meta-data-not-published";
 
-    if (!options.noMetadataPublish) { // testing concesion
-      const tokenURI = (await publishTrialMetadata(
-        metadata, {
+    if (!options.noMetadataPublish) {
+      // testing concesion
+      tokenURI = (
+        await publishTrialMetadata(metadata, {
           ...options,
-          imageBytes: options.gameIconBytes, imageContentType:"image/png",
+          imageBytes: options.gameIconBytes,
+          imageContentType: "image/png",
           imageFilename: options.nftstorageGameIconFilename,
-        }))?.token.url;
+        })
+      )?.token.url;
     }
     console.log(`tokenURI: ${tokenURI}`);
 
     const args = prepareTrialInitArgs(metadata.properties, {
-      ...chaintrapGameDefaults, registrationLimit: options.maxParticipants, tokenURI,
-      networkEIP1559: options?.networkEIP1559
+      ...chaintrapGameDefaults,
+      registrationLimit: options.maxParticipants,
+      tokenURI,
+      networkEIP1559: options?.networkEIP1559,
     });
 
     return await this.createGame(...args);
@@ -162,38 +163,57 @@ export class Guardian {
 
   /** start listening to the dungeon just prepared by the guardian */
   async preparedStartListening(gid, options) {
-    return this.startListening2(gid, this.preparedDungeon(), options);
-  }
+    const dungeon = this.preparedDungeon();
+    const staticRootLabel = (await this.journal.findStaticRoot(gid)).rootLabel;
+    const trial = new Trial(gid, staticRootLabel, dungeon);
 
-  async startListening(gid, options) {
-    return this.startListening2(gid, this.preparedDungeon(), options);
+    return await this.trialStartListening(trial, gid, {
+      ikeys: options?.ikeys,
+    });
   }
 
   /**
-   * @param {ethers.BigNumber} gid 
-   * @param {{map,topology,trie}} prepared 
-   * @param {*} options 
-   * @returns 
+   * Start listening for events for a trial described by the provided codex & gid
+   * @param {{getIndexedItem:Function}} codex
+   * @param {ethers.BigNumber} gid
+   * @param {{ikey?:number, which?:number,rootLabel?:string, maxTranscripts?:number}} options
    */
-  async startListening2(gid, prepared, options) {
-    const staticRootLabel = (await this.journal.findStaticRoot(gid)).rootLabel;
-    this.trials[gid.toHexString()] = new Trial(
+  async codexStartListening(codex, gid, options) {
+    return await this.trialStartListening(
+      Trial.fromCodex(codex, gid, {
+        ikey: options?.ikey,
+        which: options?.which,
+      }),
       gid,
-      staticRootLabel,
-      prepared
+      { rootLabel: options?.rootLabel, maxTranscripts: options?.maxTranscripts }
     );
+  }
+
+  trialIsListening(gid) {
+    return this.trials[gid.toHexString()] !== undefined;
+  }
+
+  /**
+   *
+   * @param {*} trial
+   * @param {ethers.BigNumber} gid
+   * @param {{irootLabel?:string, maxTranscripts?:number}} options
+   * @returns
+   */
+  async trialStartListening(trial, gid, options) {
+    const gidHex = gid.toHexString();
+    if (this.trials[gidHex]) {
+      this.journal.stopListening([gid]);
+    }
+    this.trials[gidHex] = trial;
     return await this.journal.startListening([gid], options);
   }
 
-
-  async openTranscript(gid) {
-    const staticRootLabel = (await this.journal.findStaticRoot(gid)).rootLabel;
-    this.journal.openTranscript(gid, staticRootLabel);
-    this.trials[gid.toHexString()] = new Trial(
-      gid,
-      staticRootLabel,
-      this.preparedDungeon()
-    );
+  async trialStopListening(trial, gid, options) {
+    const gidHex = gid.toHexString();
+    if (!this.trials[gidHex]) return;
+    this.journal.stopListening([gid]);
+    delete this.trials[gidHex];
   }
 
   async startGame(gid, ...starts) {

@@ -11,7 +11,11 @@ import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
 import { ABIName } from "../lib/abiconst.js";
 import { defaultGameIconPrompt } from "../lib/erc1155metadata/gamecreator.js";
-import { prepareTrialMetadata, prepareTrialInitArgs, publishTrialMetadata } from "../lib/erc1155metadata/metadataprepare.js";
+import {
+  prepareTrialMetadata,
+  prepareTrialInitArgs,
+  publishTrialMetadata,
+} from "../lib/erc1155metadata/metadataprepare.js";
 import { generateImageBinary } from "../lib/openai/imageprompt.js";
 import { openaiImagesURL } from "../lib/openai/config.js";
 import { readBinaryData } from "./data.js";
@@ -155,7 +159,10 @@ async function creategame(program, options) {
   guardian.setupTrial(codex, { ikey: 0 });
 
   const result = await guardian.mintGame({
-    gameIconBytes, name:options.name, description:options.description})
+    gameIconBytes,
+    name: options.name,
+    description: options.description,
+  });
 
   const o = { roots: {} };
 

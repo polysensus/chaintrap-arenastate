@@ -234,6 +234,39 @@ export async function findGames(arena) {
 }
 
 /**
+ * Find trials matching the provided filter
+ * @param {any} eventParser
+ * @param {filter} filter (contract, event)
+ * @param {number} limit
+ * @returns {Promise<number[]|import("ethers").BigNumber[]>}
+ */
+export async function filterTrials(eventParser, filter, limit = undefined) {
+  const owner = await eventParser?.contract?.signer?.getAddress();
+  if (!owner) return [];
+
+  const logs = await findGames(eventParser.contract);
+  if (!logs || logs.length === 0) return [];
+  let gids = [];
+
+  for (const log of logs) {
+    const ev = eventParser.parse(log);
+    if (ev.subject !== owner) continue;
+
+    if (filter && !(await filter(ev, eventParser))) continue;
+
+    gids.push(ev.gid);
+  }
+
+  if (typeof limit !== undefined) gids = gids.slice(-limit);
+
+  gids.sort((a, b) => {
+    return Number(a) - Number(b);
+  });
+
+  return gids;
+}
+
+/**
  * find gids on the contract, optionally return a specific `which` gid. set which = -1 to get the most recent.
  * @param {*} eventParser
  * @param {undefined|number} which

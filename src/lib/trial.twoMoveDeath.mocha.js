@@ -36,14 +36,21 @@ describe("Game session participant halt tests", function () {
     const dispatcher = new Dispatcher(eventParser);
     const guardian = new Guardian(eventParser, {
       ...this.gameOptions,
-      noMETADATA: true,
       dispatcher,
     });
 
     guardian.prepareDungeon(maps["map02"]);
     guardian.furnishDungeon(furnishings);
     guardian.finalizeDungeon();
-    const gid = (await guardian.mintGame({ gameIconBytes, fetch })).gid;
+    const gid = (
+      await guardian.mintGame({
+        name: "game1",
+        description: "a test game of chaintrap",
+        noMetadataPublish: true,
+        gameIconBytes,
+        fetch,
+      })
+    ).gid;
     const gidHex = gid.toHexString();
     await guardian.preparedStartListening(gid);
 

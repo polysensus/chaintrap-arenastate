@@ -154,7 +154,7 @@ export class Journal {
   /**
    * open transcripts for the listed games, populates the initial roster state
    * and starts the listeners for future events.
-   * @param {} options
+   * @param {rootLabel?:string, maxTranscripts?:number} options
    * @param  {...ethers.BigNumber} gids to watch
    */
   async startListening(candidateGids, options) {
