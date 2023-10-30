@@ -216,7 +216,6 @@ export class Journal {
     else for (const gid of gids) gidsHex.push(gid.toHexString());
 
     for (const gidHex of gidsHex) {
-      const gidHex = gid.toHexString();
       if (!this.listening[gidHex]) continue;
 
       for (const name of TRANSCRIPT_EVENT_NAMES) {

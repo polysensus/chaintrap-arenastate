@@ -32,7 +32,7 @@ export * from "./chainkit/dispatcher.js";
 export { Web3AuthModalProviderSwitchAbstract } from "./chainkit/web3authmodalproviderswitch.js";
 export * from "./chainkit/providertypes.js";
 export * from "./chainkit/provider.js";
-export { etherrmsg } from "./idioms.js";
+export * from "./idioms.js";
 export { TrialistState } from "./trialiststate.js";
 export { StateRoster, loadRoster } from "./stateroster.js";
 export { TransactionHorizon } from "./chainkit/transactionhorizon.js";

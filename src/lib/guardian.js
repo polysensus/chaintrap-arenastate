@@ -202,14 +202,12 @@ export class Guardian {
    */
   async trialStartListening(trial, gid, options) {
     const gidHex = gid.toHexString();
-    if (this.trials[gidHex]) {
-      this.journal.stopListening([gid]);
-    }
+    if (this.trials[gidHex]) this.journal.stopListening([gid]);
     this.trials[gidHex] = trial;
     return await this.journal.startListening([gid], options);
   }
 
-  async trialStopListening(trial, gid, options) {
+  async stopListening(gid, options) {
     const gidHex = gid.toHexString();
     if (!this.trials[gidHex]) return;
     this.journal.stopListening([gid]);

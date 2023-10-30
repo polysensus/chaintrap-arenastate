@@ -11,6 +11,7 @@ import { undefinedIfZeroBytesLike } from "./chainkit/ethutil.js";
 
 import { LocationChoices } from "./maptrie/locationchoices.js";
 import { IPFSScheme } from "./chainkit/nftstorage.js";
+import { isUndefined, awaitable } from "./idioms.js";
 
 export const ERC1155URISignature = "URI(string,uint256)";
 
@@ -252,12 +253,16 @@ export async function filterTrials(eventParser, filter, limit = undefined) {
     const ev = eventParser.parse(log);
     if (ev.subject !== owner) continue;
 
-    if (filter && !(await filter(ev, eventParser))) continue;
+    if (filter) {
+      if (awaitable(filter))
+        if (!(await filter(ev, eventParser))) continue;
+        else if (!filter(ev, eventParser)) continue;
+    }
 
     gids.push(ev.gid);
   }
 
-  if (typeof limit !== undefined) gids = gids.slice(-limit);
+  if (!isUndefined(limit)) gids = gids.slice(-limit);
 
   gids.sort((a, b) => {
     return Number(a) - Number(b);
