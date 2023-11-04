@@ -1,5 +1,7 @@
 
 
+## [0.0.33](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.32...v0.0.33) (2023-11-04)
+
 ## [0.0.32](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.31...v0.0.32) (2023-11-04)
 
 ## [0.0.28](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.27...v0.0.28) (2023-09-05)
