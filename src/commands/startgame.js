@@ -37,12 +37,14 @@ async function startgame(program, options) {
   const { gid, codex } = await fetchCodex(program, { ...options, eventParser });
 
   const guardian = await prepareGuardian(eventParser, program, options);
-  guardian.setupTrial(codex, { ikey: 0 });
 
-  await guardian.openTranscript(gid);
+  await guardian.codexStartListening(codex, gid, { ikey: 0 });
   await guardian.startGame(
     gid,
     ...options.starts.split(",").map((s) => parseInt(s))
   );
   console.log(`started game ${gid.toHexString()}`);
+  process.exit();
+  // await guardian.stopListening(gid);
+  // console.log(`stoped listeners for ${gid.toHexString()}`);
 }

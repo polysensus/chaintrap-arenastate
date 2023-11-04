@@ -45,7 +45,7 @@ export class Guardian {
     this.setupOptions = { ...this.initialOptions, ...options };
     this.trialSetupCodex = codex; // The map data, AES encrypted via a PBKDF
     const { staticRootLabel, map, topology, trie } = codexTrialDetails(codex, {
-      ikeys: options?.ikeys,
+      ikey: options?.ikey,
     });
 
     this.map = map;
@@ -207,7 +207,7 @@ export class Guardian {
     return await this.journal.startListening([gid], options);
   }
 
-  async stopListening(gid, options) {
+  async stopListening(gid) {
     const gidHex = gid.toHexString();
     if (!this.trials[gidHex]) return;
     this.journal.stopListening([gid]);

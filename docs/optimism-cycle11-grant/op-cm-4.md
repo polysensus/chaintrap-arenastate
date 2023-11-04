@@ -5,7 +5,6 @@ to the game and adding the necessary per player state.
 
 We have added our first type of bonus confering placable item. As with the deadly traps introduced in MS3, the bonus item is an openable chest. Now when a player encounteres a chest it could be _either_ instant death or a bonus life. The bonus life allows the player to survive a single deadly trap.
 
-
 ## release info for this CMD
 
 - https://github.com/polysensus/chaintrap-arenastate/releases/tag/v0.0.27 game libary and command line tool

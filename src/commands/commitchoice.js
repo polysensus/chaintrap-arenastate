@@ -36,6 +36,6 @@ async function commitchoice(program, options, side, exit) {
     const sideName = { 0: "north", 1: "west", 2: "south", 3: "east" }[side];
     console.log(`committed to exit ${exit} on the ${sideName} side`);
   } else {
-    console.log(`committed to choice ${exit} on menue ${side}`);
+    console.log(`committed to choice ${exit} on menu ${side}`);
   }
 }
