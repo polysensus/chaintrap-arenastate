@@ -11,9 +11,15 @@ import { ArenaEvent } from "../lib/arenaevent.js";
 import { EventParser } from "../lib/chainkit/eventparser.js";
 import { ABIName } from "../lib/abiconst.js";
 import { defaultGameIconPrompt } from "../lib/erc1155metadata/gamecreator.js";
+import {
+  prepareTrialMetadata,
+  prepareTrialInitArgs,
+  publishTrialMetadata,
+} from "../lib/erc1155metadata/metadataprepare.js";
 import { generateImageBinary } from "../lib/openai/imageprompt.js";
 import { openaiImagesURL } from "../lib/openai/config.js";
-import { readBinaryData } from "../lib/data.js";
+import { readBinaryData } from "./data.js";
+import { chaintrapGameDefaults } from "../lib/erc1155metadata/metadataprepare.js";
 
 export function addCreategame(program) {
   program
@@ -33,7 +39,7 @@ export function addCreategame(program) {
       "A chaintrap game"
     )
     .option(
-      "--description",
+      "--description <description>",
       "The nft metadata description",
       "A single chaintrap game transcript, find polysensus on discord for more info"
     )
@@ -151,19 +157,16 @@ async function creategame(program, options) {
     );
 
   guardian.setupTrial(codex, { ikey: 0 });
-  const result = (
-    await guardian.mintGame({
-      codexPublish: options.codexPublish,
-      name: options.name,
-      description: options.description,
-      gameIconBytes,
-      fetch,
-    })
-  ).result;
+
+  const result = await guardian.mintGame({
+    gameIconBytes,
+    name: options.name,
+    description: options.description,
+  });
 
   const o = { roots: {} };
 
-  for (const event of result.events()) {
+  for (const event of result.result.events()) {
     const parsed = event.parsedLog;
     switch (event.name) {
       case "TransferSingle":

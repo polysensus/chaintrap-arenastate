@@ -20,6 +20,10 @@ import { ObjectType } from "../src/lib/maptrie/objecttypes.js";
 import { Trial } from "../src/lib/trial.js";
 
 import { ABIName } from "../src/lib/abiconst.js";
+
+import { readBinaryData } from "./support/data.js";
+const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+
 describe("StateRoster# load", async function () {
   it("Should start single player game and prove first move", async function () {
     if (!this.gameOptions || !this.mintGame) {
@@ -48,12 +52,6 @@ describe("StateRoster# load", async function () {
 
     const trie = topo.commit();
 
-    // mint without publishing nft metadata
-    this.minter.applyOptions({
-      choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
-      victoryTransitionTypes: [ObjectType.Finish],
-    });
     let r = await this.mintGame({ topology: topo, trie: trie });
 
     const startLocationId = 0;
@@ -70,15 +68,11 @@ describe("StateRoster# load", async function () {
     const gid = getGameCreated(r, arenaEvents).gid;
     const rootLabel = getSetMerkleRoot(r, arenaEvents).parsedLog.args.label;
 
-    const trial = new Trial(
-      ethers.BigNumber.from(1),
-      this.minter.options.mapRootLabel,
-      {
-        map: undefined,
-        topology: topo,
-        trie,
-      }
-    );
+    const trial = new Trial(ethers.BigNumber.from(1), this.mapRootLabel, {
+      map: undefined,
+      topology: topo,
+      trie,
+    });
 
     const startArgs = trial.createStartGameArgs([startLocationId]);
 

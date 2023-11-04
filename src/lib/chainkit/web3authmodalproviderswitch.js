@@ -88,8 +88,11 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
     const provider = new ethers.providers.Web3Provider(this.web3auth.provider);
     await newCtx.setProvider(provider);
     const address = await provider.getSigner()?.getAddress();
+    this.current = name;
     log.info(
-      `Web3ModalProviderSwitch#select: provider signerAddress ${address}`
+      `Web3ModalProviderSwitch#select: provider signerAddress ${address} ${
+        this.current
+      } ${this.getCurrent()}`
     );
   }
 
@@ -112,6 +115,7 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
     }
     try {
       this.modalOpen = true;
+      console.log("*** calling connect ***");
       await this.web3auth.connect();
       this.loggedIn = true;
       this.authenticated(this.loggedIn);

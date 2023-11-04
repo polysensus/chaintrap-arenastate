@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 
 import { getLogger } from "../log.js";
 
-const log = getLogger("nftstorage");
+const log = getLogger("imageprompt");
 
 export const defaultImageSize = "256x256";
 export const defaultIconSize = "256x256";

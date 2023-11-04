@@ -1,7 +1,3 @@
-import ethers from "ethers";
-import fetch from "node-fetch";
-import { readBinaryData, readJsonData } from "./data.js";
-
 import { GameMetadataCreator } from "./erc1155metadata/gamecreator.js";
 
 export class Minter {
@@ -24,13 +20,12 @@ export class Minter {
 
   applyOptions(options) {
     this.options = { ...this.serviceOptions, ...options };
-    if (!options?.gameIconBytes)
-      this.options.gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+    if (!options?.gameIconBytes) throw new Error(`gameIconBytes is required`);
     if (!options?.name) this.options.name = "A chaintrap game transcript";
     if (!options?.description)
       this.options.description =
         "A chaintrap game, find polysensus on discord for more info";
-    if (!options?.fetch) this.options.fetch = fetch;
+    if (!options?.fetch) throw new Error("a fetch implementation is required");
     if (!options?.mapRootLabel)
       this.options.mapRootLabel = "chaintrap-dungeon:static";
 

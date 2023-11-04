@@ -12,6 +12,8 @@ import { EventParser } from "./chainkit/eventparser.js";
 
 //
 import maps from "../../data/maps/map02.json" assert { type: "json" };
+import { readBinaryData } from "../commands/data.js";
+
 import furnishings from "../../data/maps/map02-furnishings.json" assert { type: "json" };
 import { Dispatcher } from "./chainkit/dispatcher.js";
 
@@ -33,16 +35,25 @@ describe("Game session participant ChestTreatGainLife", function () {
     const dispatcher = new Dispatcher(eventParser);
     const guardian = new Guardian(eventParser, {
       ...this.gameOptions,
-      noMETADATA: true,
       dispatcher,
     });
 
     guardian.prepareDungeon(maps["map02"]);
     guardian.furnishDungeon(furnishings);
     guardian.finalizeDungeon();
-    const gid = (await guardian.mintGame()).gid;
+
+    const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+    const gid = (
+      await guardian.mintGame({
+        name: "game1",
+        description: "a test game of chaintrap",
+        noMetadataPublish: true,
+        gameIconBytes,
+        fetch,
+      })
+    ).gid;
     const gidHex = gid.toHexString();
-    await guardian.startListening(gid);
+    await guardian.preparedStartListening(gid);
 
     const trialist = new Trialist(eventParser, { dispatcher });
 

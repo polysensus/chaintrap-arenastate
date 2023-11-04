@@ -47,6 +47,8 @@ export class TrialistState {
       }
     );
 
+    // set once by the roster to record the registration order. For the benefity of constructing the startGame args
+    this.index = undefined;
     this.state = {};
     this._previous = {};
     this._delta = {};
@@ -79,6 +81,12 @@ export class TrialistState {
     return (
       typeof this.state.lastEID !== "undefined" || this.state.pendingExitUsed
     );
+  }
+
+  setIndex(index) {
+    if (typeof this.index !== "undefined")
+      throw new Error(`index is a set once property`);
+    this.index = index;
   }
 
   maxEventEID(name) {

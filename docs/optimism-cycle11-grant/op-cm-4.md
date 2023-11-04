@@ -3,7 +3,8 @@
 Our focus for this milestone has been introducing the first bonus item (treat)
 to the game and adding the necessary per player state.
 
-We have added our first type of bonus confering placable item. As with the deadly traps introduced in CMS3, the bonus item is an openable chest. Now when a player encounteres a chest it could be *either* instant death or a bonus life. The bonus life allows the player to survive a single deadly trap.
+We have added our first type of bonus confering placable item. As with the deadly traps introduced in MS3, the bonus item is an openable chest. Now when a player encounteres a chest it could be _either_ instant death or a bonus life. The bonus life allows the player to survive a single deadly trap.
+
 
 ## release info for this CMD
 
@@ -52,7 +53,7 @@ Trialist 2 then commits to opening the first (death trap) chest
 
 https://goerli-optimism.etherscan.io/tx/0xe7ee6927016b7748a1f5c310d101a386f0e0d72272122a8b43d8080c02e5866d
 
-And in the reveal tx, they are *not* halted
+And in the reveal tx, they are _not_ halted
 
 https://goerli-optimism.etherscan.io/tx/0xdb1d38a4874869b0413ca91840550d784184d37890f7a94af3299447ae14174c
 

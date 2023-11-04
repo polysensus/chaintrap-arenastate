@@ -35,56 +35,56 @@ tasks:
       - echo ------------------------------------------------------------
       - echo "create the game token"
       - echo ------------------------------------------------------------
-      - task: ':{{.PROVIDER_ID}}:game:create'
+      - task: ":{{.PROVIDER_ID}}:game:create"
 
       - echo ------------------------------------------------------------
       - echo "trialist 1 joins the game"
       - echo ------------------------------------------------------------
-      - task: ':{{.PROVIDER_ID}}:game:join'
+      - task: ":{{.PROVIDER_ID}}:game:join"
         vars: { USER_ID: "1" }
 
       - echo ------------------------------------------------------------
       - echo "trialist 2 joins the game"
       - echo ------------------------------------------------------------
-      - task: ':{{.PROVIDER_ID}}:game:join'
+      - task: ":{{.PROVIDER_ID}}:game:join"
         vars: { USER_ID: "2" }
 
       - echo ------------------------------------------------------------
       - echo "guardian starts the game"
       - echo ------------------------------------------------------------
-      - task: ':{{.PROVIDER_ID}}:game:start'
+      - task: ":{{.PROVIDER_ID}}:game:start"
 
       - echo ------------------------------------------------------------
       - echo "trialist 1 takes the first exit on the west side"
       - echo ------------------------------------------------------------
-      - task: ':{{.PROVIDER_ID}}:game:commit'
+      - task: ":{{.PROVIDER_ID}}:game:commit"
         vars: { USER_ID: "1", MENU: "1", CHOICE: "0" }
-      - task: ':{{.PROVIDER_ID}}:game:reveal'
+      - task: ":{{.PROVIDER_ID}}:game:reveal"
 
       - echo ------------------------------------------------------------
       - echo "trialist 2 opens the second chest"
       - echo ------------------------------------------------------------
-      - task: ':{{.PROVIDER_ID}}:game:commit'
+      - task: ":{{.PROVIDER_ID}}:game:commit"
         vars: { USER_ID: "2", MENU: "4", CHOICE: "1" }
-      - task: ':{{.PROVIDER_ID}}:game:reveal'
+      - task: ":{{.PROVIDER_ID}}:game:reveal"
 
       - echo ------------------------------------------------------------
       - echo "trialist 2 opens the first chest"
       - echo ------------------------------------------------------------
-      - task: ':{{.PROVIDER_ID}}:game:commit'
+      - task: ":{{.PROVIDER_ID}}:game:commit"
         vars: { USER_ID: "2", MENU: "4", CHOICE: "0" }
-      - task: ':{{.PROVIDER_ID}}:game:reveal'
+      - task: ":{{.PROVIDER_ID}}:game:reveal"
 
       - echo ------------------------------------------------------------
       - echo "trialist 2 takes the first exit on the west side"
       - echo ------------------------------------------------------------
-      - task: ':{{.PROVIDER_ID}}:game:commit'
+      - task: ":{{.PROVIDER_ID}}:game:commit"
         vars: { USER_ID: "2", MENU: "1", CHOICE: "0" }
-      - task: ':{{.PROVIDER_ID}}:game:reveal'
+      - task: ":{{.PROVIDER_ID}}:game:reveal"
 
       - echo ------------------------------------------------------------
       - echo "trialist 1 uses the finish exit and wins the game token"
       - echo ------------------------------------------------------------
-      - task: ':{{.PROVIDER_ID}}:game:commit'
+      - task: ":{{.PROVIDER_ID}}:game:commit"
         vars: { MENU: "0", CHOICE: "0" }
-      - task: ':{{.PROVIDER_ID}}:game:reveal'
+      - task: ":{{.PROVIDER_ID}}:game:reveal"

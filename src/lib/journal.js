@@ -154,7 +154,7 @@ export class Journal {
   /**
    * open transcripts for the listed games, populates the initial roster state
    * and starts the listeners for future events.
-   * @param {} options
+   * @param {rootLabel?:string, maxTranscripts?:number} options
    * @param  {...ethers.BigNumber} gids to watch
    */
   async startListening(candidateGids, options) {
@@ -200,6 +200,29 @@ export class Journal {
         if (!event) continue;
         this._handle(event, this.handlerKey(event.name, gidHex));
       }
+    }
+  }
+
+  /**
+   * Stop all listeners associated with the listed gids
+   *
+   * If gids is undefined (or ommitted), stop all current listeners.
+   * @param {undefined|ethers.BigNumber[]} gids
+   */
+  stopListening(gids = undefined) {
+    let gidsHex = [];
+    if (typeof gids === undefined)
+      for (const gidHex of Object.keys(this.listening)) gidsHex.push(gidHex);
+    else for (const gid of gids) gidsHex.push(gid.toHexString());
+
+    for (const gidHex of gidsHex) {
+      if (!this.listening[gidHex]) continue;
+
+      for (const name of TRANSCRIPT_EVENT_NAMES) {
+        const id = this.handlerKey(name, gidHex);
+        this.dispatcher.removeHandler(id);
+      }
+      delete this.listening[gidHex];
     }
   }
 

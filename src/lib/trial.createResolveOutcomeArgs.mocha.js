@@ -7,6 +7,7 @@ import { LogicalTopology } from "./maptrie/logical.js";
 //
 // import maps from "../../../data/maps/map02.json" assert { type: "json" };
 // const { map02 } = maps;
+import { readBinaryData } from "../commands/data.js";
 
 import { Trial } from "./trial.js";
 import { getGameCreated } from "./arenaevent.js";
@@ -36,7 +37,7 @@ describe("Trial createResolveOutcomeArgs tests", function () {
       { sides: [[], [0], [], []], flags: {} },
     ]);
     const furniture = new Furniture({
-      map: { name: "test", beta: "0x" },
+      map: { name: "test", beta: "0x", vrf_inputs: {} },
       items: [
         {
           unique_name: "finish_exit",
@@ -49,20 +50,15 @@ describe("Trial createResolveOutcomeArgs tests", function () {
     topo.placeFinish(furniture.byName("finish_exit"));
     const trie = topo.commit();
 
-    // mint without publishing nft metadata
-    this.minter.applyOptions({
-      choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [ObjectType.Link2, ObjectType.Finish],
-      victoryTransitionTypes: [ObjectType.Finish],
-    });
+    const gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
 
-    let r = await this.mintGame({ topology: topo, trie: trie });
+    let r = await this.mintGame({ gameIconBytes, topology: topo, trie: trie });
 
     const startLocationId = 0;
 
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;
-    const trial = new Trial(gid, this.minter.options.mapRootLabel, {
+    const trial = new Trial(gid, this.mapRootLabel, {
       map: undefined,
       topology: topo,
       trie,
@@ -95,7 +91,7 @@ describe("Trial createResolveOutcomeArgs tests", function () {
         "TranscriptEntryChoices(uint256,address,uint256,(uint256,bytes32[][]),bytes)"
       )
       .method(this.user1Arena.transcriptEntryCommit, gid, {
-        rootLabel: this.minter.minter.initArgs.rootLabels[0],
+        rootLabel: this.gameInitArgs.rootLabels[0],
         input: choice,
         data: "0x",
       })

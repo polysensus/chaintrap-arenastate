@@ -3,14 +3,10 @@
 import { ipfsGatewayURL, IPFSScheme } from "../chainkit/nftstorage.js";
 import { BlobCodex } from "@polysensus/blobcodex";
 
-import { CODEX_INDEXED_ITEMS, CODEX_FURNITURE_INDEX } from "../guardian.js";
+import { CODEX_INDEXED_ITEMS, CODEX_FURNITURE_INDEX } from "../trial.js";
 // All of the items expected in a trial setup serialized as an encrypted blob codex.
-/**
- *
- * @param {string} ipfsURL
- * @param {{fetch,ipfsGatewayUrl?,ipfsAuthToken?}} options
- */
-export async function ipfsFetchJSON(fetch, ipfsURL, options = {}) {
+
+export function ipfsFetchArgs(ipfsURL, options = {}) {
   if (!ipfsURL.startsWith(IPFSScheme))
     throw new Error(`url must have ipfs scheme: ${ipfsURL}`);
   const url = ipfsGatewayURL(ipfsURL, options);
@@ -20,7 +16,20 @@ export async function ipfsFetchJSON(fetch, ipfsURL, options = {}) {
   if (options.ipfsAuthToken)
     headers["Authorization"] = `Bearer ${options.ipfsAuthToken}`;
 
-  const resp = await fetch(url, { method: "get", headers });
+  return [url, { headers }];
+}
+/**
+ *
+ * @param {Function} fetch
+ * @param {string} ipfsURL
+ * @param {{ipfsGatewayUrl?,ipfsAuthToken?}} options
+ */
+export async function ipfsFetchJSON(fetch, ipfsURL, options = {}) {
+  const resp = await fetch(...ipfsFetchArgs(ipfsURL, options));
+
+  if (!resp.ok && (resp.status < 200 || resp.status >= 300))
+    throw new Error(`bad status ${resp.statusText} for url ${ipfsURL}`);
+
   const j = await resp.json();
   return j;
 }

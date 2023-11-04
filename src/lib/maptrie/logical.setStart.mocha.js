@@ -8,6 +8,7 @@ import * as msgpack from "@msgpack/msgpack";
 import { LogicalTopology } from "./logical.js";
 //
 import maps from "../../../data/maps/map02.json" assert { type: "json" };
+import { readBinaryData } from "../../commands/data.js";
 
 import { getGameCreated } from "../arenaevent.js";
 import { ArenaEvent } from "../arenaevent.js";
@@ -56,28 +57,13 @@ describe("LogicalTopology setStart tests", function () {
 
     const trie = topo.commit();
 
-    // mint without publishing nft metadata
-    this.minter.applyOptions({
-      choiceInputTypes: [ObjectType.LocationChoices],
-      transitionTypes: [
-        ObjectType.Link2,
-        ObjectType.Finish,
-        ObjectType.FatalChestTrap,
-      ],
-      victoryTransitionTypes: [ObjectType.Finish],
-      haltParticipantTransitionTypes: [ObjectType.FatalChestTrap],
-    });
     let r = await this.mintGame({ topology: topo, trie: trie });
 
-    const trial = new Trial(
-      ethers.BigNumber.from(1),
-      this.minter.options.mapRootLabel,
-      {
-        map: undefined,
-        topology: topo,
-        trie,
-      }
-    );
+    const trial = new Trial(ethers.BigNumber.from(1), this.mapRootLabel, {
+      map: undefined,
+      topology: topo,
+      trie,
+    });
 
     const arenaEvents = new EventParser(this.arena, ArenaEvent.fromParsedEvent);
     const gid = getGameCreated(r, arenaEvents).gid;

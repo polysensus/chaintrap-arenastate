@@ -3,9 +3,15 @@ import path from "path";
 
 import { fileURLToPath } from "url";
 import { isFile } from "../src/commands/fsutil.js";
+import { readBinaryData } from "../src/commands/data.js";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { deployArenaFixture } from "./support/deployarena.js";
+import { prepareTrialMetadata } from "../src/lib/erc1155metadata/metadataprepare.js";
+import { prepareTrialInitArgs } from "../src/lib/erc1155metadata/metadataprepare.js";
+import { chaintrapGameDefaults } from "../src/lib/erc1155metadata/metadataprepare.js";
+import { rootLabel } from "../src/lib/maptrie/logical.js";
+
 import {
   envConnect,
   hreConnect,
@@ -129,13 +135,50 @@ export const mochaHooks = {
     if (!this.openaiOptions || !this.nftstorageOptions || !this.maptoolOptions)
       return;
     this.gameOptions = {
+      name: "a test game",
+      description: "a test game",
       ...this.openaiOptions.options,
       ...this.nftstorageOptions.options,
       ...this.maptoolOptions.options,
     };
-    this.minter = new Minter(this.guardianArena, this.gameOptions);
+
+    this.mapDataForRootLabel = {
+      vrf_inputs: {
+        alpha: "aaa=111:bbb=222:ccc=333",
+        proof: { beta: "beta", public_key: "public_key" },
+      },
+    };
+    this.mapRootLabel = rootLabel(this.mapDataForRootLabel);
+
+    this.gameIconBytes = readBinaryData("gameicons/game-ico-1.png");
+
     // note all of this is because fixture functions require a name, they can't be anonymous
-    this.mintGame = this.minter.mint.bind(this.minter);
+    this.mintGame = async function (options) {
+      options = {
+        ...this.gameOptions,
+        noMetadataPublish: true,
+        gameIconBytes: this.gameIconBytes,
+        ...options,
+      };
+      const metadata = prepareTrialMetadata(
+        this.mapDataForRootLabel,
+        options.trie,
+        { name: options.name, description: options.description }
+      );
+      const args = prepareTrialInitArgs(metadata.properties, {
+        ...chaintrapGameDefaults,
+        registrationLimit: options.maxParticipants ?? 5,
+        tokenURI: "the-token-uri",
+        networkEIP1559: options?.networkEIP1559,
+      });
+
+      this.gameInitArgs = args[0];
+
+      const tx = await this.guardianArena.createGame(...args);
+      const r = await tx.wait();
+      if (r?.status !== 1) throw new Error("createGame failed");
+      return r;
+    };
     console.log("beforeEach done");
   },
 };

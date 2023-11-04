@@ -7,7 +7,7 @@ import * as msgpack from "@msgpack/msgpack";
 
 import { LogicalTopology } from "./logical.js";
 import { LogicalRef, LogicalRefType } from "./logicalref.js";
-//
+//create a new databas
 import maps from "../../../data/maps/map02.json" assert { type: "json" };
 import furnishings from "../../../data/maps/map02-furnishings.json" assert { type: "json" };
 
