@@ -44,7 +44,7 @@ async function startgame(program, options) {
     ...options.starts.split(",").map((s) => parseInt(s))
   );
   console.log(`started game ${gid.toHexString()}`);
+  await guardian.stopListening(gid);
   process.exit();
-  // await guardian.stopListening(gid);
   // console.log(`stoped listeners for ${gid.toHexString()}`);
 }
