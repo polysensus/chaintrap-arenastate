@@ -16,7 +16,6 @@ import maps from "../../../data/maps/map02.json" assert { type: "json" };
 import { LeafObject, leafHash, conditionInputs } from "./objects.js";
 import { ObjectType } from "./objecttypes.js";
 import { readBinaryData } from "../../commands/data.js";
-import { readBinaryData } from "../../commands/data.js";
 
 import { getGameCreated, getSetMerkleRoot } from "../arenaevent.js";
 import { ArenaEvent } from "../arenaevent.js";
