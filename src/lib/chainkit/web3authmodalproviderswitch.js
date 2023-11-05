@@ -1,6 +1,8 @@
 /**
  * Abstract implementation of a ProviderSwitch for Web3Auth
  * Expected use is to inherit and implement newWeb3Auth with just  "return new Web3Auth(cfg)"
+ * 
+ * asd;klfjasd;lfkjasd;lfkj
  */
 
 // --- lib deps
@@ -181,22 +183,21 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
   async _initWeb3Auth(chainConfig) {
     if (this.web3auth) return;
 
-    log.debug(
+    console.log(`
+    ***
+
+    ***
+    `);
+    log.info(
       `Web3ModalProviderSwitch#_initWeb3Auth: creating Web3Auth and calling initModal for ${chainConfig.chainId}`
     );
-    if (isFunction(this.web3authOptions)) {
-      log.debug(
-        `Web3ModalProviderSwitch#_initWeb3Auth: call this.web3authOptions`
-      );
+    if (isFunction(this.web3authOptions))
       this.web3authOptions = this.web3authOptions();
-    }
+
     // allow for functions returning promises.
-    if (awaitable(this.web3authOptions)) {
-      log.debug(
-        `Web3ModalProviderSwitch#_initWeb3Auth: await this.web3authOptions`
-      );
+    if (awaitable(this.web3authOptions))
       this.web3authOptions = await this.web3authOptions();
-    }
+
     if (
       !this.web3authOptions?.clientId ||
       !this.web3authOptions?.web3AuthNetwork
@@ -207,10 +208,39 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
         )}"`
       );
 
+    log.info(
+      `Web3ModalProviderSwitch#_initWeb3Auth: web3authOptions: ${JSON.stringify(
+        this.web3authOptions
+      )}`
+    );
+
+    if (this.web3authOptions.adapterSettings) {
+      this.web3AuthAdapterSettings = this.web3authOptions.adapterSettings;
+      delete this.web3authOptions.adapterSettings;
+    }
+
     const web3auth = this.newWeb3Auth({
       ...this.web3authOptions,
       chainConfig: chainConfig,
     });
+    if (this.web3AuthAdapterSettings?.openlogin !== undefined) {
+      const adapterSettings = this.web3AuthAdapterSettings.openlogin;
+      log.info(
+        `Web3ModalProviderSwitch#_initWeb3Auth: configuring adapter: ${JSON.stringify(
+          adapterSettings
+        )}`
+      );
+      const adapter = this.newOpenLoginAdapter(
+        { ...this.web3authOptions, chainConfig },
+        adapterSettings
+      );
+      web3auth.configureAdapter(adapter);
+    } else {
+      console.log('what the actuall fuck ??');
+      log.info(
+        `Web3ModalProviderSwitch#_initWeb3Auth: no adapter specialisations provided ---`
+      );
+    }
     await web3auth.initModal();
     this.web3auth = web3auth;
   }
@@ -247,12 +277,15 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
     log.info("----------");
     log.info("web3auth chainConfig");
     log.info(JSON.stringify(chainConfig, null, "  "));
-    log.info("----------");
+    log.info("---------- x");
 
-    const creator = await this.initSingletonWeb3Auth(chainConfig);
+    const creator = await this.initSingletonWeb3Auth(
+      chainConfig,
+      cfg.adapterSettings
+    );
     if (creator) {
       // IF this call created then the chainConfig does not need to be added, it was provided to the constructor.
-      log.debug(
+      log.info(
         `Web3ModalProviderSwitch#addNetwork: initModal complete for ${cfg.name}`
       );
       this.web3authChains[cfg.name] = chainConfig;
@@ -262,7 +295,7 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
       return;
     }
 
-    log.debug(
+    log.info(
       `Web3ModalProviderSwitch#addNetwork: adding chain ${cfg.name} ${chainConfig.chainId} to web3auth for ${cfg.name}`
     );
     // await this.web3auth.addChain(chainConfig);
