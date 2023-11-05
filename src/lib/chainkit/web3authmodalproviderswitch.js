@@ -1,8 +1,6 @@
 /**
  * Abstract implementation of a ProviderSwitch for Web3Auth
  * Expected use is to inherit and implement newWeb3Auth with just  "return new Web3Auth(cfg)"
- * 
- * asd;klfjasd;lfkjasd;lfkj
  */
 
 // --- lib deps
@@ -183,11 +181,6 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
   async _initWeb3Auth(chainConfig) {
     if (this.web3auth) return;
 
-    console.log(`
-    ***
-
-    ***
-    `);
     log.info(
       `Web3ModalProviderSwitch#_initWeb3Auth: creating Web3Auth and calling initModal for ${chainConfig.chainId}`
     );
@@ -236,9 +229,8 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
       );
       web3auth.configureAdapter(adapter);
     } else {
-      console.log('what the actuall fuck ??');
       log.info(
-        `Web3ModalProviderSwitch#_initWeb3Auth: no adapter specialisations provided ---`
+        `Web3ModalProviderSwitch#_initWeb3Auth: no adapter specialisations provided`
       );
     }
     await web3auth.initModal();
@@ -277,7 +269,7 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
     log.info("----------");
     log.info("web3auth chainConfig");
     log.info(JSON.stringify(chainConfig, null, "  "));
-    log.info("---------- x");
+    log.info("----------");
 
     const creator = await this.initSingletonWeb3Auth(
       chainConfig,
