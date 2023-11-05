@@ -1,5 +1,12 @@
 
 
+## [0.0.34](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.33...v0.0.34) (2023-11-05)
+
+
+### Features
+
+* enable redirect auth to override default popup ([5ea1824](https://github.com/polysensus/chaintrap-arenastate/commit/5ea18240ca58793fca01f0d4371c0d4165c0da4e))
+
 ## [0.0.33](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.32...v0.0.33) (2023-11-04)
 
 ## [0.0.32](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.31...v0.0.32) (2023-11-04)
