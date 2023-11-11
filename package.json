@@ -1,7 +1,7 @@
 {
   "name": "@polysensus/chaintrap-arenastate",
   "type": "module",
-  "version": "0.0.35",
+  "version": "0.0.36",
   "description": "chaintrap arena library to derive and model the arena contract state for specific game sessions",
   "main": "dist/chaintrap-arenastate.esm.js",
   "module": "dist/chaintrap-arenastate.esm.js",

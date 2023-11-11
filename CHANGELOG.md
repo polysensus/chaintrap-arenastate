@@ -1,5 +1,12 @@
 
 
+## [0.0.36](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.35...v0.0.36) (2023-11-11)
+
+
+### Changes
+
+* allow for codices which don't contain the svg content ([7bca2a5](https://github.com/polysensus/chaintrap-arenastate/commit/7bca2a5c81d802062aab9f7ef86f8e748c232e74))
+
 ## [0.0.35](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.34...v0.0.35) (2023-11-11)
 
 
