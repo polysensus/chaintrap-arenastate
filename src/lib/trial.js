@@ -47,11 +47,15 @@ export function codexTrialDetails(codex, options = {}) {
   const furnishings = JSON.parse(
     codex.getIndexedItem(CODEX_FURNITURE_INDEX, options)
   );
+
+  const svg = JSON.parse(codex.getIndexedItem(CODEX_SVG_INDEX, options));
+
   const topology = LogicalTopology.fromMapJSON(map);
   topology.placeFurniture(new Furniture(furnishings));
   return {
     staticRootLabel,
     map,
+    svg,
     topology,
     trie: topology.commit(),
     furnishings,
@@ -65,11 +69,11 @@ export class Trial {
    * @param {ikeys?:number[]} options
    */
   static fromCodex(codex, gid, options = {}) {
-    const { staticRootLabel, map, topology, trie } = codexTrialDetails(
+    const { staticRootLabel, map, topology, trie, svg } = codexTrialDetails(
       codex,
       options
     );
-    return new Trial(gid, staticRootLabel, { map, topology, trie });
+    return new Trial(gid, staticRootLabel, { map, topology, trie, svg });
   }
 
   /**
@@ -80,6 +84,7 @@ export class Trial {
     this.gid = gid;
     this.staticRootLabel = ethers.utils.formatBytes32String(staticRootLabel);
     this.map = dungeon.map;
+    this.svg = dungeon.svg;
     this.topology = dungeon.topology;
     this.staticTrie = dungeon.trie;
 

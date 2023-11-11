@@ -215,6 +215,8 @@ export async function findGameCompleted(arena, gid) {
 
 export async function findGameMetadata(arena, gid) {
   const createdLog = await findGameCreated(arena, gid);
+  if (!createdLog) return undefined;
+
   const r = await createdLog.getTransactionReceipt();
   for (const log of r.logs) {
     const iface = arena.getEventInterface(log);
