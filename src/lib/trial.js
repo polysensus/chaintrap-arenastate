@@ -48,7 +48,9 @@ export function codexTrialDetails(codex, options = {}) {
     codex.getIndexedItem(CODEX_FURNITURE_INDEX, options)
   );
 
-  const svg = JSON.parse(codex.getIndexedItem(CODEX_SVG_INDEX, options));
+  let svg;
+  if (codex.hasIndexedItem(CODEX_SVG_INDEX))
+    svg = JSON.parse(codex.getIndexedItem(CODEX_SVG_INDEX, options));
 
   const topology = LogicalTopology.fromMapJSON(map);
   topology.placeFurniture(new Furniture(furnishings));
