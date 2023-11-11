@@ -1,5 +1,12 @@
 
 
+## [0.0.35](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.34...v0.0.35) (2023-11-11)
+
+
+### Changes
+
+* trial constructor undefined reference to svg ([756ceba](https://github.com/polysensus/chaintrap-arenastate/commit/756cebacfe86e49358936403d9ce27f758e353dc))
+
 ## [0.0.34](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.33...v0.0.34) (2023-11-05)
 
 
