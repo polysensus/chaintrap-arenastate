@@ -1,5 +1,12 @@
 
 
+## [0.0.37](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.36...v0.0.37) (2023-11-19)
+
+
+### Features
+
+* callback from journal to push new state to client ([f90be13](https://github.com/polysensus/chaintrap-arenastate/commit/f90be13f8e175695fcd0c66ab8c5ed7d86ad1995))
+
 ## [0.0.36](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.35...v0.0.36) (2023-11-11)
 
 
