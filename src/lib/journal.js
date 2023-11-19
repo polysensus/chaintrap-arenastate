@@ -8,6 +8,7 @@ import { getLogger } from "./log.js";
 import { TRANSCRIPT_EVENT_NAMES, transcriptEventSig } from "./arenaabi.js";
 import { conditionInput } from "./maptrie/objects.js";
 import { sleep } from "./processutils.js";
+import { awaitable } from "./idioms.js";
 
 const log = getLogger("journal");
 /**
@@ -56,6 +57,8 @@ export class Journal {
   updateOptions(options) {
     options = { ...this.initialOptions, ...options };
 
+    this.updateCallback = options?.updated;
+
     // The journal will track at most this many game transcripts
     if (!options.maxTranscripts) options.maxTranscripts = defaultJournalMax;
     if (!options.blockHorizon) options.blockHorizon = defaultBlockHorizon;
@@ -88,6 +91,20 @@ export class Journal {
       throw new Error(`Journal# TranscriptRegistration unknown gid ${gidHex}`);
 
     this.transcripts[gidHex].applyEvent(event);
+
+    if (!this.updateCallback) return;
+
+    if (awaitable(this.updateCallback)) {
+      this.updateCallback(event.gid, event.eid, key, event).catch((err) => {
+        log.info(`journal.js:Journal# updateCallback err ${err} ${key} ${eid}`);
+      });
+    } else {
+      try {
+        this.updateCallback(event.gid, event.eid, key, event);
+      } catch (err) {
+        log.info(`journal.js:Journal# updateCallback err ${err} ${key} ${eid}`);
+      }
+    }
   }
 
   /**
