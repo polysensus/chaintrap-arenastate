@@ -100,6 +100,23 @@ export class Web3AuthModalProviderSwitchAbstract extends ProviderSwitch {
     return this.loggedIn;
   }
 
+  refreshLoginStatus(adapterStatusConnected) {
+    const apply = (state, msg) => {
+      if (this.loggedIn === state) return;
+      this.loggedIn = state;
+      this.authenticated(this.loggedIn);
+      if (msg) console.log(msg);
+      return state;
+    };
+    const was = this.loggedIn;
+    if (!this.web3auth?.connectedAdapterName)
+      return apply(false, "no adapter name");
+    if (this.web3auth.status !== adapterStatusConnected)
+      return apply(false, `wrong status: ${this.web3auth.status}`);
+    if (!this.web3auth.provider) return apply(false, "no provider");
+    return apply(true, "refreshed connected");
+  }
+
   async login(force) {
     if (this.modalOpen) {
       log.info(`Web3ModalProviderSwitch#login modal is already open`);
