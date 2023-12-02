@@ -1,5 +1,12 @@
 
 
+## [0.0.38](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.37...v0.0.38) (2023-12-02)
+
+
+### Changes
+
+* allow connection state to be recovered after page reload ([#13](https://github.com/polysensus/chaintrap-arenastate/issues/13)) ([1756f52](https://github.com/polysensus/chaintrap-arenastate/commit/1756f52e463d32e2ed8213e7ac6a1d3335c3f666))
+
 ## [0.0.37](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.36...v0.0.37) (2023-11-19)
 
 
