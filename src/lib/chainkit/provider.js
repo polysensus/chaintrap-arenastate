@@ -324,7 +324,7 @@ export async function prepare1193Provider(
   let request;
   // Get the eip 1193 compatible request method
   if (eip1193Provider.request) {
-    request = eip1193Provider.request;
+    request = eip1193Provider.request.bind(eip1193Provider);
   } else if (eip1193Provider.send) {
     // This is the ethers JsonRpcProvider api which predated eip 1193 and this package is made *for* ethers
     request = (r) => eip1193Provider.send(r.method, r.params || []);
