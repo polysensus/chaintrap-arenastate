@@ -1,5 +1,7 @@
 import { ethers } from "ethers";
+import { ABIName } from "./abiconst.js";
 import { asGid, gidEnsureType } from "./gid.js";
+import { TrialistState } from "./trialiststate.js";
 import { StateRoster } from "./stateroster.js";
 import { Dispatcher } from "./chainkit/dispatcher.js";
 import { TransactionHorizon } from "./chainkit/transactionhorizon.js";
@@ -75,6 +77,14 @@ export class Journal {
     return `${name}-#Journal-${gidHex}`;
   }
 
+  getStateRoster(gid) {
+    const gidHex = gid.toHexString();
+    const roster = this.transcripts[gidHex];
+    if (!roster)
+      throw new Error(`Journal# TranscriptRegistration unknown gid ${gidHex}`);
+    return roster;
+  }
+
   _handle(event, key) {
     // ethers listeners can't guarantee no duplicates. and also this handler is
     // called both from ethers and directly by this class when the transcripts
@@ -90,17 +100,26 @@ export class Journal {
     if (!this.transcripts[gidHex])
       throw new Error(`Journal# TranscriptRegistration unknown gid ${gidHex}`);
 
-    this.transcripts[gidHex].applyEvent(event);
+    const roster = this.transcripts[gidHex];
+    roster.applyEvent(event);
 
     if (!this.updateCallback) return;
 
+    const state = roster.trialists[event.subject]?.current();
+    if (event.name === ABIName.TranscriptEntryChoices && !state)
+      throw new Error("WHTAHAF FHFAT");
+
     if (awaitable(this.updateCallback)) {
-      this.updateCallback(event.gid, event.eid, key, event).catch((err) => {
-        log.info(`journal.js:Journal# updateCallback err ${err} ${key} ${eid}`);
-      });
+      this.updateCallback(event.gid, event.eid, key, event, state).catch(
+        (err) => {
+          log.info(
+            `journal.js:Journal# updateCallback err ${err} ${key} ${event?.eid}`
+          );
+        }
+      );
     } else {
       try {
-        this.updateCallback(event.gid, event.eid, key, event);
+        this.updateCallback(event.gid, event.eid, key, event, state);
       } catch (err) {
         log.info(`journal.js:Journal# updateCallback err ${err} ${key} ${eid}`);
       }

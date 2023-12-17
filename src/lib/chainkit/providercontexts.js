@@ -17,7 +17,7 @@ export class ProviderContext extends EIP1193ProviderContext {
    * @param {string|number} addressOrIndex
    * @returns
    */
-  async setProvider(eip1193Provider, addressOrIndex = 0) {
+  async setProvider(eip1193Provider, addressOrIndex = undefined) {
     return await super.setProvider(
       eip1193Provider,
       addressOrIndex,
@@ -185,20 +185,20 @@ export class ProviderSwitch {
     for (let each of Object.values(cfgs)) {
       if (each.fetch && !fetch) {
         log.info(
-          `fetch config '${each.name}' skipped - fetching provider configs is not enabled`
+          `fetch config '${each.id}' skipped - fetching provider configs is not enabled`
         );
         continue;
       }
       const ctx = contextfactory({
         ...each,
-        chainChanged: async (chainId) => this.chainChanged(each.name, ctx),
+        chainChanged: async (chainId) => this.chainChanged(each.id, ctx),
         accountsChanged: async (accounts) =>
           this.accountsChanged(each.name, ctx),
-        disconnected: async (err) => this.disconnected(each.name, ctx, err),
+        disconnected: async (err) => this.disconnected(each.id, ctx, err),
       });
       if (each.type === ProviderType.Injected) {
         // The injected ones don't get pre-checked, as that forces interaction
-        prepared[each.name] = ctx;
+        prepared[each.id] = ctx;
         continue;
       }
       preparing.push(ctx.prepareProvider(this));
@@ -218,8 +218,8 @@ export class ProviderSwitch {
       .then((values) => {
         for (const ctx of values) {
           if (isUndefined(ctx)) continue;
-          log.debug(`adding provider ${ctx.cfg.name} ${ctx.cfg.url}`);
-          prepared[ctx.cfg.name] = ctx;
+          log.debug(`adding provider ${ctx.cfg.id} ${ctx.cfg.url}`);
+          prepared[ctx.cfg.id] = ctx;
           ctx.stopListening();
         }
         return prepared;
@@ -241,7 +241,7 @@ export async function prepareProviders(cfgs) {
     const ctx = new ProviderContext(each);
     if (each.type === ProviderType.Injected) {
       // The injected ones don't get pre-checked, as that forces interaction
-      prepared[each.name] = ctx;
+      prepared[each.id] = ctx;
       continue;
     }
     preparing.push(ctx.prepareProvider());
@@ -261,8 +261,8 @@ export async function prepareProviders(cfgs) {
     .then((values) => {
       for (const ctx of values) {
         if (isUndefined(ctx)) continue;
-        log.debug(`adding provider ${ctx.cfg.name} ${ctx.cfg.url}`);
-        prepared[ctx.cfg.name] = ctx;
+        log.debug(`adding provider ${ctx.cfg.id} ${ctx.cfg.url}`);
+        prepared[ctx.cfg.id] = ctx;
       }
       return prepared;
     })

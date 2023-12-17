@@ -12,7 +12,7 @@ const log = getLogger("eip1193/provider");
 
 export class EIP1193ProviderContext {
   constructor(cfg = {}) {
-    this._init();
+    this._init(cfg);
 
     const { accountsChanged, chainChanged, disconnected } = cfg;
 
@@ -28,9 +28,7 @@ export class EIP1193ProviderContext {
 
       if (!accountsChanged) return;
 
-      if (isAsync(accountsChanged)) {
-        return await accountsChanged(this);
-      }
+      if (isAsync(accountsChanged)) return await accountsChanged(this);
       return accountsChanged(this);
     };
 
@@ -65,8 +63,15 @@ export class EIP1193ProviderContext {
     };
   }
 
-  async setProvider(eip1193Provider, addressOrIndex = 0, chainId = undefined) {
+  async setProvider(
+    eip1193Provider,
+    addressOrIndex = undefined,
+    chainId = undefined
+  ) {
     this.stopListening();
+
+    if (typeof addressOrIndex === "undefined")
+      addressOrIndex = this.addressOrIndex;
 
     const prepared = await setProvider(
       eip1193Provider,
@@ -100,9 +105,9 @@ export class EIP1193ProviderContext {
     return this.setProvider(this.eip1193Provider, this.addressOrIndex);
   }
 
-  _init() {
+  _init(cfg) {
     this.eip1193Provider = undefined;
-    this.addressOrIndex = undefined;
+    this.addressOrIndex = cfg?.addressOrIndex;
 
     this.provider = undefined;
     this.request = undefined;
@@ -112,7 +117,6 @@ export class EIP1193ProviderContext {
     this.signer = undefined;
     this.signerAddress = undefined;
     this.accounts = undefined;
-    this.addressOrIndex = undefined;
   }
 
   reset() {
@@ -126,14 +130,15 @@ export async function getSignerAddress(provider, addressOrIndex) {
 
   try {
     // XXX some providers do not support getSigner
-    if (
-      typeof provider.listAccounts === "function" &&
-      (addressOrIndex === null || typeof addressOrIndex === "undefined")
-    ) {
-      signer = provider.getSigner(addressOrIndex);
-    } else {
-      signer = provider.getSigner();
-    }
+    // if (
+    //   typeof provider.listAccounts === "function" &&
+    //   (addressOrIndex === null || typeof addressOrIndex === "undefined")
+    // ) {
+    //   signer = provider.getSigner();
+    // } else {
+    //   signer = provider.getSigner(addressOrIndex);
+    // }
+    signer = provider.getSigner(addressOrIndex);
     signerAddress = await signer.getAddress();
   } catch (err) {
     log.info(

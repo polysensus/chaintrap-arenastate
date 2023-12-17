@@ -196,11 +196,11 @@ export class Guardian {
   /**
    *
    * @param {*} trial
-   * @param {ethers.BigNumber} gid
    * @param {{irootLabel?:string, maxTranscripts?:number}} options
    * @returns
    */
-  async trialStartListening(trial, gid, options) {
+  async trialStartListening(trial, options) {
+    const gid = trial.gid;
     const gidHex = gid.toHexString();
     if (this.trials[gidHex]) this.journal.stopListening([gid]);
     this.trials[gidHex] = trial;

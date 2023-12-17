@@ -90,7 +90,6 @@ export class Trial {
     this.topology = dungeon.topology;
     this.staticTrie = dungeon.trie;
 
-    this.gid = undefined;
     this.arena = undefined;
     this.scenes = undefined;
   }

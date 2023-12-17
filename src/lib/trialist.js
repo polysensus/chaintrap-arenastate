@@ -16,6 +16,10 @@ export class Trialist {
     this.journal = new Journal(this.eventParser, options);
   }
 
+  getStateRoster(gid) {
+    return this.journal.getStateRoster(gid);
+  }
+
   async joinGame(gid, options) {
     let profile = options?.profile;
     if (!profile) profile = { nickname: options?.nickname ?? "<bashfulbob>" };
