@@ -1,5 +1,7 @@
 
 
+* fix: minor fixes in support of narrator and raider pages in chaintrap-ifw (011ccc4)
+
 ## [0.0.38](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.37...v0.0.38) (2023-12-02)
 
 
