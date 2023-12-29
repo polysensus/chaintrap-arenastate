@@ -1,5 +1,12 @@
 
 
+## [0.0.40](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.39...v0.0.40) (2023-12-29)
+
+
+### Features
+
+* switch to nftstorage.link ipfs gateway ([fdc4b7f](https://github.com/polysensus/chaintrap-arenastate/commit/fdc4b7f735a88e46bae2a53edef5121cff079e4f))
+
 * fix: minor fixes in support of narrator and raider pages in chaintrap-ifw (011ccc4)
 
 ## [0.0.38](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.37...v0.0.38) (2023-12-02)
