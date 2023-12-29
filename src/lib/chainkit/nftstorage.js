@@ -6,7 +6,8 @@ const log = getLogger("nftstorage");
 
 export const IPFSScheme = "ipfs://";
 export const nftStorageURL = "https://api.nft.storage";
-export const nftstorageIPFSGatewayURL = "https://ipfs.io/";
+// export const nftstorageIPFSGatewayURL = "https://ipfs.io/";
+export const nftstorageIPFSGatewayURL = "https://nftstorage.link/";
 
 export function ipfsGatewayURL(ipfs, options = {}) {
   if (!ipfs.startsWith(IPFSScheme))

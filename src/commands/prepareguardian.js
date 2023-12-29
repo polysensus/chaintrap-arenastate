@@ -1,13 +1,10 @@
 import { readJson } from "./fsutil.js";
-import path from "path";
 import { programConnectArena } from "./connect.js";
 import { asGid } from "../lib/gid.js";
 import { findGameMetadata, findGids } from "../lib/arenaevent.js";
 import { GameMetadataReader } from "../lib/erc1155metadata/gamereader.js";
 import { Guardian } from "../lib/guardian.js";
-import { CODEX_FURNITURE_INDEX } from "../lib/trial.js";
 import { BlobCodex } from "@polysensus/blobcodex";
-import { ipfsGatewayURL } from "../lib/chainkit/nftstorage.js";
 
 const out = console.log;
 let vout = () => {};
