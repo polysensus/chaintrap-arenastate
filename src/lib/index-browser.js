@@ -17,6 +17,7 @@ export * from "./erc1155metadata/gamereader.js";
 export * from "./chainkit/eventparser.js";
 export * from "./chainkit/transactor.js";
 export * from "./chainkit/secretblobsipfs.js";
+export * from "./maptrie/locationchoices.js";
 export * from "./maptrie/access.js";
 export * from "./maptrie/geometry.js";
 export * from "./maptrie/join.js";
