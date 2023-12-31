@@ -348,7 +348,7 @@ export class Journal {
   /**
    * Stop all listeners associated with the listed gids
    *
-   * If gids is undefined (or ommitted), stop all current listeners.
+   * If gids is undefined (or omitted), stop all current listeners.
    * @param {undefined|ethers.BigNumber[]} gids
    */
   stopListening(gids = undefined) {
