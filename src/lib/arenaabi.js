@@ -34,7 +34,16 @@ export const TRANSCRIPT_EVENT_NAMES = [
   ABIName.TranscriptEntryChoices,
   ABIName.TranscriptEntryCommitted,
   ABIName.TranscriptEntryOutcome,
+  ABIName.TranscriptParticipantHalted,
   ABIName.TranscriptCompleted,
+];
+
+// Event's we get from ERC1155 durint the course of a transcript
+export const TRANSCRIPT_EVENT_NAMES_ERC1155 = [
+  // The game token is transferred on victory
+  ABIName.TransferSingle,
+  ABIName.TransferBatch,
+  ABIName.URI,
 ];
 
 export function transcriptEventSig(name) {
@@ -63,12 +72,24 @@ export function transcriptEventABIs() {
   ]) {
     abi.reduce((events, current) => {
       if (current.type !== "event") return events;
-      if (!current.name.startsWith("Transcript")) return events;
+      if (
+        !(
+          current.name.startsWith("Transcript") ||
+          TRANSCRIPT_EVENT_NAMES_ERC1155.includes(current.name)
+        )
+      )
+        return events;
 
-      if (current.name in events)
+      if (current.name in events) {
+        // If we have a duplicate that is fine, just drop it.
+        const fragment = ethers.utils.EventFragment.from(current);
+        if (fragment.format() === events[current.name].sig) return events;
+
+        // Otherwise we have an overload and we don't currently support that.
         throw new Error(
           `transcript event signatures are assumed to be not overloaded`
         );
+      }
 
       const fragment = ethers.utils.EventFragment.from(current);
       const sig = fragment.format();

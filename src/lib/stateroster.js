@@ -61,7 +61,11 @@ export class StateRoster {
         break;
     }
     if (!TrialistState.handlesEvent(event.name)) return;
-    this.trialists[event.subject].applyEvent(event);
+    const trialist = this.trialists[event.subject];
+    if (!trialist) {
+      log.warn(`${event.name} subject ${event.subject} not registered`);
+    }
+    trialist.applyEvent(event);
   }
 
   // --- getters and query methods for managed state

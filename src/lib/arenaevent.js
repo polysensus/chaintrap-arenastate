@@ -80,9 +80,13 @@ export class ArenaEvent {
       update: {},
     };
     switch (parsedLog.name) {
-      case "TransferSingle":
+      case ABIName.TransferBatch: {
         break;
-      case "URI":
+      }
+      case ABIName.TransferSingle:
+        arenaEvent.gid = parsedLog.args.id;
+        break;
+      case ABIName.URI:
         arenaEvent.gid = parsedLog.args.tokenId;
         break;
       case ABIName.TranscriptCreated:
@@ -308,12 +312,87 @@ export async function getGameCreatedBlock(arena, gid) {
  * parameter.
  */
 export async function findGameEvents(arena, gid, fromBlock) {
-  const filter = {
+  let filter = {
     address: arena.address,
     topics: [
       null, // any event on the contract
-      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the game id as the first indexed parameter
+      // which has the game id as the first indexed parameter,
+      // Note this picks up the ERC 1155 URI log
+      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32),
     ],
   };
+  const events = await arena.queryFilter(filter, fromBlock);
+  // console.log(`LEN(events) by gid ${gid.toHexString()} ${events.length}`);
+
+  // TransferSingle
+  filter = {
+    address: arena.address,
+    topics: [
+      ethers.utils.id(transcriptEventSig(ABIName.TransferSingle)),
+      null,
+      null,
+      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the game id as the fourth indexed parameter
+    ],
+  };
+
+  for (const log of await arena.queryFilter(filter, fromBlock))
+    events.push(log);
+
+  // TransferBatch - The ids (gids) are an array and so are not indexed. So we
+  // have to get all the batch events and filter them in the client. Ultimately
+  // this is an indexing problem and we can't solve it efficiently here.
+  // arenaevent.js ArenaEvent.fromParsedEvent has a special case to deal with this
+  filter = {
+    address: arena.address,
+    topics: [
+      ethers.utils.id(transcriptEventSig(ABIName.TransferBatch)),
+      null,
+      null,
+    ],
+  };
+  for (const log of await arena.queryFilter(filter, fromBlock))
+    events.push(log);
+
+  events.sort((a, b) => logCompare(a, b));
+
+  return events;
+}
+
+/**
+ *
+ * @param {*} arena
+ * @param {string[]|string|null} from match transfers from, can be an array of addresses or a single address or null
+ * @param {string[]|string|null} to match transfers to, can be an array of addresses or a single address or null
+ */
+export async function findTransferEvents(arena, from, to) {
+  if (!(from || to))
+    throw new Error(`either one of 'from' or 'to' must be provided`);
+
+  if (from !== null) {
+    if (typeof from === "string") from = [from];
+    from = from.map((addr) => ethers.utils.hexZeroPad(addr, 32));
+  }
+  if (to !== null) {
+    if (typeof to === "string") to = [to];
+    to = to.map((addr) => ethers.utils.hexZeroPad(addr, 32));
+  }
+
+  const events = [
+    ethers.utils.id(transcriptEventSig(ABIName.TransferSingle)),
+    ethers.utils.id(transcriptEventSig(ABIName.TransferBatch)),
+  ];
+
+  const filter = {
+    address: arena.address,
+    topics: [events, from, to],
+  };
+
+  // TODO: filter for gid
   return arena.queryFilter(filter, fromBlock);
+}
+
+export function logCompare(a, b) {
+  let result = a.blockNumber - b.blockNumber;
+  if (result !== 0) return result;
+  return a.logIndex - b.logIndex;
 }
