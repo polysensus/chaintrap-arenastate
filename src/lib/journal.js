@@ -126,7 +126,7 @@ export class Journal {
     if (!this.updateCallback) return;
     // To process the participant specific events (TransferSingle and TransferBatch) an updateCallback must be provided.
     if (event.name === "TranscriptRegistration")
-      this._updateParticipantListeners(gid, event.subject);
+      this._updateParticipantListeners(event.gid, event.subject);
 
     const state = roster.trialists[event.subject]?.current();
 
@@ -157,7 +157,9 @@ export class Journal {
         `Journal# _updateParticipantListeners unknown gid ${gidHex}`
       );
 
-    const participants = Object.keys(this.transcripts[gidHex]);
+    const callback = this._handle.bind(this);
+
+    const participants = Object.keys(this.transcripts[gidHex].trialists);
 
     const listenIDs = [];
     // Listener for a TransferBatch that targets any of the participants.
@@ -209,8 +211,7 @@ export class Journal {
       sig,
       null,
       null,
-      participants,
-      gid
+      participants
     );
     this.dispatcher.addHandler(handler, keyTo);
     listenIDs.push(keyTo);
@@ -220,10 +221,9 @@ export class Journal {
       sig,
       null,
       participants,
-      null,
-      gid
+      null
     );
-    this.dispatcher.addHandler(handler, keyTo);
+    this.dispatcher.addHandler(handler, keyFrom);
     listenIDs.push(keyFrom);
 
     // Start the specific listeners we have changed or added
