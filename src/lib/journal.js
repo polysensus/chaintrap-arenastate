@@ -1,11 +1,14 @@
 import { ethers } from "ethers";
 import { ABIName } from "./abiconst.js";
-import { asGid, gidEnsureType } from "./gid.js";
-import { TrialistState } from "./trialiststate.js";
 import { StateRoster } from "./stateroster.js";
 import { Dispatcher } from "./chainkit/dispatcher.js";
 import { TransactionHorizon } from "./chainkit/transactionhorizon.js";
-import { findGameEvents, findRootLabels } from "./arenaevent.js";
+import {
+  findGameEvents,
+  findRootLabels,
+  findTransferEvents,
+  logCompare,
+} from "./arenaevent.js";
 import { getLogger } from "./log.js";
 import { TRANSCRIPT_EVENT_NAMES, transcriptEventSig } from "./arenaabi.js";
 import { conditionInput } from "./maptrie/objects.js";
@@ -86,13 +89,30 @@ export class Journal {
   }
 
   _handle(event, key) {
+    if (event.name !== ABIName.TransferBatch) {
+      this._handleTranscriptEvent(event, key);
+      return;
+    }
+    // Then it might be for *multiple* game sessions
+    for (const id of event.parsedLog.args.ids) {
+      const gidHex = id.toHexString();
+      if (!this.transcripts[gidHex]) {
+        log.debug(`TransferBatch gid ${gidHex} not excluded from the journal`);
+        continue;
+      }
+      event.gid = id;
+      this._handleTranscriptEvent(event, key);
+    }
+  }
+
+  _handleTranscriptEvent(event, key) {
+    // log.info(`***** handling ${event.name} ${event.subject} ${key}`);
     // ethers listeners can't guarantee no duplicates. and also this handler is
     // called both from ethers and directly by this class when the transcripts
     // are initially opened. We don't de-dupe in the dispatcher because it
     // supports one -> many filter handling
     if (this.horizon.known(event)) return;
 
-    log.debug(`handling ${key}`);
     if (event.name === "TranscriptRegistration")
       log.debug(`registering participant ${event.subject}`);
 
@@ -104,10 +124,11 @@ export class Journal {
     roster.applyEvent(event);
 
     if (!this.updateCallback) return;
+    // To process the participant specific events (TransferSingle and TransferBatch) an updateCallback must be provided.
+    if (event.name === "TranscriptRegistration")
+      this._updateParticipantListeners(event.gid, event.subject);
 
     const state = roster.trialists[event.subject]?.current();
-    if (event.name === ABIName.TranscriptEntryChoices && !state)
-      throw new Error("WHTAHAF FHFAT");
 
     if (awaitable(this.updateCallback)) {
       this.updateCallback(event.gid, event.eid, key, event, state).catch(
@@ -124,6 +145,93 @@ export class Journal {
         log.info(`journal.js:Journal# updateCallback err ${err} ${key} ${eid}`);
       }
     }
+  }
+
+  /**
+   * Ensure the listeners that are specific to participant addresses.
+   */
+  _updateParticipantListeners(gid, subject) {
+    const gidHex = gid.toHexString();
+    if (!this.transcripts[gidHex])
+      throw new Error(
+        `Journal# _updateParticipantListeners unknown gid ${gidHex}`
+      );
+
+    const callback = this._handle.bind(this);
+
+    // const participants = Object.keys(this.transcripts[gidHex].trialists).map(
+    //   (addr) => ethers.utils.hexZeroPad(addr, 32)
+    // );
+    const participants = Object.keys(this.transcripts[gidHex].trialists);
+
+    const listenIDs = [];
+    // Listener for a TransferBatch that targets any of the participants.
+    let eventABIName = ABIName.TransferBatch;
+    let keyTo = `${this.handlerKey(eventABIName, gidHex)}#to`;
+    let keyFrom = `${this.handlerKey(eventABIName, gidHex)}#from`;
+
+    // Remove any current handlers
+    this.dispatcher.removeHandler(keyTo);
+    this.dispatcher.removeHandler(keyFrom);
+
+    let sig = transcriptEventSig(eventABIName);
+    // Create a handler matching a batch transfer TO any of the participants in the transcript
+    // NOTICE: these cant filter on a specific git because they are batch transfer events
+    let handler = this.dispatcher.createHandler(
+      callback,
+      sig,
+      null,
+      null,
+      participants
+    );
+    this.dispatcher.addHandler(handler, keyTo);
+    listenIDs.push(keyTo);
+    // Create a handler matching a batch transfer FROM any of the participants in the transcript
+    handler = this.dispatcher.createHandler(
+      callback,
+      sig,
+      null,
+      participants,
+      null
+    );
+    this.dispatcher.addHandler(handler, keyFrom);
+    listenIDs.push(keyFrom);
+
+    // Now do the same for TransferSingle
+    eventABIName = ABIName.TransferSingle;
+    keyTo = `${this.handlerKey(eventABIName, gidHex)}#to`;
+    keyFrom = `${this.handlerKey(eventABIName, gidHex)}#from`;
+
+    // Remove any current handlers
+    this.dispatcher.removeHandler(keyTo);
+    this.dispatcher.removeHandler(keyFrom);
+
+    sig = transcriptEventSig(eventABIName);
+    // Create a handler matching a batch transfer TO any of the participants in the transcript
+    // NOTICE: This time we can specify the gid as its a single token transfer
+    handler = this.dispatcher.createHandler(
+      callback,
+      sig,
+      null,
+      null
+      //, participants
+    );
+    this.dispatcher.addHandler(handler, keyTo);
+    listenIDs.push(keyTo);
+    // Create a handler matching a batch transfer FROM any of the participants in the transcript
+    handler = this.dispatcher.createHandler(
+      callback,
+      sig,
+      null,
+      // participants,
+      null,
+      null
+    );
+    this.dispatcher.addHandler(handler, keyFrom);
+    listenIDs.push(keyFrom);
+
+    // Start the specific listeners we have changed or added
+    for (const id of listenIDs) this.dispatcher.startListening(id);
   }
 
   /**
@@ -224,25 +332,27 @@ export class Journal {
     // do two passes so we don't get odd effects on exceptions interrupting the handler addition
     for (const gid of gids) this.listening[gid.toHexString()] = true;
 
-    // Start all the listeners (idempotent)
-    this.dispatcher.startListening();
-
     // rely on the horizon de-dupe to ensure we don't get duplicates due to the
     // listeners already being started.
     for (const gid of gids) {
       const gidHex = gid.toHexString();
-      for (const log of await findGameEvents(this.arena, gid)) {
-        const event = this.eventParser.parse(log);
-        if (!event) continue;
+      for (const ethersLog of await findGameEvents(this.arena, gid, 0)) {
+        const event = this.eventParser.parse(ethersLog);
+        if (!event) {
+          log.info(`failed to parse ${JSON.stringify(ethersLog)}`);
+          continue;
+        }
         this._handle(event, this.handlerKey(event.name, gidHex));
       }
     }
+    // Start all the listeners (idempotent)
+    this.dispatcher.startListening();
   }
 
   /**
    * Stop all listeners associated with the listed gids
    *
-   * If gids is undefined (or ommitted), stop all current listeners.
+   * If gids is undefined (or omitted), stop all current listeners.
    * @param {undefined|ethers.BigNumber[]} gids
    */
   stopListening(gids = undefined) {
@@ -258,6 +368,15 @@ export class Journal {
         const id = this.handlerKey(name, gidHex);
         this.dispatcher.removeHandler(id);
       }
+
+      // remember to remove the handlers for the transfer events
+      for (const name of [ABIName.TransferBatch, ABIName.TransferSingle]) {
+        let id = `${this.handlerKey(name, gidHex)}#to`;
+        this.dispatcher.removeHandler(id);
+        id = `${this.handlerKey(name, gidHex)}#from`;
+        this.dispatcher.removeHandler(id);
+      }
+
       delete this.listening[gidHex];
     }
   }

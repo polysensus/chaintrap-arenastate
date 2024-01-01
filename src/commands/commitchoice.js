@@ -26,6 +26,7 @@ async function commitchoice(program, options, side, exit) {
 
   const trialist = new Trialist(eventParser);
   await trialist.openTranscript(gid);
+  await trialist.startListening(gid);
 
   // TODO: load the state roster to check that the provided side & exit are
   // available to the player. the contracts revert if they are wrong, so its not
@@ -38,4 +39,5 @@ async function commitchoice(program, options, side, exit) {
   } else {
     console.log(`committed to choice ${exit} on menu ${side}`);
   }
+  await trialist.journal.stopListening([gid]);
 }

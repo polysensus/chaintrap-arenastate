@@ -8,6 +8,9 @@ export class ABIName {
   static TranscriptEntryChoices = "TranscriptEntryChoices";
   static TranscriptEntryCommitted = "TranscriptEntryCommitted";
   static TranscriptEntryOutcome = "TranscriptEntryOutcome";
+  static TransferSingle = "TransferSingle";
+  static TransferBatch = "TransferBatch";
+  static URI = "URI";
 }
 
 export class TranscriptOutcome {

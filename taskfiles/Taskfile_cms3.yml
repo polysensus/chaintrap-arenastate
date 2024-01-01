@@ -53,6 +53,7 @@ tasks:
       - echo ------------------------------------------------------------
       - task: ":{{.PROVIDER_ID}}:game:commit"
         vars: { USER_ID: "1", MENU: "1", CHOICE: "0" }
+      - echo "REVEAL for trialist 1 takes the first exit on the west side"
       - task: ":{{.PROVIDER_ID}}:game:reveal"
 
       - echo ------------------------------------------------------------
