@@ -117,8 +117,12 @@ export class Journal {
       log.debug(`registering participant ${event.subject}`);
 
     const gidHex = event.gid.toHexString();
-    if (!this.transcripts[gidHex])
-      throw new Error(`Journal# TranscriptRegistration unknown gid ${gidHex}`);
+    if (!this.transcripts[gidHex]) {
+      log.warn(
+        `Journal# _handleTranscriptEvent ${event.name} unknown gid ${gidHex}`
+      );
+      return;
+    }
 
     const roster = this.transcripts[gidHex];
     roster.applyEvent(event);
