@@ -159,6 +159,9 @@ export class Journal {
 
     const callback = this._handle.bind(this);
 
+    // const participants = Object.keys(this.transcripts[gidHex].trialists).map(
+    //   (addr) => ethers.utils.hexZeroPad(addr, 32)
+    // );
     const participants = Object.keys(this.transcripts[gidHex].trialists);
 
     const listenIDs = [];
@@ -210,8 +213,8 @@ export class Journal {
       callback,
       sig,
       null,
-      null,
-      participants
+      null
+      //, participants
     );
     this.dispatcher.addHandler(handler, keyTo);
     listenIDs.push(keyTo);
@@ -220,7 +223,8 @@ export class Journal {
       callback,
       sig,
       null,
-      participants,
+      // participants,
+      null,
       null
     );
     this.dispatcher.addHandler(handler, keyFrom);

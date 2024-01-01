@@ -81,10 +81,17 @@ export class ArenaEvent {
     };
     switch (parsedLog.name) {
       case ABIName.TransferBatch: {
+        arenaEvent.subject = parsedLog.args.to;
+        if (parsedLog.args.from === ethers.constants.AddressZero)
+          arenaEvent.mint = true;
         break;
       }
       case ABIName.TransferSingle:
         arenaEvent.gid = parsedLog.args.id;
+        arenaEvent.subject = parsedLog.args.to;
+        if (parsedLog.args.from === ethers.constants.AddressZero) {
+          arenaEvent.mint = true;
+        }
         break;
       case ABIName.URI:
         arenaEvent.gid = parsedLog.args.tokenId;
@@ -157,6 +164,9 @@ export class ArenaEvent {
         throw new Error(`event ${ev.name} with signature ${ev.signature} not recognized for ABIv2`);
         */
     }
+    // console.log(
+    //   `new ArenaEvent. ${parsedLog.name} ${arenaEvent.eid} ${arenaEvent.subject}`
+    // );
     return new ArenaEvent(arenaEvent);
   }
 }
@@ -328,15 +338,22 @@ export async function findGameEvents(arena, gid, fromBlock) {
   filter = {
     address: arena.address,
     topics: [
-      ethers.utils.id(transcriptEventSig(ABIName.TransferSingle)),
-      null,
-      null,
-      ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the game id as the fourth indexed parameter
+      ethers.utils.id(transcriptEventSig(ABIName.TransferSingle)), //,
+      // null,
+      // null,
+      // ethers.utils.hexZeroPad(ethers.BigNumber.from(gid).toHexString(), 32), // which has the game id as the fourth indexed parameter
     ],
   };
 
-  for (const log of await arena.queryFilter(filter, fromBlock))
+  for (const log of await arena.queryFilter(filter, fromBlock)) {
+    // console.log(`FOUND TransferSingle: ${JSON.stringify(log)}`);
+    const iface = arena.getEventInterface(log);
+    if (!iface) continue;
+    const parsed = iface.parseLog(log);
+    if (!parsed.args.id.eq(gid)) continue;
+
     events.push(log);
+  }
 
   // TransferBatch - The ids (gids) are an array and so are not indexed. So we
   // have to get all the batch events and filter them in the client. Ultimately
@@ -345,13 +362,22 @@ export async function findGameEvents(arena, gid, fromBlock) {
   filter = {
     address: arena.address,
     topics: [
-      ethers.utils.id(transcriptEventSig(ABIName.TransferBatch)),
-      null,
-      null,
+      ethers.utils.id(transcriptEventSig(ABIName.TransferBatch)), //,
+      // null,
+      // null,
     ],
   };
-  for (const log of await arena.queryFilter(filter, fromBlock))
-    events.push(log);
+  for (const log of await arena.queryFilter(filter, fromBlock)) {
+    const iface = arena.getEventInterface(log);
+    if (!iface) continue;
+    const parsed = iface.parseLog(log);
+
+    for (const foundGid of parsed.args.ids) {
+      if (!foundGid.eq(gid)) continue;
+      events.push(log);
+      break;
+    }
+  }
 
   events.sort((a, b) => logCompare(a, b));
 

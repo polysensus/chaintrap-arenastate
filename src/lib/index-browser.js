@@ -16,6 +16,7 @@ export * from "./erc1155metadata/metadataprepare.js";
 export * from "./erc1155metadata/gamereader.js";
 export * from "./chainkit/eventparser.js";
 export * from "./chainkit/transactor.js";
+export * from "./chainkit/nftstorage.js";
 export * from "./chainkit/secretblobsipfs.js";
 export * from "./maptrie/inputtypes.js";
 export * from "./maptrie/access.js";
