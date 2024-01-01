@@ -1,5 +1,12 @@
 
 
+## [0.0.41](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.40...v0.0.41) (2024-01-01)
+
+
+### Changes
+
+* tollerate but warn on unexpected gid ([2fedcbb](https://github.com/polysensus/chaintrap-arenastate/commit/2fedcbb3c5bf563b83399eee3aea2cc12dd68824))
+
 ## [0.0.40](https://github.com/polysensus/chaintrap-arenastate/compare/v0.0.39...v0.0.40) (2023-12-29)
 
 
