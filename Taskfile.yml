@@ -22,7 +22,7 @@ includes:
   op:game:
     taskfile: ./taskfiles/Taskfile_game.yml
     vars:
-      PROVIDER_ID: "opgoerli"
+      PROVIDER_ID: "opsepolia"
   hh:game:
     taskfile: ./taskfiles/Taskfile_game.yml
     vars:
@@ -151,10 +151,10 @@ tasks:
       - task: deploy:mumbai
       - task: deploy
         vars:
-          PROVIDER_ID: opgoerli
+          PROVIDER_ID: opsepolia
 
   op:bridge-eth:
-    dotenv: [".env.opgoerli"]
+    dotenv: [".env.opsepolia"]
     desc: |
       bridge eth from Optimism L1 to L2.
 
@@ -176,20 +176,26 @@ tasks:
             ${key} ${amount}
 
   deploy:op:
-    desc: deploy the contracts to polygon mumbai testnet
+    desc: deploy the contracts to optimism testnet
     cmds:
       - task: deploy:up
         vars:
-          PROVIDER_ID: "opgoerli"
+          PROVIDER_ID: "opsepolia"
           GAS_PRICE: "0.001"
 
   deploy:op-new:
-    desc: deploy the contracts to polygon mumbai testnet
+    desc: deploy the contracts to optimism testnet
     cmds:
       - task: deploy:new
         vars:
-          PROVIDER_ID: "opgoerli"
+          PROVIDER_ID: "opsepolia"
           GAS_PRICE: "0.001"
+          #GAS_LIMIT: "1514"
+          #CUTTER_GAS_LIMIT: "1514"
+          #GAS_LIMIT: "1514136"
+          #CUTTER_GAS_LIMIT: "1514136"
+          GAS_LIMIT: '{{.GAS_LIMIT | default ""}}'
+          CUTTER_GAS_LIMIT: '{{.CUTTER_GAS_LIMIT | default ""}}'
 
   deploy:mumbai:
     desc: deploy the contracts to polygon mumbai testnet
@@ -270,7 +276,7 @@ tasks:
       COMMIT: '{{.COMMIT | default ""}}'
 
     desc: |
-      deploy the contracts to hardhat (assumes the local server is listening on 8545)
+      deploy the contracts
 
       This command is dry run by default, add '-- --commit' to deploy
 
