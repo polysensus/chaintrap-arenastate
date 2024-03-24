@@ -58,6 +58,8 @@ export async function fetchCodex(program, options) {
       );
 
     const metadataUrl = await findGameMetadata(arena, gid);
+    if (!metadataUrl)
+        throw new Error(`valid url not found for ${gid.toHexString()}`);
     return {
       gid,
       metadataUrl,

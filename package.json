@@ -101,7 +101,7 @@
     "@openzeppelin/merkle-tree": "^1.0.5",
     "@polysensus/blobcodex": "^0.0.10",
     "@polysensus/chaintrap-contracts": "^0.3.8",
-    "@polysensus/diamond-deploy": "^0.3.3",
+    "@polysensus/diamond-deploy": "file:../diamond-deploy",
     "commander": "^9.4.1",
     "loglevel": "^1.8.1",
     "nft.storage": "^7.0.0"

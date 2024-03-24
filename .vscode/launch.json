@@ -5,6 +5,20 @@
   "version": "0.2.0",
   "configurations": [
     {
+        "type": "node",
+        "name": "deploy:op-list",
+        "request": "launch",
+        "skipFiles": ["<node_internals>/**"],
+        "envFile": "${workspaceFolder}/.env.opsepolia",
+        "program": "${workspaceFolder}/node_modules/@polysensus/diamond-deploy/deploycli.js",
+        "args": [
+            "list",
+            "-I", "facet", "-n", "Diamond", "DiamondNew",
+            "-i", "node_modules/@polysensus/chaintrap-contracts/abi",
+            "--format", "json", "-x", "node_modules/@polysensus/chaintrap-contracts/abi/facets-exclude.json"
+        ]
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "maptool",
@@ -33,7 +47,7 @@
       "name": "creategame",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",
-      "envFile": "${workspaceFolder}/.env.opgoerli",
+      "envFile": "${workspaceFolder}/.env.test",
       "args": [
         // "--map", "${workspaceFolder}/data/maps/map02.json",
         "--codex-filename",
@@ -101,42 +115,6 @@
         "commitchoice",
         "1",
         "0" // map02 location 1
-      ]
-    },
-
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "resolvechoice",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/cli.js",
-      "envFile": "${workspaceFolder}/.env.test",
-      "args": [
-        "--codex-password",
-        "very-secret",
-        // "--codex-filename", "map.blobs.json",
-        // "--furniture", "${workspaceFolder}/data/maps/map02-furnishings.json",
-        // "--map-name", "map02",
-        "resolvechoice"
-      ]
-    },
-
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "watch",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/cli.js",
-      "args": [
-        "--arena",
-        "0xcA88B57549db9f89C1f9D3603b4e04A15242e100",
-        "-u",
-        "http://localhost:8545",
-        "watch",
-        "-p",
-        "data/providers/only-hardhat.json",
-        "--which",
-        "hardhat"
       ]
     }
   ]

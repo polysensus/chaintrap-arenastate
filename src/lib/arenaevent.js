@@ -238,11 +238,13 @@ export async function findGameMetadata(arena, gid) {
     if (parsedLog.signature !== ERC1155URISignature) continue;
 
     const uri = parsedLog.args.value;
-    if (!uri.startsWith(IPFSScheme))
-      throw new Error(`metadata url is not a valid ipfs reference`);
+    if (!uri.startsWith(IPFSScheme)) {
+      console.log(`metadata url "${uri}" is not a valid ipfs reference`);
+      continue;
+    }
     return uri;
   }
-  throw new Error(`metadata url not set when the game was created`);
+  return undefined;
 }
 
 export async function findGames(arena) {

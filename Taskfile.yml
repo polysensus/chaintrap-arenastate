@@ -237,6 +237,9 @@ tasks:
         echo "DIAMOND_ADDRESS: $DIAMOND_ADDRESS"
         DIAMOND_NONCE=${ARENASTATE_DIAMOND_NONCE:-"{{.DIAMOND_NONCE}}"}
         echo "DIAMOND_NONCE: $DIAMOND_NONCE"
+        echo "GAS_PRICE: {{.GAS_PRICE}}"
+        echo "GAS_PRICE: {{.GAS_LIMIT}}"
+        echo "CUTTER_GAS_PRICE: {{.CUTTER_GAS_LIMIT}}"
 
         {{.DEPLOYCLI}} list \
           -I facet -n Diamond DiamondNew \
