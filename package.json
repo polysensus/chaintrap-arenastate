@@ -100,7 +100,7 @@
     "@msgpack/msgpack": "^2.8.0",
     "@openzeppelin/merkle-tree": "^1.0.5",
     "@polysensus/blobcodex": "^0.0.10",
-    "@polysensus/chaintrap-contracts": "^0.3.7",
+    "@polysensus/chaintrap-contracts": "^0.3.8",
     "@polysensus/diamond-deploy": "^0.3.3",
     "commander": "^9.4.1",
     "loglevel": "^1.8.1",

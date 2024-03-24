@@ -264,6 +264,10 @@ export class Guardian {
             "TransferSingle(address,address,address,uint256,uint256)",
             "TranscriptCompleted(uint256)"
           );
+          // other players, if the exist, will be halted.
+          request.acceptLogs(
+            "TranscriptParticipantHalted(uint256,address,uint256)"
+          );
           break;
         }
         case ObjectType.Link2: {
@@ -275,7 +279,9 @@ export class Guardian {
         case ObjectType.FatalChestTrap: {
           // if the player gained a life, then they can survive the fatal trap
           request.acceptLogs(
-            "TranscriptParticipantHalted(uint256,address,uint256)"
+            "TranscriptParticipantHalted(uint256,address,uint256)",
+            // If all players are halted, the game is completed
+            "TranscriptCompleted(uint256)"
           );
           request.requireLogs(
             "TranscriptParticipantLivesLost(uint256,address,uint256,uint256)"
